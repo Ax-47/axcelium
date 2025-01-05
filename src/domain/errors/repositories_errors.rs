@@ -37,17 +37,16 @@ impl actix_web::ResponseError for ApiError {
     }
 }
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
-impl Into<CommonError> for RepositoryError {
-    fn into(self) -> CommonError {
+impl From<RepositoryError> for CommonError {
+    fn from(error: RepositoryError) -> Self {
         CommonError {
-            message: self.message,
+            message: error.message,
             code: 1,
         }
     }
 }
 impl From<sqlx::Error> for RepositoryError {
     fn from(error: sqlx::Error) -> Self {
-        // You can customize this conversion as needed
         RepositoryError {
             message: format!("Database error: {}", error),
         }
@@ -55,7 +54,6 @@ impl From<sqlx::Error> for RepositoryError {
 }
 impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(error: argon2::password_hash::Error) -> Self {
-        // You can customize this conversion as needed
         RepositoryError {
             message: format!("Database error: {}", error),
         }

@@ -2,8 +2,8 @@ use async_trait::async_trait;
 
 use crate::{
     domain::{
-        errors::repositories_errors::{CommonError, RepositoryResult},
-        models::user_models::{CreateUser, CreatedUser, User},
+        errors::repositories_errors::CommonError,
+        models::user_models::{CreateUser, CreatedUser},
     },
     infrastructure::repositories::user_repositories::UserRepository,
 };

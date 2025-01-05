@@ -8,12 +8,12 @@ pub struct CreateUserDTO {
     pub password: String,
     pub role: String,
 }
-impl Into<CreateUser> for CreateUserDTO {
-    fn into(self) -> CreateUser {
+impl From<CreateUserDTO> for CreateUser {
+    fn from(dto: CreateUserDTO) -> Self {
         CreateUser {
-            username: self.username,
-            password: self.password,
-            role: self.role,
+            username: dto.username,
+            password: dto.password,
+            role: dto.role,
         }
     }
 }
@@ -24,12 +24,12 @@ pub struct CreateUserResponse {
     pub username: String,
     pub role: String,
 }
-impl Into<CreateUserResponse> for CreatedUser {
-    fn into(self) -> CreateUserResponse {
+impl From<CreatedUser> for CreateUserResponse {
+    fn from(created_user: CreatedUser) -> Self {
         CreateUserResponse {
-            id: self.id,
-            username: self.username,
-            role: self.role,
+            id: created_user.id,
+            username: created_user.username,
+            role: created_user.role,
         }
     }
 }
