@@ -27,6 +27,7 @@ pub trait UserRepository: Send + Sync {
     fn hash_password(&self, password: String) -> RepositoryResult<String>;
     fn verify_password(&self, stored_hash: String, password: String) -> RepositoryResult<bool>;
     async fn create(&self, user: CreateUser) -> RepositoryResult<u64>;
+    async fn send_otp(&self);
 }
 
 #[async_trait]
@@ -51,20 +52,22 @@ impl UserRepository for UserRepositoryImpl {
             .is_ok())
     }
     async fn create(&self, user: CreateUser) -> RepositoryResult<u64> {
-        if self.check_rule_name(user.username.clone()) {
+        if !self.check_rule_name(user.username.clone()) {
             return Err(RepositoryError {
                 message: "username is not validate".to_string(),
             });
         }
         let pool = &*self.database;
         let hashed_password = self.hash_password(user.password.to_string())?;
-        let query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        let query = "INSERT INTO users (username, password) VALUES (?, ?)";
         let result = sqlx::query(query)
             .bind(&user.username)
             .bind(&hashed_password)
-            .bind(&user.role)
             .execute(pool)
             .await?;
         Ok(result.last_insert_id())
+    }
+    async fn send_otp(&self){
+
     }
 }

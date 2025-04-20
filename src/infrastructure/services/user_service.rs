@@ -33,7 +33,6 @@ impl UserService for UserServiceImpl {
         return Ok(CreatedUser {
             id,
             username: user.username,
-            role: user.role,
         });
     }
 }
