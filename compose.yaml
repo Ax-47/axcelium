@@ -1,32 +1,38 @@
 services:
-  server:
-    build:
-      context: .
-      target: final
-    ports:
-      - 6969:6969
-    depends_on:
-      - maria
-      - redis
+  # server:
+  #   build:
+  #     context: .
+  #     target: final
+  #   ports:
+  #     - 6969:6969
+  #   depends_on:
+  #     - scylla
+  #     - dragonfly
+  #   networks:
+  #     - mynetwork
 
-  maria:
-    image: mariadb
-    container_name: maria
-    environment:
-      MYSQL_ROOT_PASSWORD: axcelium
-      MYSQL_DATABASE: axcelium
+  scylla:
+    image: scylladb/scylla
+    container_name: scylla
     ports:
-      - 3306:3306
+      - 9042:9042
+      - 10000:10000
+    volumes:
+      - ./scylla/data:/var/lib/scylla
     networks:
       - mynetwork
 
-  redis:
-    image: redis
-    container_name: redis
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: dragonfly
     ports:
       - 6379:6379
+    command: ["--maxmemory", "3gb"]
     networks:
       - mynetwork
+
+volumes:
+  scylla-data:
 
 networks:
   mynetwork:
