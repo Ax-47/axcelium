@@ -1,3 +1,4 @@
 /target
 .env
 /scylla/data
+/scylla-data

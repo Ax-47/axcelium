@@ -9,15 +9,15 @@ use argon2::{
 
 use async_trait::async_trait;
 use redis::Client as RedisClient;
-use sqlx::MySqlPool;
+use scylla::client::session::Session;
 use std::sync::Arc;
 pub struct UserRepositoryImpl {
     pub cache: Arc<RedisClient>,
-    pub database: Arc<MySqlPool>,
+    pub database: Arc<Session>,
 }
 
 impl UserRepositoryImpl {
-    pub fn new(cache: Arc<RedisClient>, database: Arc<MySqlPool>) -> Self {
+    pub fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
         Self { cache, database }
     }
 }
@@ -55,17 +55,10 @@ impl UserRepository for UserRepositoryImpl {
         if !self.check_rule_name(user.username.clone()) {
             return Err(RepositoryError {
                 message: "username is not validate".to_string(),
+                code:400,
             });
         }
-        let pool = &*self.database;
-        let hashed_password = self.hash_password(user.password.to_string())?;
-        let query = "INSERT INTO users (username, password) VALUES (?, ?)";
-        let result = sqlx::query(query)
-            .bind(&user.username)
-            .bind(&hashed_password)
-            .execute(pool)
-            .await?;
-        Ok(result.last_insert_id())
+        Ok(3)
     }
     async fn send_otp(&self){
 

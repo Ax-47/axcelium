@@ -1,1 +1,1 @@
-pub mod mariadb;
+pub mod scylladb;

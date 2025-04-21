@@ -18,7 +18,7 @@ services:
       - 9042:9042
       - 10000:10000
     volumes:
-      - ./scylla/data:/var/lib/scylla
+      - scylla-data:/var/lib/scylla
     networks:
       - mynetwork
 

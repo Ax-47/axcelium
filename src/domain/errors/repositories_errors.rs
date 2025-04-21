@@ -3,7 +3,7 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
     pub message: String,
-    pub code: u32,
+    pub code: i16,
 }
 
 impl std::fmt::Display for CommonError {
@@ -15,6 +15,7 @@ impl std::fmt::Display for CommonError {
 #[derive(Debug)]
 pub struct RepositoryError {
     pub message: String,
+    pub code: i16,
 }
 #[derive(Debug)]
 pub struct ApiError(CommonError);
@@ -41,21 +42,15 @@ impl From<RepositoryError> for CommonError {
     fn from(error: RepositoryError) -> Self {
         CommonError {
             message: error.message,
-            code: 1,
-        }
-    }
-}
-impl From<sqlx::Error> for RepositoryError {
-    fn from(error: sqlx::Error) -> Self {
-        RepositoryError {
-            message: format!("Database error: {}", error),
+            code:error.code,
         }
     }
 }
 impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(error: argon2::password_hash::Error) -> Self {
         RepositoryError {
-            message: format!("Database error: {}", error),
+            message: format!("failed to hash: {}", error),
+            code:500,
         }
     }
 }

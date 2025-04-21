@@ -1,4 +1,3 @@
-use sqlx::MySqlPool;
 
 use crate::infrastructure::{
     repositories::{hello_repositories::{HelloRepository, HelloRepositoryImpl}, user_repositories::{UserRepository, UserRepositoryImpl}},
@@ -7,6 +6,7 @@ use crate::infrastructure::{
 };
 use std::sync::Arc;
 use redis::Client as RedisClient;
+use scylla::client::session::Session;
 
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
@@ -14,7 +14,7 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(cache: Arc<RedisClient>, database: Arc<MySqlPool>) -> Self {
+    pub fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
         let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
         let hello_service = Arc::new(HelloServiceImpl {
             repository: hello_repository,

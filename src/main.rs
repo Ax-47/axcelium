@@ -1,5 +1,5 @@
 use actix_web::HttpServer;
-use axcelium::{container::Container, create_app::create_app, infrastructure::{cache::redis::get_redis_client, database::mariadb::get_db_pool}};
+use axcelium::{container::Container, create_app::create_app, infrastructure::{cache::redis::get_redis_client, database::scylladb::get_db_pool}};
 use std::sync::Arc;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
