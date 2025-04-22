@@ -17,6 +17,7 @@ bigdecimal = "0.4"
 num-bigint = "0.3"
 tracing = "0.1.36"
 tracing-subscriber = { version = "0.3.14", features = ["env-filter"] }
+chrono = "0.4.40"
 
 [dependencies.uuid]
 version = "1.11.0"
