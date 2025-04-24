@@ -1,5 +1,6 @@
 use crate::application::controllers::hello_handle::hello_handler;
 use crate::application::controllers::user_handle::create_user_handle;
+use crate::application::middlewares::bearer_auth::ValidateBearerAuth;
 use crate::container::Container;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
@@ -26,5 +27,8 @@ pub fn create_app(
         .app_data(web::Data::from(user_service.clone()))
         .wrap(Logger::default())
         .service(web::scope("/hello").route("", web::get().to(hello_handler)))
-        .service(web::scope("/auth").route("/sign-up", web::post().to(create_user_handle)))
+        .service(web::scope("/users")
+            .wrap(ValidateBearerAuth)
+            .route("", web::post().to(create_user_handle))
+        )
 }

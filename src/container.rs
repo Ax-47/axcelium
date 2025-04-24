@@ -16,13 +16,9 @@ pub struct Container {
 impl Container {
     pub fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
         let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
-        let hello_service = Arc::new(HelloServiceImpl {
-            repository: hello_repository,
-        });
+        let hello_service = Arc::new(HelloServiceImpl { repository: hello_repository, });
         let user_repository: Arc<dyn UserRepository> = Arc::new(UserRepositoryImpl::new(cache,database));
-        let user_service = Arc::new(UserServiceImpl{
-            repository: user_repository,
-        });
+        let user_service = Arc::new(UserServiceImpl{ repository: user_repository, });
         Container { hello_service, user_service }
     }
 }
