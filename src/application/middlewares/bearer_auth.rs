@@ -71,7 +71,7 @@ where
                 return Err(actix_web::error::ErrorUnauthorized("missing Bearer prefix"));
             };
 
-            middleware_service.authentication(token.to_string()).await;
+            middleware_service.authentication(token.to_string()).await?;
             let res = fut.await?;
 
             println!("Hi from response");
