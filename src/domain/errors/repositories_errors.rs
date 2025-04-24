@@ -1,3 +1,4 @@
+use scylla::errors::FirstRowError;
 use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
@@ -15,6 +16,11 @@ impl std::fmt::Display for CommonError {
 pub struct RepositoryError {
     pub message: String,
     pub code: i16,
+}
+impl RepositoryError {
+    pub fn new(message: String, code: i16) -> Self {
+        Self { message, code }
+    }
 }
 #[derive(Debug)]
 pub struct ApiError(CommonError);
@@ -55,6 +61,15 @@ impl From<argon2::password_hash::Error> for RepositoryError {
         RepositoryError {
             message: format!("failed to hash: {}", error),
             code: 500,
+        }
+    }
+}
+
+impl From<FirstRowError> for RepositoryError {
+    fn from(error: FirstRowError) -> Self {
+        RepositoryError {
+            message: format!("failed to Query: {}", error),
+            code: 400,
         }
     }
 }

@@ -1,9 +1,10 @@
+use super::app_config::AppConfig;
+use super::application_models::Application;
+use super::organization_models::Organization;
 use chrono::Utc;
 use scylla::value::CqlTimestamp;
 use scylla::{DeserializeRow, SerializeRow};
 use uuid::Uuid;
-use super::application_models::Application;
-use super::organization_models::Organization;
 
 #[derive(Debug, Clone, DeserializeRow, SerializeRow)]
 pub struct AppOrgByClientId {
@@ -15,6 +16,7 @@ pub struct AppOrgByClientId {
     pub organization_slug: String,
     pub application_name: String,
     pub application_description: String,
+    pub application_config: String,
     pub is_active: bool,
     pub created_at: CqlTimestamp,
     pub updated_at: CqlTimestamp,
@@ -23,7 +25,7 @@ pub struct AppOrgByClientId {
 impl AppOrgByClientId {
     pub fn new(org: Organization, app: Application) -> Self {
         let now = CqlTimestamp(Utc::now().timestamp_millis());
-        
+
         Self {
             client_id: app.client_id,
             application_id: app.application_id,
@@ -33,10 +35,22 @@ impl AppOrgByClientId {
             organization_slug: org.slug,
             application_name: app.name,
             application_description: app.description,
+            application_config: app.config,
             is_active: true,
             created_at: now,
             updated_at: now,
         }
+    }
+}
+impl AppOrgByClientId {
+    pub fn set_config(&mut self, config: &AppConfig) -> Result<(), serde_json::Error> {
+        self.application_config = serde_json::to_string(config)?;
+        self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());
+        Ok(())
+    }
+
+    pub fn get_config(&self) -> Result<AppConfig, serde_json::Error> {
+        serde_json::from_str::<AppConfig>(&self.application_config)
     }
 }
 #[derive(Debug, Clone, DeserializeRow, SerializeRow)]
@@ -48,6 +62,7 @@ pub struct CleanAppOrgByClientId {
     pub organization_slug: String,
     pub application_name: String,
     pub application_description: String,
+    pub application_config: String,
     pub is_active: bool,
     pub created_at: CqlTimestamp,
     pub updated_at: CqlTimestamp,
@@ -62,9 +77,22 @@ impl From<AppOrgByClientId> for CleanAppOrgByClientId {
             organization_slug: app_org.organization_slug,
             application_name: app_org.application_name,
             application_description: app_org.application_description,
+            application_config: app_org.application_config,
             is_active: app_org.is_active,
             created_at: app_org.created_at,
             updated_at: app_org.updated_at,
         }
+    }
+}
+
+impl CleanAppOrgByClientId {
+    pub fn set_config(&mut self, config: &AppConfig) -> Result<(), serde_json::Error> {
+        self.application_config = serde_json::to_string(config)?;
+        self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());
+        Ok(())
+    }
+
+    pub fn get_config(&self) -> Result<AppConfig, serde_json::Error> {
+        serde_json::from_str::<AppConfig>(&self.application_config)
     }
 }

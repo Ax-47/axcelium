@@ -1,4 +1,6 @@
+use scylla::{DeserializeRow, SerializeRow};
 use serde::Serialize;
+use uuid::Uuid;
 
 #[derive(Serialize)]
 pub struct User {
@@ -10,12 +12,13 @@ pub struct User {
 #[derive(Serialize, Clone)]
 pub struct CreateUser {
     pub username: String,
+    pub email: String,
     pub password: String,
-    pub repassword: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, DeserializeRow, SerializeRow)]
 pub struct CreatedUser {
-    pub id: u64,
+    pub id: Uuid,
     pub username: String,
+    pub email: String,
 }

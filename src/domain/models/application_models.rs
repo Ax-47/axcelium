@@ -3,6 +3,8 @@ use scylla::value::CqlTimestamp;
 use scylla::{DeserializeRow, SerializeRow};
 use chrono::Utc;
 
+use super::app_config::AppConfig;
+
 #[derive(Debug, Clone, DeserializeRow, SerializeRow)]
 pub struct Application {
     pub organization_id: Uuid,
@@ -11,12 +13,13 @@ pub struct Application {
     pub description: String,
     pub client_id: Uuid,
     pub client_secret: String,
+    pub config: String,
     pub created_at: CqlTimestamp,
     pub updated_at: CqlTimestamp,
 }
 
 impl Application {
-    pub fn new(organization_id:Uuid,name:String,description:String,hashed_client_secret: String) -> Self {
+    pub fn new(organization_id:Uuid,name:String,description:String,hashed_client_secret: String,config: &AppConfig) -> Self {
         let now = CqlTimestamp(Utc::now().timestamp_millis());
         Self {
             organization_id ,
@@ -25,8 +28,18 @@ impl Application {
             description,
             client_id: Uuid::new_v4(),
             client_secret: hashed_client_secret,
+            config:config.to_string() ,
             created_at: now,
             updated_at: now,
         }
+    }
+    pub fn set_config(&mut self, config: &str) {
+        self.config = config.to_string();
+        self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());
+    }
+
+    // ฟังก์ชันที่ใช้ในการดึงข้อมูล config
+    pub fn get_config(&self) -> &str {
+        &self.config
     }
 }
