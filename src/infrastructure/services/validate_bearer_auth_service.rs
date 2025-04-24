@@ -15,3 +15,6 @@ impl VaildateBearerAuthMiddlewareServiceImpl {
 
 #[async_trait]
 pub trait VaildateBearerAuthMiddlewareService: Send + Sync {}
+impl VaildateBearerAuthMiddlewareService for VaildateBearerAuthMiddlewareServiceImpl {
+    
+}

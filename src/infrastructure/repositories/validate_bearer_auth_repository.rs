@@ -1,4 +1,3 @@
-
 use async_trait::async_trait;
 use redis::Client as RedisClient;
 use scylla::client::session::Session;
@@ -13,7 +12,8 @@ impl VaildateBearerAuthMiddlewareRepositoryImpl {
     }
 }
 
+#[async_trait]
+pub trait VaildateBearerAuthMiddlewareRepository: Send + Sync {}
 
 #[async_trait]
-pub trait VaildateBearerAuthMiddlewareRepository: Send + Sync {
-}
+impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepositoryImpl {}

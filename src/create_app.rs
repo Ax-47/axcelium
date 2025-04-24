@@ -22,13 +22,15 @@ pub fn create_app(
 > {
     let hello_service = container.hello_service.clone();
     let user_service = container.user_service.clone();
+    let validate_bearer_auth_middleware_service = container.validate_bearer_auth_middleware_service.clone();
+    let validate_bearer_auth_middleware = ValidateBearerAuth::new(validate_bearer_auth_middleware_service);
     App::new()
         .app_data(web::Data::from(hello_service.clone()))
         .app_data(web::Data::from(user_service.clone()))
         .wrap(Logger::default())
         .service(web::scope("/hello").route("", web::get().to(hello_handler)))
         .service(web::scope("/users")
-            .wrap(ValidateBearerAuth)
+            .wrap(validate_bearer_auth_middleware)
             .route("", web::post().to(create_user_handle))
         )
 }
