@@ -38,7 +38,7 @@ CREATE TABLE axcelium.organizations (
 );
 
 
-CREATE TABLE axcelium.organizations_application_by_client_id (
+CREATE TABLE axcelium.applications_organization_by_client_id (
   client_id       UUID PRIMARY KEY,
   application_id  UUID,
   organization_id UUID,

@@ -5,7 +5,7 @@ use std::sync::Arc;
 async fn main() -> std::io::Result<()> {
     let database =Arc::new(get_db_pool().await);
     let container = Arc::new(Container::new(Arc::new(get_redis_client()),database.clone()));
-    init_application::create_organization(database.clone()).await;
+    init_application::InitialCore::new(database.clone()).init_core().await;
     println!("run server");
     let server =
         HttpServer::new(move || create_app(container.clone())).bind(("127.0.0.1", 6969))?;
