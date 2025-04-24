@@ -110,7 +110,7 @@ async fn create_application(session: Arc<Session>, organization_id: Uuid) {
         )
         .await
         .unwrap();
-
+    println!("Organization created with ID: {}",organization_id);
     println!("Application created with ID: {}", application_id);
     println!("Client ID: {}", client_id);
     println!("Client Secret: {}", client_secret);

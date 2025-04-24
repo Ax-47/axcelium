@@ -36,3 +36,18 @@ CREATE TABLE axcelium.organizations (
   created_at      TIMESTAMP,
   updated_at      TIMESTAMP
 );
+
+
+CREATE TABLE axcelium.organizations_application_by_client_id (
+  client_id       UUID PRIMARY KEY,
+  application_id  UUID,
+  organization_id UUID,
+  client_secret   TEXT,
+  organization_name            TEXT,
+  organization_slug            TEXT,
+  application_name            TEXT,
+  application_description     TEXT,
+  is_active       BOOLEAN,
+  created_at      TIMESTAMP,
+  updated_at      TIMESTAMP
+);

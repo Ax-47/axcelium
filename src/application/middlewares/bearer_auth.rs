@@ -37,7 +37,7 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        println!("Hi from start. You requested: {}", req.path());
+        println!("Hi from start. You requested: {:?}", req.headers());
         let fut = self.service.call(req);
         Box::pin(async move {
             let res = fut.await?;
