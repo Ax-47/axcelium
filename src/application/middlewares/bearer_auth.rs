@@ -7,9 +7,9 @@ use std::{
     future::{ready, Ready},
     sync::Arc,
 };
-
+use std::rc::Rc;
 use crate::infrastructure::services::validate_bearer_auth_service::VaildateBearerAuthMiddlewareService;
-
+use actix_web::HttpMessage;
 pub struct ValidateBearerAuth {
     middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
 }
@@ -20,7 +20,7 @@ impl ValidateBearerAuth {
 }
 impl<S, B> Transform<S, ServiceRequest> for ValidateBearerAuth
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>+ 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -32,20 +32,20 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         ready(Ok(ValidateBearerAuthMiddleware {
-            service,
+            service: Rc::new(service),
             middleware_service: Arc::clone(&self.middleware_service),
         }))
     }
 }
 
 pub struct ValidateBearerAuthMiddleware<S> {
-    service: S,
+    service:  Rc<S>,
     middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
 }
 
 impl<S, B> Service<ServiceRequest> for ValidateBearerAuthMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>+ 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -58,7 +58,7 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let middleware_service = self.middleware_service.clone();
         let bearer_token = req.headers().get("Authorization").cloned();
-        let fut = self.service.call(req);
+        let srv = self.service.clone();
         Box::pin(async move {
             let Some(header_value) = bearer_token else {
                 return Err(actix_web::error::ErrorBadRequest("not found token"));
@@ -71,8 +71,9 @@ where
                 return Err(actix_web::error::ErrorUnauthorized("missing Bearer prefix"));
             };
 
-            middleware_service.authentication(token.to_string()).await?;
-            let res = fut.await?;
+            let apporg=middleware_service.authentication(token.to_string()).await?;
+            req.extensions_mut().insert(apporg);
+            let res = srv.call(req).await?;
 
             println!("Hi from response");
             Ok(res)
