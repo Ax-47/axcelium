@@ -304,6 +304,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "futures",
+ "futures-util",
  "num-bigint 0.3.3",
  "redis",
  "scylla",
