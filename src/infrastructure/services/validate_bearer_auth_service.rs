@@ -14,7 +14,13 @@ impl VaildateBearerAuthMiddlewareServiceImpl {
 }
 
 #[async_trait]
-pub trait VaildateBearerAuthMiddlewareService: Send + Sync {}
+pub trait VaildateBearerAuthMiddlewareService: 'static +Send + Sync {
+    async fn authentication(&self,token:String);
+}
+
+#[async_trait]
 impl VaildateBearerAuthMiddlewareService for VaildateBearerAuthMiddlewareServiceImpl {
-    
+    async fn authentication(&self,token:String){
+        println!("token: {:?}",token);
+    }
 }

@@ -1,5 +1,4 @@
 use serde::Serialize;
-
 #[derive(Debug, Serialize)]
 pub struct CommonError {
     pub message: String,
@@ -19,6 +18,11 @@ pub struct RepositoryError {
 }
 #[derive(Debug)]
 pub struct ApiError(CommonError);
+impl ApiError {
+    pub fn new(message: String, code: i16) -> Self {
+        Self(CommonError { message, code })
+    }
+}
 
 impl From<CommonError> for ApiError {
     fn from(error: CommonError) -> ApiError {
@@ -42,7 +46,7 @@ impl From<RepositoryError> for CommonError {
     fn from(error: RepositoryError) -> Self {
         CommonError {
             message: error.message,
-            code:error.code,
+            code: error.code,
         }
     }
 }
@@ -50,7 +54,7 @@ impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(error: argon2::password_hash::Error) -> Self {
         RepositoryError {
             message: format!("failed to hash: {}", error),
-            code:500,
+            code: 500,
         }
     }
 }

@@ -1,14 +1,20 @@
-use std::{future::{ready, Ready}, sync::Arc};
-use actix_web::{ dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, };
+use actix_web::{
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
+    Error,
+};
 use futures_util::future::LocalBoxFuture;
+use std::{
+    future::{ready, Ready},
+    sync::Arc,
+};
 
 use crate::infrastructure::services::validate_bearer_auth_service::VaildateBearerAuthMiddlewareService;
 
-pub struct ValidateBearerAuth{
-    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>
+pub struct ValidateBearerAuth {
+    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
 }
 impl ValidateBearerAuth {
-    pub fn new (middleware_service:Arc<dyn VaildateBearerAuthMiddlewareService>)->Self{
+    pub fn new(middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>) -> Self {
         Self { middleware_service }
     }
 }
@@ -25,13 +31,16 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(ValidateBearerAuthMiddleware { service ,middleware_service:Arc::clone(&self.middleware_service)}))
+        ready(Ok(ValidateBearerAuthMiddleware {
+            service,
+            middleware_service: Arc::clone(&self.middleware_service),
+        }))
     }
 }
 
 pub struct ValidateBearerAuthMiddleware<S> {
     service: S,
-    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>
+    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
 }
 
 impl<S, B> Service<ServiceRequest> for ValidateBearerAuthMiddleware<S>
@@ -47,10 +56,22 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-
-        println!("Hi from start. You requested: {:?}", req.headers().get("Authorization").cloned());
+        let middleware_service = self.middleware_service.clone();
+        let bearer_token = req.headers().get("Authorization").cloned();
         let fut = self.service.call(req);
         Box::pin(async move {
+            let Some(header_value) = bearer_token else {
+                return Err(actix_web::error::ErrorBadRequest("not found token"));
+            };
+            let Ok(token_str) = header_value.to_str() else {
+                return Err(actix_web::error::ErrorBadRequest("invalid token format"));
+            };
+    
+            let Some(token) = token_str.strip_prefix("Bearer ") else {
+                return Err(actix_web::error::ErrorUnauthorized("missing Bearer prefix"));
+            };
+
+            middleware_service.authentication(token.to_string()).await;
             let res = fut.await?;
 
             println!("Hi from response");
