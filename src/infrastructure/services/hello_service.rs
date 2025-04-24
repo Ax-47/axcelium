@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::infrastructure::repositories::hello_repositories::HelloRepository;
+use crate::infrastructure::repositories::hello_repository::HelloRepository;
 use std::sync::Arc;
 #[derive(Clone)]
 pub struct HelloServiceImpl {

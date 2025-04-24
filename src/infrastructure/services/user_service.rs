@@ -5,7 +5,7 @@ use crate::{
         errors::repositories_errors::CommonError,
         models::user_models::{CreateUser, CreatedUser},
     },
-    infrastructure::repositories::user_repositories::UserRepository,
+    infrastructure::repositories::user_repository::UserRepository,
 };
 use std::sync::Arc;
 #[derive(Clone)]

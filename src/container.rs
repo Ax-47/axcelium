@@ -1,6 +1,6 @@
 
 use crate::infrastructure::{
-    repositories::{hello_repositories::{HelloRepository, HelloRepositoryImpl}, user_repositories::{UserRepository, UserRepositoryImpl}},
+    repositories::{hello_repository::{HelloRepository, HelloRepositoryImpl}, user_repository::{UserRepository, UserRepositoryImpl}},
 
     services::{hello_service::{HelloService, HelloServiceImpl}, user_service::{ UserService, UserServiceImpl}},
 };

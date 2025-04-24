@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use std::sync::Arc;
 
-use crate::infrastructure::repositories::validate_bearer_auth_repositories::VaildateBearerAuthMiddlewareRepository;
+use crate::infrastructure::repositories::validate_bearer_auth_repository::VaildateBearerAuthMiddlewareRepository;
 #[derive(Clone)]
 pub struct VaildateBearerAuthMiddlewareServiceImpl {
     pub repository: Arc<dyn VaildateBearerAuthMiddlewareRepository>,
