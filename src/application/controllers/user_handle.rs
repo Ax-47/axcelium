@@ -13,19 +13,16 @@ pub async fn create_user_handle(
     user_service: web::Data<dyn UserService>,
     post_data: web::Json<CreateUserDTO>,
 ) -> Result<web::Json<CreateUserResponse>, ApiError> {
-    println!("esfkld;a");
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    println!("{:?}", apporg);
     let created_user = user_service
         .create(
             apporg,
             post_data.into_inner().into(),
         )
         .await?;
-    println!("test");
     Ok(web::Json(created_user.into()))
 }

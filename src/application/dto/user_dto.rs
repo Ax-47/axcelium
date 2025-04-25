@@ -26,7 +26,7 @@ pub struct CreateUserResponse {
 impl From<CreatedUser> for CreateUserResponse {
     fn from(created_user: CreatedUser) -> Self {
         CreateUserResponse {
-            id: created_user.id.to_string(),
+            id: created_user.user_id.to_string(),
             username: created_user.username,
             email: created_user.email,
         }

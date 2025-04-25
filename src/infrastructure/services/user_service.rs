@@ -34,7 +34,7 @@ impl UserService for UserServiceImpl {
         let cloned = user.clone();
         let id = self.repository.create(c_apporg, cloned).await?;
         return Ok(CreatedUser {
-            id,
+            user_id:id,
             username: user.username,
             email: user.email
         });

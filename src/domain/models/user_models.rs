@@ -14,7 +14,7 @@ pub struct CreateUser {
 
 #[derive(Debug, Clone, DeserializeRow, SerializeRow)]
 pub struct CreatedUser {
-    pub id: Uuid,
+    pub user_id: Uuid,
     pub username: String,
     pub email: Option<String>,
 }

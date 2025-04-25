@@ -75,7 +75,6 @@ where
             req.extensions_mut().insert(apporg);
             let res = srv.call(req).await?;
 
-            println!("Hi from response");
             Ok(res)
         })
     }

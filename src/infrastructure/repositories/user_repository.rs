@@ -176,10 +176,22 @@ impl UserRepository for UserRepositoryImpl {
             user_id, organization_id, application_id,
             username, email, password_hash,
             created_at, updated_at,
-            is_active, is_verified, is_locked,
-            last_login, mfa_enabled, deactivated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        self.database.query_unpaged(query, user).await?;
+            is_active, is_verified, is_locked, mfa_enabled
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        self.database.query_unpaged(query,  (
+            user.user_id,
+            user.organization_id,
+            user.application_id,
+            user.username.clone(),
+            user.prepared_email(),
+            user.password_hash.clone(),
+            user.created_at,
+            user.updated_at,
+            user.is_active,
+            user.is_verified,
+            user.is_locked,
+            user.mfa_enabled,
+        )).await?;
 
         Ok(())
     }
@@ -243,7 +255,7 @@ impl UserRepository for UserRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<CreatedUser>> {
-        let query = "SELECT username FROM axcelium.users_by_email \
+        let query = "SELECT username,user_id,email FROM axcelium.users_by_email \
                     WHERE email = ? AND application_id = ? AND organization_id = ?";
 
         let result = self
@@ -262,7 +274,7 @@ impl UserRepository for UserRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<CreatedUser>> {
-        let query = "SELECT username FROM axcelium.users_by_username \
+        let query = "SELECT username,user_id,email FROM axcelium.users_by_username \
                 WHERE username = ? AND application_id = ? AND organization_id = ?";
         let result = self
             .database
