@@ -180,6 +180,7 @@ impl UserRepository for UserRepositoryImpl {
             last_login, mfa_enabled, deactivated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         self.database.query_unpaged(query, user).await?;
+
         Ok(())
     }
 
@@ -242,7 +243,7 @@ impl UserRepository for UserRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<CreatedUser>> {
-        let query = "SELECT username FROM users_by_email \
+        let query = "SELECT username FROM axcelium.users_by_email \
                     WHERE email = ? AND application_id = ? AND organization_id = ?";
 
         let result = self
