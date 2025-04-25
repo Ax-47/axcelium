@@ -53,7 +53,7 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
         let query = "
             SELECT client_id, application_id, organization_id, client_secret,
                     organization_name, organization_slug,
-                    application_name, application_description,
+                    application_name, application_description,application_config,contact_email,
                     is_active, created_at, updated_at
             FROM axcelium.applications_organization_by_client_id
             WHERE client_id = ?;
