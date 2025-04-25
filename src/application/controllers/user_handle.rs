@@ -22,8 +22,7 @@ pub async fn create_user_handle(
     println!("{:?}", apporg);
     let created_user = user_service
         .create(
-            apporg.application_id,
-            apporg.organization_id,
+            apporg,
             post_data.into_inner().into(),
         )
         .await?;

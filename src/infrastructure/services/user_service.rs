@@ -1,10 +1,8 @@
 use async_trait::async_trait;
-use uuid::Uuid;
-
 use crate::{
     domain::{
         errors::repositories_errors::RepositoryResult,
-        models::user_models::{CreateUser, CreatedUser},
+        models::{apporg_client_id_models::CleanAppOrgByClientId, user_models::{CreateUser, CreatedUser}},
     },
     infrastructure::repositories::user_repository::UserRepository,
 };
@@ -22,8 +20,7 @@ impl UserServiceImpl {
 pub trait UserService: 'static + Sync + Send {
     async fn create(
         &self,
-        app_id: Uuid,
-        org_id: Uuid,
+        c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
     ) -> RepositoryResult<CreatedUser>;
 }
@@ -31,15 +28,15 @@ pub trait UserService: 'static + Sync + Send {
 impl UserService for UserServiceImpl {
     async fn create(
         &self,
-        app_id: Uuid,
-        org_id: Uuid,
+        c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
     ) -> RepositoryResult<CreatedUser> {
         let cloned = user.clone();
-        let id = self.repository.create(app_id, org_id, cloned).await?;
+        let id = self.repository.create(c_apporg, cloned).await?;
         return Ok(CreatedUser {
             id,
             username: user.username,
+            email: user.email
         });
     }
 }

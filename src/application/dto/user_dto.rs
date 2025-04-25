@@ -4,7 +4,7 @@ use crate::domain::models::user_models::{CreateUser, CreatedUser};
 #[derive(Serialize,Deserialize)]
 pub struct CreateUserDTO {
     pub username: String,
-    pub email: String,
+    pub email: Option<String>,
     pub password: String,
 }
 impl From<CreateUserDTO> for CreateUser {
@@ -21,7 +21,7 @@ impl From<CreateUserDTO> for CreateUser {
 pub struct CreateUserResponse {
     pub id: String,
     pub username: String,
-    pub email: String,
+    pub email: Option<String>,
 }
 impl From<CreatedUser> for CreateUserResponse {
     fn from(created_user: CreatedUser) -> Self {

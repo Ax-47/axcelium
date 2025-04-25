@@ -88,3 +88,28 @@ CREATE TABLE axcelium.users_by_username (
   deactivated_at  TIMESTAMP,
   PRIMARY KEY ((username, application_id, organization_id), user_id)
 );
+
+CREATE TABLE axcelium.user_organizations (
+  organization_id               UUID,
+  user_id                       UUID,
+  role                          TEXT,
+  username                      TEXT,
+  user_email                    TEXT,
+  organization_name             TEXT,
+  organization_slug             TEXT,
+  contact_email                 TEXT,
+  joined_at                     TIMESTAMP,
+  PRIMARY KEY ((organization_id), user_id)
+);
+CREATE TABLE axcelium.user_organizations_by_user (
+  user_id                       UUID,
+  organization_id               UUID,
+  role                          TEXT,
+  username                      TEXT,
+  user_email                    TEXT,
+  organization_name             TEXT,
+  organization_slug             TEXT,
+  contact_email                 TEXT,
+  joined_at                     TIMESTAMP,
+  PRIMARY KEY ((user_id), organization_id)
+);

@@ -1,4 +1,4 @@
-use scylla::errors::FirstRowError;
+use scylla::errors::{ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError};
 use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
@@ -56,6 +56,15 @@ impl From<RepositoryError> for CommonError {
         }
     }
 }
+
+impl From<RepositoryError> for ApiError {
+    fn from(error: RepositoryError) -> Self {
+        ApiError(CommonError {
+            message: error.message,
+            code: error.code,
+        })
+    }
+}
 impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(error: argon2::password_hash::Error) -> Self {
         RepositoryError {
@@ -69,7 +78,33 @@ impl From<FirstRowError> for RepositoryError {
     fn from(error: FirstRowError) -> Self {
         RepositoryError {
             message: format!("failed to Query: {}", error),
-            code: 400,
+            code: 500,
+        }
+    }
+}
+
+impl From<MaybeFirstRowError> for RepositoryError {
+    fn from(error: MaybeFirstRowError) -> Self {
+        RepositoryError {
+            message: format!("failed to Query: {}", error),
+            code: 500,
+        }
+    }
+}
+impl From<ExecutionError> for RepositoryError {
+    fn from(error: ExecutionError) -> Self {
+        RepositoryError {
+            message: format!("DB query faile: {}", error),
+            code: 500,
+        }
+    }
+}
+
+impl From<IntoRowsResultError> for RepositoryError {
+    fn from(error: IntoRowsResultError) -> Self {
+        RepositoryError {
+            message: format!("DB query faile: {}", error),
+            code: 500,
         }
     }
 }

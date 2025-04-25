@@ -7,6 +7,7 @@ use scylla::errors::FirstRowError;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use crate::domain::models::app_config::AppConfig;
 use crate::domain::models::application_models::Application;
 use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
 use crate::domain::models::organization_models::Organization;
@@ -31,11 +32,13 @@ impl InitialCore {
         let hashed_client_secret = Self::hash_password(client_secret.to_string());
         let app_name = "Axcelium Core";
         let app_description = "The core SSO platform of Axcelium.";
+        let app_config = AppConfig::new(false,false);
         let app = Application::new(
             org.organization_id,
             app_name.to_string(),
             app_description.to_string(),
             hashed_client_secret,
+            &app_config
         );
         self.create_application(app.clone()).await;
         let org_app = AppOrgByClientId::new(org, app);
