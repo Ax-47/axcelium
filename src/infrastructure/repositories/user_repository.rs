@@ -262,7 +262,7 @@ impl UserRepository for UserRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<CreatedUser>> {
-        let query = "SELECT username FROM users_by_username \
+        let query = "SELECT username FROM axcelium.users_by_username \
                 WHERE username = ? AND application_id = ? AND organization_id = ?";
         let result = self
             .database
