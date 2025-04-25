@@ -10,11 +10,11 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
     Argon2, PasswordHash,
 };
-
 use async_trait::async_trait;
 use redis::Client as RedisClient;
 use scylla::client::session::Session;
 use std::sync::Arc;
+use std::time::Instant;
 use uuid::Uuid;
 pub struct UserRepositoryImpl {
     pub cache: Arc<RedisClient>,
@@ -85,22 +85,63 @@ impl UserRepository for UserRepositoryImpl {
         c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
     ) -> RepositoryResult<Uuid> {
+        let start_time = Instant::now();
+
+        // ขั้นตอน 1: get_config
+        let step1_start = Instant::now();
         let Ok(app_config) = c_apporg.get_config() else {
             return Err(RepositoryError::new(
                 "failed to read config".to_string(),
                 500,
             ));
         };
+        let step1_duration = step1_start.elapsed();
+        println!("get_config took: {:?}", step1_duration);
+
+        // ขั้นตอน 2: check_rule_name
+        let step2_start = Instant::now();
         self.check_rule_name(user.username.clone())?;
+        let step2_duration = step2_start.elapsed();
+        println!("check_rule_name took: {:?}", step2_duration);
+
+        // ขั้นตอน 3: check_rule_email_can_be_nullable
+        let step3_start = Instant::now();
         self.check_rule_email_can_be_nullable(app_config.clone(), user.clone(), c_apporg.clone())
             .await?;
+        let step3_duration = step3_start.elapsed();
+        println!(
+            "check_rule_email_can_be_nullable took: {:?}",
+            step3_duration
+        );
+
+        // ขั้นตอน 4: check_rule_is_must_username_unique
+        let step4_start = Instant::now();
         self.check_rule_is_must_username_unique(app_config.clone(), user.clone(), c_apporg.clone())
             .await?;
+        let step4_duration = step4_start.elapsed();
+        println!(
+            "check_rule_is_must_username_unique took: {:?}",
+            step4_duration
+        );
+
+        // ขั้นตอน 5: hash_password
+        let step5_start = Instant::now();
         let hashed_password = self.hash_password(user.password)?;
+        let step5_duration = step5_start.elapsed();
+        println!("hash_password took: {:?}", step5_duration);
+
+        // ขั้นตอน 6: create User
+        let step6_start = Instant::now();
         let new_user = User::new(c_apporg.clone(), user.username, hashed_password, user.email);
         let new_uorg = UserOrganization::new(c_apporg, new_user.clone());
         let user_id = new_user.user_id.clone();
         self.create_user(new_user, new_uorg).await?;
+        let step6_duration = step6_start.elapsed();
+        println!("create_user took: {:?}", step6_duration);
+
+        // ขั้นตอนสุดท้าย: หยุดจับเวลาทั้งฟังก์ชัน
+        let duration = start_time.elapsed();
+        println!("create function took: {:?}", duration);
 
         Ok(user_id)
     }
@@ -164,11 +205,14 @@ impl UserRepository for UserRepositoryImpl {
     }
 
     async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
-        self.insert_into_user(&user).await?;
-        self.insert_into_user_by_email(&user).await?;
-        self.insert_into_user_by_username(&user).await?;
-        self.insert_into_user_organizations(&u_org).await?;
-        self.insert_into_user_organizations_by_user(&u_org).await?;
+        let insert_tasks = vec![
+            self.insert_into_user(&user),
+            self.insert_into_user_by_email(&user),
+            self.insert_into_user_by_username(&user),
+            self.insert_into_user_organizations(&u_org),
+            self.insert_into_user_organizations_by_user(&u_org),
+        ];
+        futures::future::join_all(insert_tasks).await;
         Ok(())
     }
     async fn insert_into_user(&self, user: &User) -> RepositoryResult<()> {
@@ -178,20 +222,25 @@ impl UserRepository for UserRepositoryImpl {
             created_at, updated_at,
             is_active, is_verified, is_locked, mfa_enabled
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        self.database.query_unpaged(query,  (
-            user.user_id,
-            user.organization_id,
-            user.application_id,
-            user.username.clone(),
-            user.prepared_email(),
-            user.password_hash.clone(),
-            user.created_at,
-            user.updated_at,
-            user.is_active,
-            user.is_verified,
-            user.is_locked,
-            user.mfa_enabled,
-        )).await?;
+        self.database
+            .query_unpaged(
+                query,
+                (
+                    user.user_id,
+                    user.organization_id,
+                    user.application_id,
+                    user.username.clone(),
+                    user.prepared_email(),
+                    user.password_hash.clone(),
+                    user.created_at,
+                    user.updated_at,
+                    user.is_active,
+                    user.is_verified,
+                    user.is_locked,
+                    user.mfa_enabled,
+                ),
+            )
+            .await?;
 
         Ok(())
     }
