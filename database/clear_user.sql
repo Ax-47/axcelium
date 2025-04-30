@@ -12,4 +12,3 @@ TRUNCATE axcelium.user_organizations;
 -- user_organizations_by_user
 TRUNCATE axcelium.user_organizations_by_user;
 
-

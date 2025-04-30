@@ -4,7 +4,6 @@ use crate::application::middlewares::bearer_auth::ValidateBearerAuth;
 use crate::container::Container;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
-use actix_web::middleware::Logger;
 use actix_web::Error;
 use actix_web::{web, App};
 use std::sync::Arc;
@@ -27,7 +26,6 @@ pub fn create_app(
     App::new()
         .app_data(web::Data::from(hello_service.clone()))
         .app_data(web::Data::from(user_service.clone()))
-        .wrap(Logger::default())
         .service(web::scope("/hello").route("", web::get().to(hello_handler)))
         .service(web::scope("/users")
             .wrap(validate_bearer_auth_middleware)
