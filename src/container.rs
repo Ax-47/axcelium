@@ -1,4 +1,5 @@
 use crate::infrastructure::{
+    database::user_repository::UserDatabaseRepositoryImpl,
     repositories::{
         hello_repository::{HelloRepository, HelloRepositoryImpl},
         user_repository::{UserRepository, UserRepositoryImpl},
@@ -31,8 +32,9 @@ impl Container {
         let hello_service = Arc::new(HelloServiceImpl {
             repository: hello_repository,
         });
+        let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
         let user_repository: Arc<dyn UserRepository> =
-            Arc::new(UserRepositoryImpl::new(cache.clone(), database.clone()));
+            Arc::new(UserRepositoryImpl::new(cache.clone(), user_database_repository));
         let user_service = Arc::new(UserServiceImpl {
             repository: user_repository,
         });
