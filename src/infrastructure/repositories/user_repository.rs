@@ -7,11 +7,10 @@ use crate::{
             user_models::{CreateUser, User, UserOrganization},
         },
     },
-    infrastructure::database::user_repository::UserDatabaseRepository,
-};
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2, PasswordHash,
+    infrastructure::{
+        database::user_repository::UserDatabaseRepository,
+        security::argon2_repository::PasswordHasherRepo,
+    },
 };
 use async_trait::async_trait;
 use redis::Client as RedisClient;
@@ -20,14 +19,20 @@ use std::time::Instant;
 use uuid::Uuid;
 pub struct UserRepositoryImpl {
     pub cache: Arc<RedisClient>,
-    pub database_repo: Arc<dyn UserDatabaseRepository>,
+    database_repo: Arc<dyn UserDatabaseRepository>,
+    hasher_repo: Arc<dyn PasswordHasherRepo>,
 }
 
 impl UserRepositoryImpl {
-    pub fn new(cache: Arc<RedisClient>, database_repo: Arc<dyn UserDatabaseRepository>) -> Self {
+    pub fn new(
+        cache: Arc<RedisClient>,
+        database_repo: Arc<dyn UserDatabaseRepository>,
+        hasher_repo: Arc<dyn PasswordHasherRepo>,
+    ) -> Self {
         Self {
             cache,
             database_repo,
+            hasher_repo,
         }
     }
 }
@@ -53,9 +58,6 @@ pub trait UserRepository: Send + Sync {
         user: CreateUser,
         c_apporg: CleanAppOrgByClientId,
     ) -> RepositoryResult<()>;
-    fn hash_password(&self, password: String) -> RepositoryResult<String>;
-    fn verify_password(&self, stored_hash: String, password: String) -> RepositoryResult<bool>;
-    async fn send_otp(&self);
 }
 
 #[async_trait]
@@ -106,7 +108,7 @@ impl UserRepository for UserRepositoryImpl {
 
         // ขั้นตอน 5: hash_password
         let step5_start = Instant::now();
-        let hashed_password = self.hash_password(user.password)?;
+        let hashed_password = self.hasher_repo.hash(user.password.as_str())?;
         let step5_duration = step5_start.elapsed();
         println!("hash_password took: {:?}", step5_duration);
 
@@ -185,22 +187,4 @@ impl UserRepository for UserRepositoryImpl {
         }
         Ok(())
     }
-
-    fn hash_password(&self, password: String) -> RepositoryResult<String> {
-        let argon2 = Argon2::default();
-        let salt = SaltString::generate(&mut OsRng);
-        let password_hash = argon2
-            .hash_password(password.as_bytes(), &salt)?
-            .to_string();
-        Ok(password_hash)
-    }
-
-    fn verify_password(&self, stored_hash: String, password: String) -> RepositoryResult<bool> {
-        let argon2 = Argon2::default();
-        let parsed_hash = PasswordHash::new(&stored_hash)?;
-        Ok(argon2
-            .verify_password(password.as_bytes(), &parsed_hash)
-            .is_ok())
-    }
-    async fn send_otp(&self) {}
 }

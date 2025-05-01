@@ -7,6 +7,7 @@ use crate::infrastructure::{
             VaildateBearerAuthMiddlewareRepository, VaildateBearerAuthMiddlewareRepositoryImpl,
         },
     },
+    security::argon2_repository::PasswordHasherImpl,
     services::{
         hello_service::{HelloService, HelloServiceImpl},
         user_service::{UserService, UserServiceImpl},
@@ -33,8 +34,12 @@ impl Container {
             repository: hello_repository,
         });
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
-        let user_repository: Arc<dyn UserRepository> =
-            Arc::new(UserRepositoryImpl::new(cache.clone(), user_database_repository));
+        let password_hasher = Arc::new(PasswordHasherImpl::new());
+        let user_repository: Arc<dyn UserRepository> = Arc::new(UserRepositoryImpl::new(
+            cache.clone(),
+            user_database_repository,
+            password_hasher,
+        ));
         let user_service = Arc::new(UserServiceImpl {
             repository: user_repository,
         });
