@@ -39,7 +39,6 @@ pub trait UserRepository: Send + Sync {
         user: CreateUser,
     ) -> RepositoryResult<Uuid>;
 
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
     fn check_rule_name(&self, rule_name: String) -> RepositoryResult<()>;
     async fn check_rule_email_can_be_nullable(
         &self,
@@ -116,7 +115,7 @@ impl UserRepository for UserRepositoryImpl {
         let new_user = User::new(c_apporg.clone(), user.username, hashed_password, user.email);
         let new_uorg = UserOrganization::new(c_apporg, new_user.clone());
         let user_id = new_user.user_id.clone();
-        self.create_user(new_user, new_uorg).await?;
+        self.database_repo.create_user(new_user, new_uorg).await?;
         let step6_duration = step6_start.elapsed();
         println!("create_user took: {:?}", step6_duration);
 
@@ -187,18 +186,6 @@ impl UserRepository for UserRepositoryImpl {
         Ok(())
     }
 
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
-        let insert_tasks = vec![
-            self.database_repo.insert_into_user(&user),
-            self.database_repo.insert_into_user_by_email(&user),
-            self.database_repo.insert_into_user_by_username(&user),
-            self.database_repo.insert_into_user_organizations(&u_org),
-            self.database_repo
-                .insert_into_user_organizations_by_user(&u_org),
-        ];
-        futures::future::join_all(insert_tasks).await;
-        Ok(())
-    }
     fn hash_password(&self, password: String) -> RepositoryResult<String> {
         let argon2 = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);

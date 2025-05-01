@@ -18,6 +18,7 @@ impl UserDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait UserDatabaseRepository: Send + Sync {
+    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
     async fn insert_into_user(&self, user: &User) -> RepositoryResult<()>;
     async fn insert_into_user_by_email(&self, user: &User) -> RepositoryResult<()>;
     async fn insert_into_user_by_username(&self, user: &User) -> RepositoryResult<()>;
@@ -46,6 +47,17 @@ pub trait UserDatabaseRepository: Send + Sync {
 
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
+    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
+        let insert_tasks = vec![
+            self.insert_into_user(&user),
+            self.insert_into_user_by_email(&user),
+            self.insert_into_user_by_username(&user),
+            self.insert_into_user_organizations(&u_org),
+            self.insert_into_user_organizations_by_user(&u_org),
+        ];
+        futures::future::join_all(insert_tasks).await;
+        Ok(())
+    }
     async fn insert_into_user(&self, user: &User) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.users (
             user_id, organization_id, application_id,
