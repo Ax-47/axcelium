@@ -14,12 +14,12 @@ impl PasswordHasherImpl {
 }
 
 #[async_trait]
-pub trait PasswordHasherRepo: Send + Sync {
+pub trait PasswordHasherRepository: Send + Sync {
     fn hash(&self, password: &str) -> RepositoryResult<String>;
     fn verify(&self, hashed: &str, plain: &str) -> RepositoryResult<bool>;
 }
 #[async_trait]
-impl PasswordHasherRepo for PasswordHasherImpl {
+impl PasswordHasherRepository for PasswordHasherImpl {
     fn hash(&self, password: &str) -> RepositoryResult<String> {
         let salt = SaltString::generate(&mut OsRng);
         let hash = Argon2::default()

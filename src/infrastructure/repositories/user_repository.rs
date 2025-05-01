@@ -2,37 +2,39 @@ use crate::{
     domain::{
         errors::repositories_errors::{RepositoryError, RepositoryResult},
         models::{
-            app_config::AppConfig,
             apporg_client_id_models::CleanAppOrgByClientId,
             user_models::{CreateUser, User, UserOrganization},
         },
     },
     infrastructure::{
         database::user_repository::UserDatabaseRepository,
-        security::argon2_repository::PasswordHasherRepo,
+        rule_checker::user_rule::UserRuleCheckerRepository,
+        security::argon2_repository::PasswordHasherRepository,
     },
 };
 use async_trait::async_trait;
 use redis::Client as RedisClient;
 use std::sync::Arc;
-use std::time::Instant;
 use uuid::Uuid;
 pub struct UserRepositoryImpl {
     pub cache: Arc<RedisClient>,
     database_repo: Arc<dyn UserDatabaseRepository>,
-    hasher_repo: Arc<dyn PasswordHasherRepo>,
+    hasher_repo: Arc<dyn PasswordHasherRepository>,
+    user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
 }
 
 impl UserRepositoryImpl {
     pub fn new(
         cache: Arc<RedisClient>,
         database_repo: Arc<dyn UserDatabaseRepository>,
-        hasher_repo: Arc<dyn PasswordHasherRepo>,
+        hasher_repo: Arc<dyn PasswordHasherRepository>,
+        user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
     ) -> Self {
         Self {
             cache,
             database_repo,
             hasher_repo,
+            user_rule_repo,
         }
     }
 }
@@ -43,21 +45,6 @@ pub trait UserRepository: Send + Sync {
         c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
     ) -> RepositoryResult<Uuid>;
-
-    fn check_rule_name(&self, rule_name: String) -> RepositoryResult<()>;
-    async fn check_rule_email_can_be_nullable(
-        &self,
-        app_config: AppConfig,
-        user: CreateUser,
-        c_apporg: CleanAppOrgByClientId,
-    ) -> RepositoryResult<()>;
-
-    async fn check_rule_is_must_username_unique(
-        &self,
-        app_config: AppConfig,
-        user: CreateUser,
-        c_apporg: CleanAppOrgByClientId,
-    ) -> RepositoryResult<()>;
 }
 
 #[async_trait]
@@ -67,124 +54,31 @@ impl UserRepository for UserRepositoryImpl {
         c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
     ) -> RepositoryResult<Uuid> {
-        let start_time = Instant::now();
-
-        // ขั้นตอน 1: get_config
-        let step1_start = Instant::now();
         let Ok(app_config) = c_apporg.get_config() else {
             return Err(RepositoryError::new(
                 "failed to read config".to_string(),
                 500,
             ));
         };
-        let step1_duration = step1_start.elapsed();
-        println!("get_config took: {:?}", step1_duration);
 
-        // ขั้นตอน 2: check_rule_name
-        let step2_start = Instant::now();
-        self.check_rule_name(user.username.clone())?;
-        let step2_duration = step2_start.elapsed();
-        println!("check_rule_name took: {:?}", step2_duration);
+        self.user_rule_repo
+            .check_rule_name(user.username.as_str())?;
 
-        // ขั้นตอน 3: check_rule_email_can_be_nullable
-        let step3_start = Instant::now();
-        self.check_rule_email_can_be_nullable(app_config.clone(), user.clone(), c_apporg.clone())
+        self.user_rule_repo
+            .check_email_nullable(&app_config, &user, &c_apporg)
             .await?;
-        let step3_duration = step3_start.elapsed();
-        println!(
-            "check_rule_email_can_be_nullable took: {:?}",
-            step3_duration
-        );
 
-        // ขั้นตอน 4: check_rule_is_must_username_unique
-        let step4_start = Instant::now();
-        self.check_rule_is_must_username_unique(app_config.clone(), user.clone(), c_apporg.clone())
+        self.user_rule_repo
+            .check_username_unique(&app_config, &user, &c_apporg)
             .await?;
-        let step4_duration = step4_start.elapsed();
-        println!(
-            "check_rule_is_must_username_unique took: {:?}",
-            step4_duration
-        );
 
-        // ขั้นตอน 5: hash_password
-        let step5_start = Instant::now();
         let hashed_password = self.hasher_repo.hash(user.password.as_str())?;
-        let step5_duration = step5_start.elapsed();
-        println!("hash_password took: {:?}", step5_duration);
 
-        // ขั้นตอน 6: create User
-        let step6_start = Instant::now();
         let new_user = User::new(c_apporg.clone(), user.username, hashed_password, user.email);
         let new_uorg = UserOrganization::new(c_apporg, new_user.clone());
         let user_id = new_user.user_id.clone();
         self.database_repo.create_user(new_user, new_uorg).await?;
-        let step6_duration = step6_start.elapsed();
-        println!("create_user took: {:?}", step6_duration);
-
-        // ขั้นตอนสุดท้าย: หยุดจับเวลาทั้งฟังก์ชัน
-        let duration = start_time.elapsed();
-        println!("create function took: {:?}", duration);
 
         Ok(user_id)
-    }
-
-    fn check_rule_name(&self, rule_name: String) -> RepositoryResult<()> {
-        if rule_name.len() <= 2 || rule_name.len() >= 50 {
-            return Err(RepositoryError::new(
-                "username is not validate".to_string(),
-                400,
-            ));
-        }
-        Ok(())
-    }
-    async fn check_rule_is_must_username_unique(
-        &self,
-        app_config: AppConfig,
-        user: CreateUser,
-        c_apporg: CleanAppOrgByClientId,
-    ) -> RepositoryResult<()> {
-        if !app_config.is_must_name_unique {
-            return Ok(());
-        }
-        let fetched_user = self
-            .database_repo
-            .find_user_by_username(
-                user.username,
-                c_apporg.application_id,
-                c_apporg.organization_id,
-            )
-            .await?;
-        if fetched_user.is_some() {
-            return Err(RepositoryError::new(
-                "this username has used".to_string(),
-                400,
-            ));
-        }
-        Ok(())
-    }
-    async fn check_rule_email_can_be_nullable(
-        &self,
-        app_config: AppConfig,
-        user: CreateUser,
-        c_apporg: CleanAppOrgByClientId,
-    ) -> RepositoryResult<()> {
-        if app_config.can_allow_email_nullable {
-            return Ok(());
-        }
-        let Some(email) = user.email.as_ref() else {
-            return Err(RepositoryError::new("email is required".to_string(), 399));
-        };
-        let fetched_user = self
-            .database_repo
-            .find_user_by_email(
-                email.clone(),
-                c_apporg.application_id,
-                c_apporg.organization_id,
-            )
-            .await?;
-        if fetched_user.is_some() {
-            return Err(RepositoryError::new("this email has used".to_string(), 399));
-        }
-        Ok(())
     }
 }

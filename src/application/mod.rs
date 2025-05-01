@@ -1,3 +1,3 @@
 pub mod controllers;
-pub mod middlewares;
 pub mod dto;
+pub mod middlewares;
