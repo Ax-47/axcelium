@@ -1,0 +1,19 @@
+นี้คือ flow auth tenant sso ของฉัน 
+1 issue token 
+1.1 client req token
+1.2 สร้าง client_secret 
+1.3 สร้าง nonce 
+1.4 encrypted_secret =aes_gcm(server_key,client_secret, nonce);
+1.5 update app{
+    client_id: UUID,
+    app_name:string,
+    encrypted_secret: $encrypted_secret,
+}
+1.6 issue token Axcelium-core: Base64(client_id).Base64(client_secret).Base64(Nonce)
+
+2 verify token 
+2.1 get token 
+2.2 search token.client_id into apps
+2.3 compare(token.client_secret, decrypt(server_key,app.encrypted_secret,token.nonce))
+2.3.1 if it failed, return 401
+2.3.2 if it success, return next();

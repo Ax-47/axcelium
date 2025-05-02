@@ -34,7 +34,7 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
         let decoded_token = self.decode_base64_to_string(token)?;
         let (client_id, client_secret) = self.parse_axcelium_credentials(decoded_token)?;
         let apporg=self.find_apporg_by_client_id(client_id).await?;
-        if !self.verify_password(client_secret, apporg.client_secret.clone())?{
+        if !self.verify_password(client_secret, apporg.encrypted_client_secret.clone())?{
             return Err(MiddelwareError { message: "unauth".to_string(), code: 401 })
         }
         let clean_apporg= CleanAppOrgByClientId::from(apporg);

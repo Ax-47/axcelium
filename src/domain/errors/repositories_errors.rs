@@ -108,3 +108,21 @@ impl From<IntoRowsResultError> for RepositoryError {
         }
     }
 }
+
+impl From<aes_gcm::Error> for RepositoryError {
+    fn from(_: aes_gcm::Error) -> Self {
+        RepositoryError {
+            message: format!("Cipher failed."),
+            code: 500,
+        }
+    }
+}
+
+impl From<base64::DecodeError> for RepositoryError {
+    fn from(_: base64::DecodeError) -> Self {
+        RepositoryError {
+            message: format!("Cipher failed."),
+            code: 500,
+        }
+    }
+}
