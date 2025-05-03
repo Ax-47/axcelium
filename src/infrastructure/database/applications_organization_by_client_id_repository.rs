@@ -4,6 +4,7 @@ use crate::domain::{
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
+use uuid::Uuid;
 use std::sync::Arc;
 pub struct ApplicationsOrganizationByClientIdDatabaseRepositoryImpl {
     pub database: Arc<Session>,
@@ -17,6 +18,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepositoryImpl {
 #[async_trait]
 pub trait ApplicationsOrganizationByClientIdDatabaseRepository: Send + Sync {
     async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()>;
+    async fn find_apporg_by_client_id(&self, client: String) -> RepositoryResult<AppOrgByClientId>;
 }
 
 #[async_trait]
@@ -43,5 +45,25 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
     ";
         self.database.query_unpaged(query, &apporg).await?;
         Ok(())
+    }
+    async fn find_apporg_by_client_id(&self, client: String) -> RepositoryResult<AppOrgByClientId> {
+        let client_id = Uuid::parse_str(&client)?;
+        let query = "
+            SELECT client_id, application_id, organization_id, client_secret,
+                    organization_name, organization_slug,
+                    application_name, application_description,application_config,contact_email,
+                    is_active, created_at, updated_at
+            FROM axcelium.applications_organization_by_client_id
+            WHERE client_id = ?;
+        ";
+
+        let row = self
+            .database
+            .query_unpaged(query, (client_id,))
+            .await?
+            .into_rows_result()?
+            .first_row::<AppOrgByClientId>()?;
+
+        Ok(row)
     }
 }

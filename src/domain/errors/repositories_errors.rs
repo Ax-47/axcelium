@@ -65,6 +65,14 @@ impl From<RepositoryError> for ApiError {
         })
     }
 }
+impl From<uuid::Error> for RepositoryError {
+    fn from(_: uuid::Error) -> Self {
+        RepositoryError {
+            message: "invalid UUID for client_id".to_string(),
+            code: 400,
+        }
+    }
+}
 impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(error: argon2::password_hash::Error) -> Self {
         RepositoryError {
