@@ -28,7 +28,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
 {
     async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()> {
         let query = "
-         INSERT INTO axcelium.applications_organization_by_client_id (
+            INSERT INTO axcelium.applications_organization_by_client_id (
                 client_id,
                 application_id,
                 organization_id,
