@@ -10,7 +10,6 @@ async fn main() -> std::io::Result<()> {
     let container = Arc::new(Container::new(
         Arc::new(get_redis_client()),
         Arc::new(get_db_pool().await),
-        true,
     ).await);
     println!("run server");
     let server =

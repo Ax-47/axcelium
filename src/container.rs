@@ -39,8 +39,13 @@ impl Container {
     fn get_env(key: &str) -> String {
         env::var(key).unwrap()
     }
+    
+    fn get_env_bool(key: &str) -> bool {
+        env::var(key).map(|v| v == "true").unwrap_or(false)
+    }
+
     // todo split them into fn create_repo, fn create_service, fn create_middleware
-    pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>, do_lunch_initial: bool) -> Self {
+    pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
         let secret=Self::get_env("CORE_SECRET");
         //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
@@ -75,7 +80,8 @@ impl Container {
             apporg_by_client_id_db_repo,
         ));
         let initial_core_service = Arc::new(InitialCoreServiceImpl::new(initial_core_repository));
-        initial_core_service.lunch(do_lunch_initial).await;
+        let do_gen_core = Self::get_env_bool("CORE_GENRATE_CORE_ORG_APP");
+        initial_core_service.lunch(do_gen_core).await;
         //controllers
         let hello_service = Arc::new(HelloServiceImpl {
             repository: hello_repository,

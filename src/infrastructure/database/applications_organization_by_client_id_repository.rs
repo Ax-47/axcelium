@@ -16,27 +16,32 @@ impl ApplicationsOrganizationByClientIdDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait ApplicationsOrganizationByClientIdDatabaseRepository: Send + Sync {
-    async fn create_apporg_by_client_id(&self, app: AppOrgByClientId) -> RepositoryResult<()>;
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl ApplicationsOrganizationByClientIdDatabaseRepository
     for ApplicationsOrganizationByClientIdDatabaseRepositoryImpl
 {
-    async fn create_apporg_by_client_id(&self, app: AppOrgByClientId) -> RepositoryResult<()> {
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()> {
         let query = "
-        INSERT INTO axcelium.applications (
-            organization_id,
-            application_id,
-            name,
-            description,
-            client_id,
-            client_secret,
-            created_at,
-            updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+         INSERT INTO axcelium.applications_organization_by_client_id (
+                client_id,
+                application_id,
+                organization_id,
+                encrypted_client_secret,
+                organization_name,
+                organization_slug,
+                application_name,
+                application_description,
+                contact_email,
+                application_config,
+                is_active,
+                created_at,
+                updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ";
-        self.database.query_unpaged(query, &app).await?;
+        self.database.query_unpaged(query, &apporg).await?;
         Ok(())
     }
 }

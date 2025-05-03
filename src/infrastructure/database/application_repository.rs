@@ -29,10 +29,11 @@ impl ApplicationDatabaseRepository for ApplicationDatabaseRepositoryImpl {
             name,
             description,
             client_id,
-            client_secret,
+            encrypted_client_secret,
+            config,
             created_at,
             updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     ";
         self.database.query_unpaged(query, &app).await?;
         Ok(())

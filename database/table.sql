@@ -49,6 +49,7 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   application_name              TEXT,
   application_config            TEXT,
   application_description       TEXT,
+  contact_email                 TEXT,
   is_active                     BOOLEAN,
   created_at                    TIMESTAMP,
   updated_at                    TIMESTAMP
