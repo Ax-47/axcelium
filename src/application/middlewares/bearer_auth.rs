@@ -67,7 +67,7 @@ where
                 return Err(actix_web::error::ErrorBadRequest("invalid token format"));
             };
     
-            let Some(token) = token_str.strip_prefix("Bearer ") else {
+            let Some(token) = token_str.strip_prefix("axcelium-core: ") else {
                 return Err(actix_web::error::ErrorUnauthorized("missing Bearer prefix"));
             };
 

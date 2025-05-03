@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use std::sync::Arc;
+use uuid::Uuid;
 
 use crate::domain::errors::repositories_errors::{RepositoryError, RepositoryResult};
 use crate::{
@@ -31,10 +32,8 @@ impl VaildateBearerAuthMiddlewareRepositoryImpl {
 #[async_trait]
 pub trait VaildateBearerAuthMiddlewareRepository: Send + Sync {
     async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId>;
-    fn parse_axcelium_credentials(
-        &self,
-        input: String,
-    ) -> RepositoryResult<(String, String, String)>;
+    fn parse_axcelium_credentials(&self, input: String)
+        -> RepositoryResult<(Uuid, String, String)>;
 }
 
 #[async_trait]
@@ -62,8 +61,9 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
     fn parse_axcelium_credentials(
         &self,
         input: String,
-    ) -> RepositoryResult<(String, String, String)> {
+    ) -> RepositoryResult<(Uuid, String, String)> {
         // input base64
+        println!("{}", input);
         let without_prefix =
             input
                 .strip_prefix("axcelium-core: ")
@@ -78,13 +78,17 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
                 code: 400,
             });
         }
-        let decoded_client_id = self.base64_repo.decode(parts[0])?;
-        let decoded_client_key = self.base64_repo.decode(parts[1])?;
-        let decoded_client_secret = self.base64_repo.decode(parts[2])?;
 
+        println!("{:?}", parts);
+        let decoded_client_id = self.base64_repo.decode(parts[0])?;
+        let decoded_client_secret = self.base64_repo.decode(parts[2])?;
         Ok((
-            String::from_utf8_lossy(&decoded_client_id).into_owned(),
-            String::from_utf8_lossy(&decoded_client_key).into_owned(),
+            Uuid::parse_str(
+                String::from_utf8_lossy(&decoded_client_id)
+                    .into_owned()
+                    .as_str(),
+            )?,
+            parts[1].to_owned(),
             String::from_utf8_lossy(&decoded_client_secret).into_owned(),
         ))
     }

@@ -56,13 +56,13 @@ impl InitialCoreRepository for InitialCoreImpl {
             .await
             .unwrap();
 
-        println!("ORGANIZATION_ID= {}", org_app.organization_id);
-        println!("APPLICATION_ID= {}", org_app.application_id);
-        println!("CLIENT_ID= {}", org_app.client_id);
-        println!("CLIENT_SECRET= {}", client_secret);
-        println!("CLIENT_KEY= {}", key);
+        println!("CORE_ORGANIZATION_ID= {}", org_app.organization_id);
+        println!("CORE_APPLICATION_ID= {}", org_app.application_id);
+        println!("CORE_CLIENT_ID= {}", org_app.client_id);
+        println!("CORE_CLIENT_SECRET= {}", client_secret);
+        println!("CORE_CLIENT_KEY= {}", key);
         println!(
-            "CLIENT_TOKEN= axcelium-core: {}",
+            "CORE_CLIENT_TOKEN= axcelium-core: {}",
             self.create_client_token(org_app.client_id, key, client_secret)
         );
     }
@@ -136,7 +136,7 @@ impl InitialCoreImpl {
         client_key: String,
         client_secret: String,
     ) -> String {
-        let encoded_id = self.base64_repo.encode(client_id.as_bytes());
+        let encoded_id = self.base64_repo.encode(client_id.to_string().as_bytes());
         format!("{}.{}.{}", encoded_id, client_key, client_secret)
     }
 }

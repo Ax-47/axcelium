@@ -103,7 +103,8 @@ pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
 // === Error Mappings ===
 impl From<uuid::Error> for RepositoryError {
-    fn from(_: uuid::Error) -> Self {
+    fn from(e: uuid::Error) -> Self {
+        println!("{}",e);
         RepositoryError::new("invalid UUID for client_id".to_string(), 400)
     }
 }
@@ -115,7 +116,8 @@ impl From<argon2::password_hash::Error> for RepositoryError {
 }
 
 impl From<FromUtf8Error> for RepositoryError {
-    fn from(_: FromUtf8Error) -> Self {
+    fn from(e: FromUtf8Error) -> Self {
+        println!("{}", e);
         RepositoryError::new("failed to convert".to_string(), 500)
     }
 }
