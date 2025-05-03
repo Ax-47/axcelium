@@ -1,5 +1,6 @@
 use scylla::errors::{ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError};
 use serde::Serialize;
+use std::string::FromUtf8Error;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
     pub message: String,
@@ -44,7 +45,42 @@ impl std::fmt::Display for ApiError {
 
 impl actix_web::ResponseError for ApiError {
     fn error_response(&self) -> actix_web::HttpResponse {
-        actix_web::HttpResponse::BadRequest().json(&self.0)
+        actix_web::HttpResponse::build(self.status_code()).json(self.0.message.clone())
+    }
+
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self.0.code {
+            401 => actix_web::http::StatusCode::UNAUTHORIZED,
+            403 => actix_web::http::StatusCode::FORBIDDEN,
+            404 => actix_web::http::StatusCode::NOT_FOUND,
+            500 => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            _ => actix_web::http::StatusCode::BAD_REQUEST,
+        }
+    }
+}
+
+impl std::fmt::Display for RepositoryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+impl actix_web::ResponseError for RepositoryError {
+    fn error_response(&self) -> actix_web::HttpResponse {
+        let body = CommonError {
+            message: self.message.clone(),
+            code: self.code,
+        };
+        actix_web::HttpResponse::build(self.status_code()).json(body)
+    }
+
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self.code {
+            401 => actix_web::http::StatusCode::UNAUTHORIZED,
+            403 => actix_web::http::StatusCode::FORBIDDEN,
+            404 => actix_web::http::StatusCode::NOT_FOUND,
+            500 => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            _ => actix_web::http::StatusCode::BAD_REQUEST,
+        }
     }
 }
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
@@ -82,6 +118,14 @@ impl From<argon2::password_hash::Error> for RepositoryError {
     }
 }
 
+impl From<FromUtf8Error> for RepositoryError {
+    fn from(_error: FromUtf8Error) -> Self {
+        RepositoryError {
+            message: format!("failed to convert"),
+            code: 500,
+        }
+    }
+}
 impl From<FirstRowError> for RepositoryError {
     fn from(error: FirstRowError) -> Self {
         RepositoryError {

@@ -27,8 +27,8 @@ use crate::infrastructure::{
 };
 use redis::Client as RedisClient;
 use scylla::client::session::Session;
-use std::sync::Arc;
 use std::env;
+use std::sync::Arc;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
     pub user_service: Arc<dyn UserService>,
@@ -39,14 +39,14 @@ impl Container {
     fn get_env(key: &str) -> String {
         env::var(key).unwrap()
     }
-    
+
     fn get_env_bool(key: &str) -> bool {
         env::var(key).map(|v| v == "true").unwrap_or(false)
     }
 
     // todo split them into fn create_repo, fn create_service, fn create_middleware
     pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
-        let secret=Self::get_env("CORE_SECRET");
+        let secret = Self::get_env("CORE_SECRET");
         //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
         let password_hasher = Arc::new(PasswordHasherImpl::new());
@@ -70,7 +70,9 @@ impl Container {
         let validate_bearer_auth_middleware_repository: Arc<
             dyn VaildateBearerAuthMiddlewareRepository,
         > = Arc::new(VaildateBearerAuthMiddlewareRepositoryImpl::new(
-            cache, database,
+            apporg_by_client_id_db_repo.clone(),
+            base64_repo.clone(),
+            aes_repo.clone(),
         ));
         let initial_core_repository = Arc::new(InitialCoreImpl::new(
             aes_repo,
