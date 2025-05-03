@@ -4,9 +4,22 @@ use super::organization_models::Organization;
 use chrono::Utc;
 use scylla::value::CqlTimestamp;
 use scylla::{DeserializeRow, SerializeRow};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
-
-#[derive(Debug, Clone, DeserializeRow, SerializeRow)]
+fn serialize_cql_timestamp<S>(ts: &CqlTimestamp, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_i64(ts.0) // timestamp in milliseconds
+}
+fn deserialize_cql_timestamp<'de, D>(deserializer: D) -> Result<CqlTimestamp, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let millis = i64::deserialize(deserializer)?;
+    Ok(CqlTimestamp(millis))
+}
+#[derive(Debug, Clone, DeserializeRow, SerializeRow, Serialize, Deserialize)]
 pub struct AppOrgByClientId {
     pub client_id: Uuid,
     pub application_id: Uuid,
@@ -19,7 +32,15 @@ pub struct AppOrgByClientId {
     pub application_config: String,
     pub contact_email:String,
     pub is_active: bool,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
     pub created_at: CqlTimestamp,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
     pub updated_at: CqlTimestamp,
 }
 

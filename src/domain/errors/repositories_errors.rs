@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use scylla::errors::{ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError};
 use serde::Serialize;
 use std::{fmt, string::FromUtf8Error};
-
+use redis::RedisError;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
     pub message: String,
@@ -155,5 +155,15 @@ impl From<aes_gcm::Error> for RepositoryError {
 impl From<base64::DecodeError> for RepositoryError {
     fn from(_: base64::DecodeError) -> Self {
         RepositoryError::new("Cipher failed.".to_string(), 500)
+    }
+}
+impl From<RedisError> for  RepositoryError{
+    fn from(_: RedisError) -> Self {
+        RepositoryError::new("caching error failed.".to_string(), 500)
+    }
+}
+impl From< serde_json::Error> for  RepositoryError{
+    fn from(_: serde_json::Error) -> Self {
+        RepositoryError::new("convert error".to_string(), 500)
     }
 }

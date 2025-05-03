@@ -13,11 +13,9 @@ use crate::{
     },
 };
 use async_trait::async_trait;
-use redis::Client as RedisClient;
 use std::sync::Arc;
 use uuid::Uuid;
 pub struct UserRepositoryImpl {
-    pub cache: Arc<RedisClient>,
     database_repo: Arc<dyn UserDatabaseRepository>,
     hasher_repo: Arc<dyn PasswordHasherRepository>,
     user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
@@ -25,13 +23,11 @@ pub struct UserRepositoryImpl {
 
 impl UserRepositoryImpl {
     pub fn new(
-        cache: Arc<RedisClient>,
         database_repo: Arc<dyn UserDatabaseRepository>,
         hasher_repo: Arc<dyn PasswordHasherRepository>,
         user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
     ) -> Self {
         Self {
-            cache,
             database_repo,
             hasher_repo,
             user_rule_repo,

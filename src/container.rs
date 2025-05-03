@@ -25,7 +25,7 @@ use crate::infrastructure::{
         },
     },
 };
-use redis::Client as RedisClient;
+use redis::cluster::ClusterClient;
 use scylla::client::session::Session;
 use std::env;
 use std::sync::Arc;
@@ -45,7 +45,7 @@ impl Container {
     }
 
     // todo split them into fn create_repo, fn create_service, fn create_middleware
-    pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
+    pub async fn new(_cache: Arc<ClusterClient>, database: Arc<Session>) -> Self {
         let secret = Self::get_env("CORE_SECRET");
         //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
@@ -62,7 +62,6 @@ impl Container {
         );
         let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
         let user_repository: Arc<dyn UserRepository> = Arc::new(UserRepositoryImpl::new(
-            cache.clone(),
             user_database_repository,
             password_hasher,
             user_rule_chacker,

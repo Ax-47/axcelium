@@ -1,9 +1,15 @@
 use dotenv::dotenv;
-use redis::Client;
+use redis::cluster::ClusterClient;
 use std::env;
 
-pub fn get_redis_client() -> Client {
+pub fn get_redis_cluster_client() ->ClusterClient {
     dotenv().ok();
-    let redis_url = env::var("REDIS_URL").expect("REDIS_URL must be set");
-    redis::Client::open(redis_url).expect("Failed to Connect")
+    let redis_urls = env::var("REDIS_URLS").expect("REDIS_URLS must be set");
+
+    let nodes: Vec<String> = redis_urls
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .collect();
+
+    ClusterClient::new(nodes).unwrap()
 }
