@@ -74,7 +74,6 @@ impl Container {
             app_db_repo,
             apporg_by_client_id_db_repo,
         ));
-        
         let initial_core_service = Arc::new(InitialCoreServiceImpl::new(initial_core_repository));
         initial_core_service.lunch(do_lunch_initial).await;
         //controllers
