@@ -39,8 +39,8 @@ impl Application {
             updated_at: now,
         }
     }
-    pub fn gen_client_secret() -> Result<[u8; 32], rand_core::OsError> {
-        let mut secret = [0u8; 32];
+    pub fn gen_client_secret() -> Result<Vec<u8>, rand_core::OsError> {
+        let mut secret = vec![0u8; 32];
         OsRng.try_fill_bytes(&mut secret)?;
         Ok(secret)
     }

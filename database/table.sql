@@ -16,15 +16,15 @@ CREATE TABLE axcelium.users (
   PRIMARY KEY ((organization_id, application_id), user_id)
 );
 CREATE TABLE axcelium.applications (
-  application_id  UUID,
-  organization_id UUID,
-  name            TEXT,
-  description     TEXT,
-  client_id       UUID,
-  client_secret   TEXT,
-  config          TEXT,
-  created_at      TIMESTAMP,
-  updated_at      TIMESTAMP,
+  application_id            UUID,
+  organization_id           UUID,
+  name                      TEXT,
+  description               TEXT,
+  client_id                 UUID,
+  encrypted_client_secret   TEXT,
+  config                    TEXT,
+  created_at                TIMESTAMP,
+  updated_at                TIMESTAMP,
   PRIMARY KEY (organization_id, application_id)
 );
 
@@ -43,7 +43,7 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   client_id                     UUID PRIMARY KEY,
   application_id                UUID,
   organization_id               UUID,
-  client_secret                 TEXT,
+  encrypted_client_secret       TEXT,
   organization_name             TEXT,
   organization_slug             TEXT,
   application_name              TEXT,

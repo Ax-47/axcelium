@@ -8,7 +8,7 @@ use actix_web::Error;
 use actix_web::{web, App};
 use std::sync::Arc;
 
-pub fn create_app(
+pub fn create_router(
     container: Arc<Container>,
 ) -> App<
     impl ServiceFactory<
@@ -23,6 +23,7 @@ pub fn create_app(
     let user_service = container.user_service.clone();
     let validate_bearer_auth_middleware_service = container.validate_bearer_auth_middleware_service.clone();
     let validate_bearer_auth_middleware = ValidateBearerAuth::new(validate_bearer_auth_middleware_service);
+    // todo : split them into /router
     App::new()
         .app_data(web::Data::from(hello_service.clone()))
         .app_data(web::Data::from(user_service.clone()))

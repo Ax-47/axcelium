@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose, Engine as _};
 
-pub trait Base64Repository {
+pub trait Base64Repository: Send + Sync {
     fn encode(&self, bytes: &[u8]) -> String;
     fn decode(&self, b64: &str) -> Result<Vec<u8>, base64::DecodeError>;
 }

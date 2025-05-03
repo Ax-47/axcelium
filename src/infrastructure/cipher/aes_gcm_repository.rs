@@ -20,7 +20,7 @@ impl AesGcmCipherImpl {
 }
 
 #[async_trait]
-pub trait AesGcmCipherRepository {
+pub trait AesGcmCipherRepository: Send + Sync {
     async fn encrypt(&self, plaintext: &[u8]) -> RepositoryResult<(String, String)>; // base64(nonce), base64(ciphertext)
     async fn decrypt(&self, nonce_b64: &str, ciphertext_b64: &str) -> RepositoryResult<String>;
 }

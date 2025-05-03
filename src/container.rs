@@ -1,7 +1,14 @@
 use crate::infrastructure::{
-    database::user_repository::UserDatabaseRepositoryImpl,
+    cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
+    database::{
+        application_repository::ApplicationDatabaseRepositoryImpl,
+        applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepositoryImpl,
+        organization_repository::OrganizationDatabaseRepositoryImpl,
+        user_repository::UserDatabaseRepositoryImpl,
+    },
     repositories::{
         hello_repository::{HelloRepository, HelloRepositoryImpl},
+        initial_core::InitialCoreImpl,
         user_repository::{UserRepository, UserRepositoryImpl},
         validate_bearer_auth_repository::{
             VaildateBearerAuthMiddlewareRepository, VaildateBearerAuthMiddlewareRepositoryImpl,
@@ -11,6 +18,7 @@ use crate::infrastructure::{
     security::argon2_repository::PasswordHasherImpl,
     services::{
         hello_service::{HelloService, HelloServiceImpl},
+        initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
         user_service::{UserService, UserServiceImpl},
         validate_bearer_auth_service::{
             VaildateBearerAuthMiddlewareService, VaildateBearerAuthMiddlewareServiceImpl,
@@ -28,31 +36,51 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(cache: Arc<RedisClient>, database: Arc<Session>) -> Self {
-        //controllers
-        let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
-        let hello_service = Arc::new(HelloServiceImpl {
-            repository: hello_repository,
-        });
+    // todo split them into fn create_repo, fn create_service, fn create_middleware
+    pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>, do_lunch_initial: bool) -> Self {
+        //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
         let password_hasher = Arc::new(PasswordHasherImpl::new());
         let user_rule_chacker =
             Arc::new(UserRuleCheckerImpl::new(user_database_repository.clone()));
+        let aes_repo = Arc::new(AesGcmCipherImpl::new("adsasdasd".as_bytes()));
+        let base64_repo = Arc::new(Base64RepositoryImpl);
+
+        let org_db_repo = Arc::new(OrganizationDatabaseRepositoryImpl::new(database.clone()));
+        let app_db_repo = Arc::new(ApplicationDatabaseRepositoryImpl::new(database.clone()));
+        let apporg_by_client_id_db_repo = Arc::new(
+            ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()),
+        );
+        let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
         let user_repository: Arc<dyn UserRepository> = Arc::new(UserRepositoryImpl::new(
             cache.clone(),
             user_database_repository,
             password_hasher,
             user_rule_chacker,
         ));
-        let user_service = Arc::new(UserServiceImpl {
-            repository: user_repository,
-        });
-        //middlewares
         let validate_bearer_auth_middleware_repository: Arc<
             dyn VaildateBearerAuthMiddlewareRepository,
         > = Arc::new(VaildateBearerAuthMiddlewareRepositoryImpl::new(
             cache, database,
         ));
+        let initial_core_repository = Arc::new(InitialCoreImpl::new(
+            aes_repo,
+            base64_repo,
+            org_db_repo,
+            app_db_repo,
+            apporg_by_client_id_db_repo,
+        ));
+        
+        let initial_core_service = Arc::new(InitialCoreServiceImpl::new(initial_core_repository));
+        initial_core_service.lunch(do_lunch_initial).await;
+        //controllers
+        let hello_service = Arc::new(HelloServiceImpl {
+            repository: hello_repository,
+        });
+        let user_service = Arc::new(UserServiceImpl {
+            repository: user_repository,
+        });
+        //middlewares
         let validate_bearer_auth_middleware_service =
             Arc::new(VaildateBearerAuthMiddlewareServiceImpl {
                 repository: validate_bearer_auth_middleware_repository,
