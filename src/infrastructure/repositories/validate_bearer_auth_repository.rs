@@ -62,8 +62,6 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
         &self,
         input: String,
     ) -> RepositoryResult<(Uuid, String, String)> {
-        // input base64
-        println!("{}", input);
         let without_prefix =
             input
                 .strip_prefix("axcelium-core: ")
@@ -79,7 +77,6 @@ impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepo
             });
         }
 
-        println!("{:?}", parts);
         let decoded_client_id = self.base64_repo.decode(parts[0])?;
         let decoded_client_secret = self.base64_repo.decode(parts[2])?;
         Ok((

@@ -38,7 +38,6 @@ impl AesGcmCipherRepository for AesGcmCipherImpl {
     }
 
     async fn decrypt(&self, nonce_b64: &str, ciphertext_b64: &str) -> RepositoryResult<String> {
-        println!("{} {}",nonce_b64,ciphertext_b64);
         let nonce_bytes = general_purpose::STANDARD.decode(nonce_b64)?;
         let ciphertext_bytes = general_purpose::STANDARD.decode(ciphertext_b64)?;
         let nonce = Nonce::from_slice(&nonce_bytes);
