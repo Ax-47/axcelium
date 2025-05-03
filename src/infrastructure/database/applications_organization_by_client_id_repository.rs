@@ -19,7 +19,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepositoryImpl {
 pub trait ApplicationsOrganizationByClientIdDatabaseRepository: Send + Sync {
     async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()>;
     async fn find_apporg_by_client_id(&self, client_id: Uuid)
-        -> RepositoryResult<AppOrgByClientId>;
+        -> RepositoryResult<Option<AppOrgByClientId>>;
 }
 
 #[async_trait]
@@ -50,7 +50,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
     async fn find_apporg_by_client_id(
         &self,
         client_id: Uuid,
-    ) -> RepositoryResult<AppOrgByClientId> {
+    ) -> RepositoryResult<Option<AppOrgByClientId>> {
         let query = "
             SELECT client_id, application_id, organization_id, encrypted_client_secret,
                     organization_name, organization_slug,
@@ -65,7 +65,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
             .query_unpaged(query, (client_id,))
             .await?
             .into_rows_result()?
-            .first_row::<AppOrgByClientId>()?;
+            .maybe_first_row::<AppOrgByClientId>()?;
 
         Ok(row)
     }

@@ -1,0 +1,1 @@
+pub mod applications_organization_by_client_id_repository;

@@ -2,10 +2,10 @@ use crate::domain::models::app_config::AppConfig;
 use crate::domain::models::application_models::Application;
 use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
 use crate::domain::models::organization_models::Organization;
+use crate::infrastructure::cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository;
 use crate::infrastructure::cipher::aes_gcm_repository::AesGcmCipherRepository;
 use crate::infrastructure::cipher::base64_repository::Base64Repository;
 use crate::infrastructure::database::application_repository::ApplicationDatabaseRepository;
-use crate::infrastructure::database::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepository;
 use crate::infrastructure::database::organization_repository::OrganizationDatabaseRepository;
 use async_trait::async_trait;
 use std::env;
@@ -17,7 +17,7 @@ pub struct InitialCoreImpl {
     base64_repo: Arc<dyn Base64Repository>,
     org_db_repo: Arc<dyn OrganizationDatabaseRepository>,
     app_db_repo: Arc<dyn ApplicationDatabaseRepository>,
-    apporg_by_client_id_db_repo: Arc<dyn ApplicationsOrganizationByClientIdDatabaseRepository>,
+    apporg_by_client_id_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
 }
 
 #[async_trait]
@@ -51,7 +51,7 @@ impl InitialCoreRepository for InitialCoreImpl {
             .unwrap();
 
         let org_app = AppOrgByClientId::new(org, app);
-        self.apporg_by_client_id_db_repo
+        self.apporg_by_client_id_cachelayer_repo
             .create_apporg_by_client_id(org_app.clone())
             .await
             .unwrap();
@@ -74,14 +74,14 @@ impl InitialCoreImpl {
         base64_repo: Arc<dyn Base64Repository>,
         org_db_repo: Arc<dyn OrganizationDatabaseRepository>,
         app_db_repo: Arc<dyn ApplicationDatabaseRepository>,
-        apporg_by_client_id_db_repo: Arc<dyn ApplicationsOrganizationByClientIdDatabaseRepository>,
+        apporg_by_client_id_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
     ) -> Self {
         Self {
             aes_repo,
             base64_repo,
             org_db_repo,
             app_db_repo,
-            apporg_by_client_id_db_repo,
+            apporg_by_client_id_cachelayer_repo,
         }
     }
 

@@ -1,4 +1,6 @@
 use crate::infrastructure::{
+    cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
+    cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
     cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
     database::{
         application_repository::ApplicationDatabaseRepositoryImpl,
@@ -44,9 +46,13 @@ impl Container {
         env::var(key).map(|v| v == "true").unwrap_or(false)
     }
 
+    fn get_env_u64(key: &str) -> u64 {
+        env::var(key).map(|u| u.parse::<u64>().unwrap()).unwrap()
+    }
     // todo split them into fn create_repo, fn create_service, fn create_middleware
-    pub async fn new(_cache: Arc<ClusterClient>, database: Arc<Session>) -> Self {
+    pub async fn new(cache: Arc<ClusterClient>, database: Arc<Session>) -> Self {
         let secret = Self::get_env("CORE_SECRET");
+        let cache_ttl = Self::get_env_u64("APPLICATIONS_ORGANIZATION_CACHE_TTL");
         //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
         let password_hasher = Arc::new(PasswordHasherImpl::new());
@@ -60,6 +66,15 @@ impl Container {
         let apporg_by_client_id_db_repo = Arc::new(
             ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()),
         );
+
+        let apporg_by_client_id_cache_repo = Arc::new(
+            ApplicationsOrganizationByClientIdCacheImpl::new(cache, cache_ttl),
+        );
+        let apporg_by_client_id_cachelayer_repo =
+            Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
+                apporg_by_client_id_cache_repo,
+                apporg_by_client_id_db_repo,
+            ));
         let hello_repository: Arc<dyn HelloRepository> = Arc::new(HelloRepositoryImpl::new());
         let user_repository: Arc<dyn UserRepository> = Arc::new(UserRepositoryImpl::new(
             user_database_repository,
@@ -69,7 +84,7 @@ impl Container {
         let validate_bearer_auth_middleware_repository: Arc<
             dyn VaildateBearerAuthMiddlewareRepository,
         > = Arc::new(VaildateBearerAuthMiddlewareRepositoryImpl::new(
-            apporg_by_client_id_db_repo.clone(),
+            apporg_by_client_id_cachelayer_repo.clone(),
             base64_repo.clone(),
             aes_repo.clone(),
         ));
@@ -78,7 +93,7 @@ impl Container {
             base64_repo,
             org_db_repo,
             app_db_repo,
-            apporg_by_client_id_db_repo,
+            apporg_by_client_id_cachelayer_repo.clone(),
         ));
         let initial_core_service = Arc::new(InitialCoreServiceImpl::new(initial_core_repository));
         let do_gen_core = Self::get_env_bool("CORE_GENRATE_CORE_ORG_APP");

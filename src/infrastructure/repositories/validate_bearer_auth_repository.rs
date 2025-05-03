@@ -3,26 +3,26 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::domain::errors::repositories_errors::{RepositoryError, RepositoryResult};
+use crate::infrastructure::cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository;
 use crate::{
     domain::models::apporg_client_id_models::CleanAppOrgByClientId,
-    infrastructure::{
-        cipher::{aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository},
-        database::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepository,
+    infrastructure::cipher::{
+        aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
     },
 };
 pub struct VaildateBearerAuthMiddlewareRepositoryImpl {
-    apporg_db_repo: Arc<dyn ApplicationsOrganizationByClientIdDatabaseRepository>,
+    apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
     base64_repo: Arc<dyn Base64Repository>,
     aes_repo: Arc<dyn AesGcmCipherRepository>,
 }
 impl VaildateBearerAuthMiddlewareRepositoryImpl {
     pub fn new(
-        apporg_db_repo: Arc<dyn ApplicationsOrganizationByClientIdDatabaseRepository>,
+        apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
         base64_repo: Arc<dyn Base64Repository>,
         aes_repo: Arc<dyn AesGcmCipherRepository>,
     ) -> Self {
         Self {
-            apporg_db_repo,
+            apporg_cachelayer_repo,
             base64_repo,
             aes_repo,
         }
@@ -40,10 +40,17 @@ pub trait VaildateBearerAuthMiddlewareRepository: Send + Sync {
 impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepositoryImpl {
     async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId> {
         let (client_id, client_key, client_secret) = self.parse_axcelium_credentials(token)?;
-        let apporg = self
-            .apporg_db_repo
+        let Some(apporg) = self
+            .apporg_cachelayer_repo
             .find_apporg_by_client_id(client_id)
-            .await?;
+            .await?
+        else {
+            return Err(RepositoryError {
+                message: "no found".to_string(),
+                code: 404,
+            });
+        };
+
         let decrypted = self
             .aes_repo
             .decrypt(&client_key, &apporg.encrypted_client_secret)
