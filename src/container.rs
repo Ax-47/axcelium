@@ -28,7 +28,7 @@ use crate::infrastructure::{
 use redis::Client as RedisClient;
 use scylla::client::session::Session;
 use std::sync::Arc;
-
+use std::env;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
     pub user_service: Arc<dyn UserService>,
@@ -36,14 +36,18 @@ pub struct Container {
 }
 
 impl Container {
+    fn get_env(key: &str) -> String {
+        env::var(key).unwrap()
+    }
     // todo split them into fn create_repo, fn create_service, fn create_middleware
     pub async fn new(cache: Arc<RedisClient>, database: Arc<Session>, do_lunch_initial: bool) -> Self {
+        let secret=Self::get_env("CORE_SECRET");
         //repo
         let user_database_repository = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
         let password_hasher = Arc::new(PasswordHasherImpl::new());
         let user_rule_chacker =
             Arc::new(UserRuleCheckerImpl::new(user_database_repository.clone()));
-        let aes_repo = Arc::new(AesGcmCipherImpl::new("adsasdasd".as_bytes()));
+        let aes_repo = Arc::new(AesGcmCipherImpl::new(secret.as_bytes()));
         let base64_repo = Arc::new(Base64RepositoryImpl);
 
         let org_db_repo = Arc::new(OrganizationDatabaseRepositoryImpl::new(database.clone()));
