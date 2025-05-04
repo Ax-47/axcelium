@@ -8,11 +8,15 @@ use crate::{
 };
 use actix_web::HttpMessage;
 use actix_web::{web, Result};
+use validator::Validate;
 pub async fn create_user_handle(
     req: actix_web::HttpRequest,
     user_service: web::Data<dyn UserService>,
     post_data: web::Json<CreateUserPayload>,
 ) -> Result<web::Json<CreateUserResponse>, ApiError> {
+    post_data
+        .validate()
+        .map_err(|e| ApiError::new(e.to_string(), 400))?;
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
