@@ -1,14 +1,24 @@
-use std::env;
+use crate::domain::models::app_config::AppConfig;
 use serde::Deserialize;
-use std::{fs::File, io::BufReader, path::Path};
-
+use std::path::Path;
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
+    pub core: CoreConfig,
     pub database: DatabaseConfig,
     pub redis: RedisConfig,
-    pub core: CoreConfig,
+
+    #[serde(default)]
     pub organization: OrganizationConfig,
+
+    #[serde(default)]
     pub application: ApplicationConfig,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct CoreConfig {
+    pub secret: String,
+    pub generate_core_org_app: bool,
+    pub cache_ttl: u64,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -24,32 +34,57 @@ pub struct RedisConfig {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct CoreConfig {
-    pub secret: String,
-    pub cache_ttl: u64,
-    pub generate_core_org_app: bool,
-}
-
-#[derive(Debug, Deserialize, Clone)]
 pub struct OrganizationConfig {
     pub name: String,
     pub slug: String,
     pub contact_email: String,
 }
 
+impl Default for OrganizationConfig {
+    fn default() -> Self {
+        Self {
+            name: "Axcelium".to_string(),
+            slug: "axcelium".to_string(),
+            contact_email: "support@axcelium.io".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct ApplicationConfig {
     pub name: String,
     pub description: String,
-    pub is_must_name_unique: bool,
-    pub can_allow_email_nullable: bool,
+
+    #[serde(flatten)]
+    pub config: AppConfig,
+}
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            is_must_name_unique: false,
+            can_allow_email_nullable: false,
+        }
+    }
+}
+impl Default for ApplicationConfig {
+    fn default() -> Self {
+        Self {
+            name: "Axcelium Core".to_string(),
+            description: "The core SSO platform of Axcelium.".to_string(),
+            config: AppConfig::default(),
+        }
+    }
 }
 
 impl Config {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let file = File::open(path)?;
-        let reader = BufReader::new(file);
-        let config = serde_yaml::from_reader(reader)?;
+        dotenv::dotenv().ok();
+        let builder = config::Config::builder()
+            .add_source(config::File::from(path.as_ref()))
+            .add_source(config::Environment::default().separator("__")); // รองรับ ENV override เช่น CONFIG__DATABASE__URL
+
+        let settings = builder.build()?;
+        let config: Config = settings.try_deserialize()?;
         Ok(config)
     }
     pub fn validate(&self) -> Result<(), String> {
@@ -70,28 +105,4 @@ impl Config {
         }
         Ok(())
     }
-}
-
-/// Utility: Get required env
-fn get_env(key: &str) -> String {
-    env::var(key).unwrap_or_else(|_| panic!("{key} must be set"))
-}
-
-/// Utility: Get with default fallback
-fn get_env_with_default(key: &str, default: &str) -> String {
-    env::var(key).unwrap_or_else(|_| default.to_string())
-}
-
-/// Utility: Parse as u64
-fn get_env_u64(key: &str) -> u64 {
-    get_env(key)
-        .parse::<u64>()
-        .unwrap_or_else(|_| panic!("{key} must be a valid u64"))
-}
-
-/// Utility: Parse as bool
-fn get_env_bool(key: &str) -> bool {
-    get_env(key)
-        .parse::<bool>()
-        .unwrap_or_else(|_| panic!("{key} must be a valid boolean"))
 }

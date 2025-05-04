@@ -1,0 +1,26 @@
+core:
+  secret: ${CORE_SECRET}
+  generate_core_org_app: true
+  cache_ttl: 3600
+database:
+  urls:
+    - localhost:9042
+  username: ${DATABASE_USERNAME}
+  password: ${DATABASE_PASSWORD}
+redis:
+  urls:
+    - redis://@localhost:6379
+
+# optional
+organization:
+  name: Axcelium
+  slug: axcelium
+  contact_email: support@axcelium.io
+
+# optional
+application:
+  name: Axcelium Core
+  description: The core SSO platform of Axcelium.
+  config:
+    is_must_name_unique: false
+    can_allow_email_nullable: false
