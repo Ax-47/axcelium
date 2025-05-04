@@ -1,6 +1,6 @@
 use actix_web::web::{self, ServiceConfig};
 use crate::application::controllers::hello_handle::hello_handler;
-use crate::container::Container;
+use crate::setup::Container;
 use std::sync::Arc;
 
 pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {

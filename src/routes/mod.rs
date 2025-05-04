@@ -1,7 +1,7 @@
 pub mod hello;
 pub mod users;
 
-use crate::container::Container;
+use crate::setup::Container;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::web::ServiceConfig;

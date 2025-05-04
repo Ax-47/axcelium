@@ -1,7 +1,7 @@
 use actix_web::web::{self, ServiceConfig};
 use crate::application::controllers::user_handle::create_user_handle;
 use crate::application::middlewares::bearer_auth::ValidateBearerAuth;
-use crate::container::Container;
+use crate::setup::Container;
 use std::sync::Arc;
 
 pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
