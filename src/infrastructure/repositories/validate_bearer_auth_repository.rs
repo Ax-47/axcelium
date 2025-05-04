@@ -2,13 +2,11 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::domain::errors::repositories_errors::{RepositoryError, RepositoryResult};
+use crate::domain::errors::repositories_errors::RepositoryResult;
+use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
 use crate::infrastructure::cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository;
-use crate::{
-    domain::models::apporg_client_id_models::CleanAppOrgByClientId,
-    infrastructure::cipher::{
-        aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
-    },
+use crate::infrastructure::cipher::{
+    aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
 };
 pub struct ValidateBearerAuthMiddlewareRepositoryImpl {
     apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
@@ -31,69 +29,47 @@ impl ValidateBearerAuthMiddlewareRepositoryImpl {
 
 #[async_trait]
 pub trait ValidateBearerAuthMiddlewareRepository: Send + Sync {
-    async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId>;
-    fn parse_axcelium_credentials(&self, input: String)
-        -> RepositoryResult<(Uuid, String, String)>;
+    async fn decrypt_token(&self, token: Vec<String>) -> RepositoryResult<(Uuid, String, String)>;
+    async fn fetch_apporg_by_client_id(
+        &self,
+        client_id: Uuid,
+    ) -> RepositoryResult<Option<AppOrgByClientId>>;
+    async fn decrypt_client_secret(
+        &self,
+        client_key: &str,
+        encrypt_client_secret: &str,
+    ) -> RepositoryResult<String>;
 }
 
 #[async_trait]
 impl ValidateBearerAuthMiddlewareRepository for ValidateBearerAuthMiddlewareRepositoryImpl {
-    async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId> {
-        let (client_id, client_key, client_secret) = self.parse_axcelium_credentials(token)?;
-        let Some(apporg) = self
-            .apporg_cachelayer_repo
-            .find_apporg_by_client_id(client_id)
-            .await?
-        else {
-            return Err(RepositoryError {
-                message: "no found".to_string(),
-                code: 404,
-            });
-        };
-
-        let decrypted = self
-            .aes_repo
-            .decrypt(&client_key, &apporg.encrypted_client_secret)
-            .await?;
-        if decrypted != client_secret {
-            return Err(RepositoryError {
-                message: "unauth".to_string(),
-                code: 401,
-            });
-        }
-        let clean_apporg = CleanAppOrgByClientId::from(apporg);
-        Ok(clean_apporg)
+    async fn decrypt_token(&self, token: Vec<String>) -> RepositoryResult<(Uuid, String, String)> {
+        let decoded_client_id = self.base64_repo.decode(&token[0])?;
+        let decoded_client_secret = self.base64_repo.decode(&token[2])?;
+        let client_id = Uuid::parse_str(
+            String::from_utf8_lossy(&decoded_client_id)
+                .into_owned()
+                .as_str(),
+        )?;
+        let client_key = token[1].to_owned();
+        let client_secret = String::from_utf8_lossy(&decoded_client_secret).into_owned();
+        return Ok((client_id, client_key, client_secret));
     }
-
-    fn parse_axcelium_credentials(
+    async fn fetch_apporg_by_client_id(
         &self,
-        input: String,
-    ) -> RepositoryResult<(Uuid, String, String)> {
-        let without_prefix =
-            input
-                .strip_prefix("axcelium-core: ")
-                .ok_or_else(|| RepositoryError {
-                    message: "missing axcelium-core prefix".to_string(),
-                    code: 400,
-                })?;
-        let parts: Vec<&str> = without_prefix.split('.').collect();
-        if parts.len() != 3 {
-            return Err(RepositoryError {
-                message: "invalid credential format".to_string(),
-                code: 400,
-            });
-        }
-
-        let decoded_client_id = self.base64_repo.decode(parts[0])?;
-        let decoded_client_secret = self.base64_repo.decode(parts[2])?;
-        Ok((
-            Uuid::parse_str(
-                String::from_utf8_lossy(&decoded_client_id)
-                    .into_owned()
-                    .as_str(),
-            )?,
-            parts[1].to_owned(),
-            String::from_utf8_lossy(&decoded_client_secret).into_owned(),
-        ))
+        client_id: Uuid,
+    ) -> RepositoryResult<Option<AppOrgByClientId>> {
+        self.apporg_cachelayer_repo
+            .find_apporg_by_client_id(client_id)
+            .await
+    }
+    async fn decrypt_client_secret(
+        &self,
+        client_key: &str,
+        encrypted_client_secret: &str,
+    ) -> RepositoryResult<String> {
+        self.aes_repo
+            .decrypt(&client_key, &encrypted_client_secret)
+            .await
     }
 }
