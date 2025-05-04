@@ -25,6 +25,7 @@ aes-gcm = "0.10.3"
 rand = "0.9.1"
 rand_core = "0.9.3"
 validator = "0.20.0"
+serde_yaml = "0.9.34"
 [dependencies.uuid]
 version = "1.11.0"
 features = [

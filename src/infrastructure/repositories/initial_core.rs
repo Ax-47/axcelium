@@ -135,13 +135,4 @@ impl InitialCoreImpl {
     //     env::var(key).map(|v| v == "true").unwrap_or(false)
     // }
 
-    pub fn create_client_token(
-        &self,
-        client_id: Uuid,
-        client_key: String,
-        client_secret: String,
-    ) -> String {
-        let encoded_id = self.base64_repo.encode(client_id.to_string().as_bytes());
-        format!("{}.{}.{}", encoded_id, client_key, client_secret)
-    } //bl
 }

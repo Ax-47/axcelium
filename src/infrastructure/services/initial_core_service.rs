@@ -9,6 +9,14 @@ impl InitialCoreServiceImpl {
     pub fn new(repository: Arc<dyn InitialCoreRepository>) -> Self {
         Self { repository }
     }
+    fn create_client_token(
+        &self,
+        client_id: String,
+        client_key: String,
+        client_secret: String,
+    ) -> String {
+        format!("{}.{}.{}", client_id, client_key, client_secret)
+    }
 }
 #[async_trait]
 pub trait InitialCoreService: 'static + Sync + Send {
