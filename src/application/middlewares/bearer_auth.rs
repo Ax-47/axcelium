@@ -57,21 +57,14 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let middleware_service = self.middleware_service.clone();
-        let bearer_token = req.headers().get("Authorization").cloned();
         let srv = self.service.clone();
         Box::pin(async move {
-            let Some(header_value) = bearer_token else {
-                return Err(actix_web::error::ErrorBadRequest("not found token"));
-            };
-            let Ok(token_str) = header_value.to_str() else {
-                return Err(actix_web::error::ErrorBadRequest("invalid token format"));
-            };
-    
-            let Some(token) = token_str.strip_prefix("axcelium-core: ") else {
-                return Err(actix_web::error::ErrorUnauthorized("missing Bearer prefix"));
+            let token = match req.headers().get("Authorization") {
+                Some(hv) => hv.to_str().ok().map(|s| s.to_string()),
+                None => None,
             };
 
-            let apporg=middleware_service.authentication(token.to_string()).await?;
+            let apporg=middleware_service.authentication(token).await?;
             req.extensions_mut().insert(apporg);
             let res = srv.call(req).await?;
 
