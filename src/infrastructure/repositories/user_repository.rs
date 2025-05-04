@@ -58,15 +58,15 @@ impl UserRepository for UserRepositoryImpl {
         };
 
         self.user_rule_repo
-            .check_rule_name(user.username.as_str())?;
+            .check_rule_name(user.username.as_str())?; //bl
 
         self.user_rule_repo
             .check_email_nullable(&app_config, &user, &c_apporg)
-            .await?;
+            .await?; //bl
 
         self.user_rule_repo
             .check_username_unique(&app_config, &user, &c_apporg)
-            .await?;
+            .await?; //bl
 
         let hashed_password = self.hasher_repo.hash(user.password.as_str())?;
 
