@@ -1,4 +1,3 @@
-use crate::domain::errors::repositories_errors::RepositoryError;
 use crate::domain::{
     errors::repositories_errors::RepositoryResult,
     models::apporg_client_id_models::AppOrgByClientId,
@@ -42,7 +41,7 @@ impl ApplicationsOrganizationByClientIdCacheLayerRepository
             return Ok(Some(cached_data));
         }
         let Some(data) = self.database_repo.find_apporg_by_client_id(key).await? else{
-            return Err(RepositoryError::new("not found".to_string(), 400));
+            return Ok(None);
         };
         self.cache_repo.cache_apporg_by_client_id(&data).await?;
         Ok(Some(data))
