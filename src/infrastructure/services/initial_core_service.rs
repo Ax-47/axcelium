@@ -17,8 +17,8 @@ pub trait InitialCoreService: 'static + Sync + Send {
 #[async_trait]
 impl InitialCoreService for InitialCoreServiceImpl {
     async fn lunch(&self, act: bool) {
-        if act {
-            self.repository.init_core().await;
+        if !act {
+            return;
         }
     }
 }
