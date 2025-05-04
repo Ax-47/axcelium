@@ -1,6 +1,6 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct Hello {
+pub struct HelloResponse {
     pub server: String,
 }

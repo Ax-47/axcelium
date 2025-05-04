@@ -1,2 +1,2 @@
-pub mod hello_dto;
-pub mod user_dto;
+pub mod payload;
+pub mod response;
