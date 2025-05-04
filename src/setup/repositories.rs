@@ -12,13 +12,13 @@ use crate::infrastructure::{
     }, repositories::{
         initial_core::InitialCoreImpl,
         user_repository::UserRepositoryImpl,
-        validate_bearer_auth_repository::VaildateBearerAuthMiddlewareRepositoryImpl,
+        validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
     }, rule_checker::user_rule::UserRuleCheckerImpl, security::argon2_repository::PasswordHasherImpl, services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl}
 };
 
 pub struct Repositories {
     pub user_repo: Arc<UserRepositoryImpl>,
-    pub auth_repo: Arc<VaildateBearerAuthMiddlewareRepositoryImpl>,
+    pub auth_repo: Arc<ValidateBearerAuthMiddlewareRepositoryImpl>,
 }
 
 pub fn create_all(
@@ -54,7 +54,7 @@ pub fn create_all(
         user_rule_checker,
     ));
 
-    let auth_repo = Arc::new(VaildateBearerAuthMiddlewareRepositoryImpl::new(
+    let auth_repo = Arc::new(ValidateBearerAuthMiddlewareRepositoryImpl::new(
         apporg_cache_layer.clone(),
         base64_repo.clone(),
         aes_repo.clone(),

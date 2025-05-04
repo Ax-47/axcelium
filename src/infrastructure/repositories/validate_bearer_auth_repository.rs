@@ -10,12 +10,12 @@ use crate::{
         aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
     },
 };
-pub struct VaildateBearerAuthMiddlewareRepositoryImpl {
+pub struct ValidateBearerAuthMiddlewareRepositoryImpl {
     apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
     base64_repo: Arc<dyn Base64Repository>,
     aes_repo: Arc<dyn AesGcmCipherRepository>,
 }
-impl VaildateBearerAuthMiddlewareRepositoryImpl {
+impl ValidateBearerAuthMiddlewareRepositoryImpl {
     pub fn new(
         apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
         base64_repo: Arc<dyn Base64Repository>,
@@ -30,14 +30,14 @@ impl VaildateBearerAuthMiddlewareRepositoryImpl {
 }
 
 #[async_trait]
-pub trait VaildateBearerAuthMiddlewareRepository: Send + Sync {
+pub trait ValidateBearerAuthMiddlewareRepository: Send + Sync {
     async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId>;
     fn parse_axcelium_credentials(&self, input: String)
         -> RepositoryResult<(Uuid, String, String)>;
 }
 
 #[async_trait]
-impl VaildateBearerAuthMiddlewareRepository for VaildateBearerAuthMiddlewareRepositoryImpl {
+impl ValidateBearerAuthMiddlewareRepository for ValidateBearerAuthMiddlewareRepositoryImpl {
     async fn authentication(&self, token: String) -> RepositoryResult<CleanAppOrgByClientId> {
         let (client_id, client_key, client_secret) = self.parse_axcelium_credentials(token)?;
         let Some(apporg) = self

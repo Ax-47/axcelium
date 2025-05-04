@@ -8,13 +8,13 @@ use std::{
     sync::Arc,
 };
 use std::rc::Rc;
-use crate::infrastructure::services::validate_bearer_auth_service::VaildateBearerAuthMiddlewareService;
+use crate::infrastructure::services::validate_bearer_auth_service::ValidateBearerAuthMiddlewareService;
 use actix_web::HttpMessage;
 pub struct ValidateBearerAuth {
-    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
+    middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>,
 }
 impl ValidateBearerAuth {
-    pub fn new(middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>) -> Self {
+    pub fn new(middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>) -> Self {
         Self { middleware_service }
     }
 }
@@ -40,7 +40,7 @@ where
 
 pub struct ValidateBearerAuthMiddleware<S> {
     service:  Rc<S>,
-    middleware_service: Arc<dyn VaildateBearerAuthMiddlewareService>,
+    middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>,
 }
 
 impl<S, B> Service<ServiceRequest> for ValidateBearerAuthMiddleware<S>

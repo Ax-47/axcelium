@@ -7,18 +7,18 @@ use crate::{
         errors::repositories_errors::{RepositoryError, RepositoryResult},
         models::apporg_client_id_models::CleanAppOrgByClientId,
     },
-    infrastructure::repositories::validate_bearer_auth_repository::VaildateBearerAuthMiddlewareRepository,
+    infrastructure::repositories::validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepository,
 };
 #[derive(Clone)]
-pub struct VaildateBearerAuthMiddlewareServiceImpl {
-    pub repository: Arc<dyn VaildateBearerAuthMiddlewareRepository>,
+pub struct ValidateBearerAuthMiddlewareServiceImpl {
+    pub repository: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
 }
-impl VaildateBearerAuthMiddlewareServiceImpl {
-    pub fn new(repository: Arc<dyn VaildateBearerAuthMiddlewareRepository>) -> Self {
+impl ValidateBearerAuthMiddlewareServiceImpl {
+    pub fn new(repository: Arc<dyn ValidateBearerAuthMiddlewareRepository>) -> Self {
         Self { repository }
     }
 }
-impl VaildateBearerAuthMiddlewareServiceImpl {
+impl ValidateBearerAuthMiddlewareServiceImpl {
     fn parse_header(&self, header: Option<String>) -> RepositoryResult<String> {
         let header = header.ok_or_else(|| RepositoryError::new("Missing Authorization".to_string(), 400))?;
         let value = header.strip_prefix("axcelium-core: ").ok_or_else(|| RepositoryError::new("Invalid Prefix".to_string(), 400))?;
@@ -26,12 +26,12 @@ impl VaildateBearerAuthMiddlewareServiceImpl {
     } 
 }
 #[async_trait]
-pub trait VaildateBearerAuthMiddlewareService: 'static + Send + Sync {
+pub trait ValidateBearerAuthMiddlewareService: 'static + Send + Sync {
     async fn authentication(&self, header: Option<String>) -> RepositoryResult<CleanAppOrgByClientId>;
 }
 
 #[async_trait]
-impl VaildateBearerAuthMiddlewareService for VaildateBearerAuthMiddlewareServiceImpl {
+impl ValidateBearerAuthMiddlewareService for ValidateBearerAuthMiddlewareServiceImpl {
     async fn authentication(&self, header: Option<String>) -> RepositoryResult<CleanAppOrgByClientId> {
         let token = self.parse_header(header)?;
         self.repository.authentication(token).await
