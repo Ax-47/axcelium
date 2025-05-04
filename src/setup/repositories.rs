@@ -1,19 +1,25 @@
 use std::sync::Arc;
 
-use redis::cluster::ClusterClient;
+use redis::Client;
 use scylla::client::session::Session;
 
 use crate::infrastructure::{
-    cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl, cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl, cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl}, database::{
+    cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
+    cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
+    cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
+    database::{
         application_repository::ApplicationDatabaseRepositoryImpl,
         applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepositoryImpl,
         organization_repository::OrganizationDatabaseRepositoryImpl,
         user_repository::UserDatabaseRepositoryImpl,
-    }, repositories::{
-        initial_core::InitialCoreImpl,
-        user_repository::UserRepositoryImpl,
+    },
+    repositories::{
+        initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
         validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
-    }, rule_checker::user_rule::UserRuleCheckerImpl, security::argon2_repository::PasswordHasherImpl, services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl}
+    },
+    rule_checker::user_rule::UserRuleCheckerImpl,
+    security::argon2_repository::PasswordHasherImpl,
+    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
 };
 
 pub struct Repositories {
@@ -23,7 +29,7 @@ pub struct Repositories {
 
 pub fn create_all(
     database: Arc<Session>,
-    cache: Arc<ClusterClient>,
+    cache: Arc<Client>,
     secret: &str,
     cache_ttl: u64,
 ) -> (Repositories, Arc<dyn InitialCoreService>) {
@@ -36,12 +42,12 @@ pub fn create_all(
 
     let org_db_repo = Arc::new(OrganizationDatabaseRepositoryImpl::new(database.clone()));
     let app_db_repo = Arc::new(ApplicationDatabaseRepositoryImpl::new(database.clone()));
-    let apporg_db_repo = Arc::new(
-        ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()),
-    );
+    let apporg_db_repo =
+        Arc::new(ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()));
 
-    let apporg_cache_repo =
-        Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(cache, cache_ttl));
+    let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
+        cache, cache_ttl,
+    ));
 
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,

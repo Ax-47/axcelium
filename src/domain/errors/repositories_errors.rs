@@ -158,7 +158,8 @@ impl From<base64::DecodeError> for RepositoryError {
     }
 }
 impl From<RedisError> for  RepositoryError{
-    fn from(_: RedisError) -> Self {
+    fn from(e: RedisError) -> Self {
+        println!("{e}");
         RepositoryError::new("caching error failed.".to_string(), 500)
     }
 }

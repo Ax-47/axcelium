@@ -3,7 +3,7 @@ use crate::{
     config,
     infrastructure::services::{hello_service::HelloService, user_service::UserService},
 };
-use redis::cluster::ClusterClient;
+use redis::Client;
 use scylla::client::session::Session;
 use std::sync::Arc;
 mod middlewares;
@@ -16,11 +16,7 @@ pub struct Container {
 }
 
 impl Container {
-    pub async fn new(
-        cfg: config::Config,
-        cache: Arc<ClusterClient>,
-        database: Arc<Session>,
-    ) -> Self {
+    pub async fn new(cfg: config::Config, cache: Arc<Client>, database: Arc<Session>) -> Self {
         let secret = cfg.core.secret.clone();
         let cache_ttl = cfg.core.cache_ttl.clone();
         let (repos, core_service) =
