@@ -22,12 +22,12 @@ pub struct InitialCoreImpl {
 
 #[async_trait]
 pub trait InitialCoreRepository: Send + Sync {
-    fn create_org_obj(&self, name: String, slug: String, email: String) -> Organization;
+    fn new_org(&self, name: String, slug: String, email: String) -> Organization;
     async fn is_org_exist(&self, org_name:String) -> bool;
     async fn create_org(&self,org: Organization);
-    async fn create_app_obj(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String);
+    async fn new_app(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String);
     async fn create_app(&self,app:Application);
-    async fn create_apporg_by_client_id_obj(&self,app:Application,org:Organization)->AppOrgByClientId;
+    fn new_apporg_by_client_id(&self,app:Application,org:Organization)->AppOrgByClientId;
     async fn create_apporg_by_client_id(&self,apporg:AppOrgByClientId);
 }
 
@@ -48,7 +48,7 @@ impl InitialCoreRepository for InitialCoreImpl {
     // let name = Self::get_env("CORE_ORGANIZATION_NAME", "Axcelium");
     // let slug = Self::get_env("CORE_ORGANIZATION_SLUG", "axcelium");
     // let email = Self::get_env("CORE_ORGANIZATION_CONTACT_EMAIL", "support@axcelium.io");
-    fn create_org_obj(&self, name: String, slug: String, email: String) -> Organization {
+    fn new_org(&self, name: String, slug: String, email: String) -> Organization {
         Organization::new(name, slug, email)
     }
     async fn is_org_exist(&self, org_name:String) -> bool {
@@ -74,7 +74,7 @@ impl InitialCoreRepository for InitialCoreImpl {
         // let is_must_name_unique = Self::get_env_bool("CORE_APPLICATION_CONFIG_IS_MUST_NAME_UNIQUE");
         // let can_allow_email_nullable =
         //     Self::get_env_bool("CORE_APPLICATION_CONFIG_CAN_ALLOW_EMAIL_NULLABLE");
-    async fn create_app_obj(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String){
+    async fn new_app(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String){
 
         let client_secret = Application::gen_client_secret().unwrap();
         let (nonce, encrypted_client_secret) = self.aes_repo.encrypt(&client_secret).await.unwrap();
@@ -97,7 +97,7 @@ impl InitialCoreRepository for InitialCoreImpl {
             .await
             .unwrap()
     }
-    async fn create_apporg_by_client_id_obj(&self,app:Application,org:Organization)->AppOrgByClientId{
+    fn new_apporg_by_client_id(&self,app:Application,org:Organization)->AppOrgByClientId{
          AppOrgByClientId::new(org, app)
     }
     async fn create_apporg_by_client_id(&self,apporg:AppOrgByClientId){
