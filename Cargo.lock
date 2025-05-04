@@ -353,6 +353,7 @@ dependencies = [
  "rand 0.9.1",
  "rand_core 0.9.3",
  "redis",
+ "regex",
  "scylla",
  "serde",
  "serde_json",

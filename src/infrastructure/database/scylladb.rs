@@ -1,22 +1,14 @@
-use dotenv::dotenv;
 use scylla::client::session::Session;
 use scylla::client::session_builder::SessionBuilder;
-use std::env;
+use crate::config;
 
-pub async fn get_db_pool() -> Session {
-    dotenv().ok();
-    let database_urls = env::var("DATABASE_URLS").expect("DATABASE_URL must be set")
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .collect::<Vec<String>>();
-    let database_username = env::var("DATABASE_USERNAME").expect("DATABASE_USERNAME must be set");
-    let database_password = env::var("DATABASE_PASSWORD").expect("DATABASE_PASSWORD must be set");
+pub async fn get_db_pool(cfg: config::DatabaseConfig) -> Session {
     let mut builder = SessionBuilder::new();
-    for url in database_urls {
+    for url in cfg.urls {
         builder = builder.known_node(url);
     }
     let session = builder
-        .user(database_username, database_password)
+        .user(cfg.username, cfg.password)
         .build()
         .await.unwrap();
     session

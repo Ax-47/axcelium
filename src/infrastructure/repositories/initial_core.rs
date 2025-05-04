@@ -1,4 +1,4 @@
-use crate::domain::models::app_config::AppConfig;
+use crate::config;
 use crate::domain::models::application_models::Application;
 use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
 use crate::domain::models::organization_models::Organization;
@@ -20,94 +20,6 @@ pub struct InitialCoreImpl {
         Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
 }
 
-#[async_trait]
-pub trait InitialCoreRepository: Send + Sync {
-    fn new_org(&self, name: String, slug: String, email: String) -> Organization;
-    async fn is_org_exist(&self, org_name:String) -> bool;
-    async fn create_org(&self,org: Organization);
-    async fn new_app(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String);
-    async fn create_app(&self,app:Application);
-    fn new_apporg_by_client_id(&self,app:Application,org:Organization)->AppOrgByClientId;
-    async fn create_apporg_by_client_id(&self,apporg:AppOrgByClientId);
-}
-
-#[async_trait]
-impl InitialCoreRepository for InitialCoreImpl {
-
-
-        // println!("CORE_ORGANIZATION_ID= {}", org_app.organization_id);
-        // println!("CORE_APPLICATION_ID= {}", org_app.application_id);
-        // println!("CORE_CLIENT_ID= {}", org_app.client_id);
-        // println!("CORE_CLIENT_SECRET= {}", client_secret);
-        // println!("CORE_CLIENT_KEY= {}", key);
-        // println!(
-        //     "CORE_CLIENT_TOKEN= axcelium-core: {}",
-        //     self.create_client_token(org_app.client_id, key, client_secret)
-        // );
-
-    // let name = Self::get_env("CORE_ORGANIZATION_NAME", "Axcelium");
-    // let slug = Self::get_env("CORE_ORGANIZATION_SLUG", "axcelium");
-    // let email = Self::get_env("CORE_ORGANIZATION_CONTACT_EMAIL", "support@axcelium.io");
-    fn new_org(&self, name: String, slug: String, email: String) -> Organization {
-        Organization::new(name, slug, email)
-    }
-    async fn is_org_exist(&self, org_name:String) -> bool {
-        self.org_db_repo
-            .find_organization(org_name)
-            .await
-            .unwrap()
-            .is_some()
-    }
-    async fn create_org(&self,org: Organization){
-
-        self.org_db_repo
-            .create_organization(org)
-            .await
-            .unwrap()
-    }
-
-        // let name = Self::get_env("CORE_APPLICATION_NAME", "Axcelium Core");
-        // let description = Self::get_env(
-        //     "CORE_APPLICATION_DESCRIPTION",
-        //     "The core SSO platform of Axcelium.",
-        // );
-        // let is_must_name_unique = Self::get_env_bool("CORE_APPLICATION_CONFIG_IS_MUST_NAME_UNIQUE");
-        // let can_allow_email_nullable =
-        //     Self::get_env_bool("CORE_APPLICATION_CONFIG_CAN_ALLOW_EMAIL_NULLABLE");
-    async fn new_app(&self,organization_id: Uuid, name:String, description:String,config:AppConfig)-> (Application, String, String){
-
-        let client_secret = Application::gen_client_secret().unwrap();
-        let (nonce, encrypted_client_secret) = self.aes_repo.encrypt(&client_secret).await.unwrap();
-        let base64_secret = self.base64_repo.encode(&client_secret);
-        (
-            Application::new(
-                organization_id,
-                name,
-                description,
-                encrypted_client_secret,
-                &config,
-            ),
-            base64_secret,
-            nonce,
-        )
-    }
-    async fn create_app(&self,app:Application){
-        self.app_db_repo
-            .create_application(app)
-            .await
-            .unwrap()
-    }
-    fn new_apporg_by_client_id(&self,app:Application,org:Organization)->AppOrgByClientId{
-         AppOrgByClientId::new(org, app)
-    }
-    async fn create_apporg_by_client_id(&self,apporg:AppOrgByClientId){
-        self.apporg_by_client_id_cachelayer_repo
-            .create_apporg_by_client_id(apporg)
-            .await
-            .unwrap();
-    }
-}
-
 impl InitialCoreImpl {
     pub fn new(
         aes_repo: Arc<dyn AesGcmCipherRepository>,
@@ -126,13 +38,85 @@ impl InitialCoreImpl {
             apporg_by_client_id_cachelayer_repo,
         }
     }
-    // vvv config
-    // fn get_env(key: &str, default: &str) -> String {
-    //     env::var(key).unwrap_or_else(|_| default.to_string())
-    // }
-
-    // fn get_env_bool(key: &str) -> bool {
-    //     env::var(key).map(|v| v == "true").unwrap_or(false)
-    // }
-
 }
+#[async_trait]
+pub trait InitialCoreRepository: Send + Sync {
+    fn new_org(&self, cfg: config::OrganizationConfig) -> Organization;
+    async fn is_org_exist(&self, org_name: String) -> bool;
+    async fn create_org(&self, org: Organization);
+    async fn new_app(
+        &self,
+        organization_id: Uuid,
+        app: config::ApplicationConfig,
+    ) -> (Application, String, String);
+    async fn create_app(&self, app: Application);
+    fn new_apporg_by_client_id(&self, app: Application, org: Organization) -> AppOrgByClientId;
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId);
+
+    fn create_client_token(
+        &self,
+        client_id: Uuid,
+        client_key: String,
+        client_secret: String,
+    ) -> String;
+}
+
+#[async_trait]
+impl InitialCoreRepository for InitialCoreImpl {
+    fn create_client_token(
+        &self,
+        client_id: Uuid,
+        client_key: String,
+        client_secret: String,
+    ) -> String {
+        let encoded_id = self.base64_repo.encode(client_id.to_string().as_bytes());
+        format!("{}.{}.{}", encoded_id, client_key, client_secret)
+    }
+    fn new_org(&self, cfg: config::OrganizationConfig) -> Organization {
+        Organization::new(cfg.name, cfg.slug, cfg.contact_email)
+    }
+    async fn is_org_exist(&self, org_name: String) -> bool {
+        self.org_db_repo
+            .find_organization(org_name)
+            .await
+            .unwrap()
+            .is_some()
+    }
+    async fn create_org(&self, org: Organization) {
+        self.org_db_repo.create_organization(org).await.unwrap()
+    }
+
+    async fn new_app(
+        &self,
+        organization_id: Uuid,
+        app: config::ApplicationConfig,
+    ) -> (Application, String, String) {
+        let client_secret = Application::gen_client_secret().unwrap();
+        let (nonce, encrypted_client_secret) = self.aes_repo.encrypt(&client_secret).await.unwrap();
+        let base64_secret = self.base64_repo.encode(&client_secret);
+        (
+            Application::new(
+                organization_id,
+                app.name,
+                app.description,
+                encrypted_client_secret,
+                &app.config,
+            ),
+            nonce,
+            base64_secret,
+        )
+    }
+    async fn create_app(&self, app: Application) {
+        self.app_db_repo.create_application(app).await.unwrap()
+    }
+    fn new_apporg_by_client_id(&self, app: Application, org: Organization) -> AppOrgByClientId {
+        AppOrgByClientId::new(org, app)
+    }
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) {
+        self.apporg_by_client_id_cachelayer_repo
+            .create_apporg_by_client_id(apporg)
+            .await
+            .unwrap();
+    }
+}
+

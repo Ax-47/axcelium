@@ -1,6 +1,6 @@
 use crate::domain::models::app_config::AppConfig;
 use serde::Deserialize;
-use std::path::Path;
+use std::{fs, path::Path};
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub core: CoreConfig,
@@ -55,7 +55,7 @@ pub struct ApplicationConfig {
     pub name: String,
     pub description: String,
 
-    #[serde(flatten)]
+    #[serde(default)]
     pub config: AppConfig,
 }
 impl Default for AppConfig {
@@ -76,17 +76,29 @@ impl Default for ApplicationConfig {
     }
 }
 
+fn interpolate_env_vars(yaml: &str) -> String {
+    let re = regex::Regex::new(r"\$\{([A-Z0-9_]+)\}").unwrap();
+    re.replace_all(yaml, |caps: &regex::Captures| {
+        std::env::var(&caps[1]).unwrap_or_else(|_| "".into())
+    })
+    .to_string()
+}
+
 impl Config {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
         dotenv::dotenv().ok();
-        let builder = config::Config::builder()
-            .add_source(config::File::from(path.as_ref()))
-            .add_source(config::Environment::default().separator("__")); // รองรับ ENV override เช่น CONFIG__DATABASE__URL
 
-        let settings = builder.build()?;
+        let raw = fs::read_to_string(path)?;
+        let interpolated = interpolate_env_vars(&raw);
+
+        let settings: config::Config = config::Config::builder()
+            .add_source(config::File::from_str(&interpolated, config::FileFormat::Yaml))
+            .build()?;
+
         let config: Config = settings.try_deserialize()?;
         Ok(config)
     }
+
     pub fn validate(&self) -> Result<(), String> {
         if self.database.urls.is_empty() {
             return Err("database.urls is required".into());

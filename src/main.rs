@@ -1,15 +1,17 @@
 use actix_web::HttpServer;
 use axcelium::{
-    infrastructure::{cache::redis::get_redis_cluster_client, database::scylladb::get_db_pool},
-    routes, setup,
+    config, infrastructure::{cache::redis::get_redis_cluster_client, database::scylladb::get_db_pool}, routes, setup
 };
 use std::sync::Arc;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let cfg=config::Config::from_file("./config.yaml").unwrap();
+    cfg.validate().unwrap();
     let container = Arc::new(
         setup::Container::new(
-            Arc::new(get_redis_cluster_client()),
-            Arc::new(get_db_pool().await),
+            cfg.clone(),
+            Arc::new(get_redis_cluster_client(cfg.redis)),
+            Arc::new(get_db_pool(cfg.database).await),
         )
         .await,
     );

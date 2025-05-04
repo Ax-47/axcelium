@@ -27,6 +27,7 @@ rand_core = "0.9.3"
 validator = "0.20.0"
 serde_yaml = "0.9.34"
 config = "0.15.11"
+regex = "1.11.1"
 [dependencies.uuid]
 version = "1.11.0"
 features = [
