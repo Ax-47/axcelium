@@ -1,6 +1,7 @@
 use crate::domain::{
-    errors::repositories_errors::RepositoryResult,
-    models::user_models::{CreatedUser, User, UserOrganization},
+    entities::user_organization::UserOrganization, errors::repositories_errors::RepositoryResult,
+    entities::user::User,
+    models::user_models::CreatedUser,
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
@@ -48,20 +49,22 @@ pub trait UserDatabaseRepository: Send + Sync {
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
-        let insert_tasks = vec![
+        let results = futures::future::join_all(vec![
             self.insert_into_user(&user),
             self.insert_into_user_by_email(&user),
             self.insert_into_user_by_username(&user),
             self.insert_into_user_organizations(&u_org),
             self.insert_into_user_organizations_by_user(&u_org),
-        ];
-        futures::future::join_all(insert_tasks).await;
+        ]).await;
+        if let Some(err) = results.into_iter().find_map(Result::err) {
+            return Err(err);
+        }
         Ok(())
     }
     async fn insert_into_user(&self, user: &User) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.users (
             user_id, organization_id, application_id,
-            username, email, password_hash,
+            username, email, hashed_password,
             created_at, updated_at,
             is_active, is_verified, is_locked, mfa_enabled
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

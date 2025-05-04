@@ -1,14 +1,14 @@
 use crate::{
     domain::{
-        errors::repositories_errors::{RepositoryError, RepositoryResult},
+        entities::{user::User, user_organization::UserOrganization},
+        errors::repositories_errors::RepositoryResult,
         models::{
             apporg_client_id_models::CleanAppOrgByClientId,
-            user_models::{CreateUser, User, UserOrganization},
+            user_models::{CreateUser, CreatedUser},
         },
     },
     infrastructure::{
         database::user_repository::UserDatabaseRepository,
-        rule_checker::user_rule::UserRuleCheckerRepository,
         security::argon2_repository::PasswordHasherRepository,
     },
 };
@@ -18,63 +18,93 @@ use uuid::Uuid;
 pub struct UserRepositoryImpl {
     database_repo: Arc<dyn UserDatabaseRepository>,
     hasher_repo: Arc<dyn PasswordHasherRepository>,
-    user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
 }
 
 impl UserRepositoryImpl {
     pub fn new(
         database_repo: Arc<dyn UserDatabaseRepository>,
         hasher_repo: Arc<dyn PasswordHasherRepository>,
-        user_rule_repo: Arc<dyn UserRuleCheckerRepository>,
     ) -> Self {
         Self {
             database_repo,
             hasher_repo,
-            user_rule_repo,
         }
     }
 }
 #[async_trait]
 pub trait UserRepository: Send + Sync {
-    async fn create(
+    fn new_user_organization(
         &self,
         c_apporg: CleanAppOrgByClientId,
+        user: User,
+    ) -> UserOrganization;
+    fn new_user(
+        &self,
+        apporg: CleanAppOrgByClientId,
         user: CreateUser,
-    ) -> RepositoryResult<Uuid>;
+        hashed_password: String,
+    ) -> User;
+    fn hash_password(&self, password: String) -> RepositoryResult<String>;
+    async fn find_user_by_username(
+        &self,
+        username: String,
+        application_id: Uuid,
+        organization_id: Uuid,
+    ) -> RepositoryResult<Option<CreatedUser>>;
+
+    async fn find_user_by_email(
+        &self,
+        email: String,
+        application_id: Uuid,
+        organization_id: Uuid,
+    ) -> RepositoryResult<Option<CreatedUser>>;
+
+    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
-    async fn create(
+    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
+        self.database_repo.create_user(user, u_org).await
+    }
+    fn new_user(
         &self,
         c_apporg: CleanAppOrgByClientId,
         user: CreateUser,
-    ) -> RepositoryResult<Uuid> {
-        let Ok(app_config) = c_apporg.get_config() else {
-            return Err(RepositoryError::new(
-                "failed to read config".to_string(),
-                500,
-            ));
-        };
+        hashed_password: String,
+    ) -> User {
+        User::new(c_apporg, user.username, hashed_password, user.email)
+    }
 
-        self.user_rule_repo
-            .check_rule_name(user.username.as_str())?; //bl
+    fn new_user_organization(
+        &self,
+        c_apporg: CleanAppOrgByClientId,
+        user: User,
+    ) -> UserOrganization {
+        UserOrganization::new(c_apporg, user)
+    }
+    fn hash_password(&self, password: String) -> RepositoryResult<String> {
+        self.hasher_repo.hash(password.as_str())
+    }
+    async fn find_user_by_username(
+        &self,
+        username: String,
+        application_id: Uuid,
+        organization_id: Uuid,
+    ) -> RepositoryResult<Option<CreatedUser>> {
+        self.database_repo
+            .find_user_by_username(username, application_id, organization_id)
+            .await
+    }
 
-        self.user_rule_repo
-            .check_email_nullable(&app_config, &user, &c_apporg)
-            .await?; //bl
-
-        self.user_rule_repo
-            .check_username_unique(&app_config, &user, &c_apporg)
-            .await?; //bl
-
-        let hashed_password = self.hasher_repo.hash(user.password.as_str())?;
-
-        let new_user = User::new(c_apporg.clone(), user.username, hashed_password, user.email);
-        let new_uorg = UserOrganization::new(c_apporg, new_user.clone());
-        let user_id = new_user.user_id.clone();
-        self.database_repo.create_user(new_user, new_uorg).await?;
-
-        Ok(user_id)
+    async fn find_user_by_email(
+        &self,
+        email: String,
+        application_id: Uuid,
+        organization_id: Uuid,
+    ) -> RepositoryResult<Option<CreatedUser>> {
+        self.database_repo
+            .find_user_by_email(email, application_id, organization_id)
+            .await
     }
 }

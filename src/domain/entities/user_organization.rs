@@ -1,11 +1,12 @@
 use chrono::Utc;
 use scylla::value::CqlTimestamp;
+use scylla::{DeserializeRow, SerializeRow};
 use uuid::Uuid;
 
 use crate::domain::models::apporg_client_id_models::CleanAppOrgByClientId;
 use crate::domain::entities::user::User;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,SerializeRow,DeserializeRow)]
 pub struct UserOrganization {
     pub user_id: Uuid,
     pub organization_id: Uuid,

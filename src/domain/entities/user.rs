@@ -1,10 +1,14 @@
 use chrono::Utc;
-use scylla::value::CqlTimestamp;
+use scylla::{value::CqlTimestamp, DeserializeRow, SerializeRow};
 use uuid::Uuid;
 
 use crate::domain::models::apporg_client_id_models::CleanAppOrgByClientId;
 
-#[derive(Debug, Clone)]
+pub trait UserValidation {
+    fn validate_name(&self) -> bool;
+}
+
+#[derive(Debug, Clone,SerializeRow,DeserializeRow)]
 pub struct User {
     pub user_id: Uuid,
     pub organization_id: Uuid,
@@ -24,7 +28,11 @@ pub struct User {
     pub mfa_enabled: bool,
     pub deactivated_at: Option<CqlTimestamp>,
 }
-
+impl UserValidation for User {
+    fn validate_name(&self) -> bool {
+        self.username.len() <= 2 || self.username.len() >= 50
+    }
+}
 impl User {
     pub fn new(
         apporg: CleanAppOrgByClientId,

@@ -17,7 +17,6 @@ use crate::infrastructure::{
         initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
         validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
     },
-    rule_checker::user_rule::UserRuleCheckerImpl,
     security::argon2_repository::PasswordHasherImpl,
     services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
 };
@@ -35,7 +34,6 @@ pub fn create_all(
 ) -> (Repositories, Arc<dyn InitialCoreService>) {
     let user_db = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
     let password_hasher = Arc::new(PasswordHasherImpl::new());
-    let user_rule_checker = Arc::new(UserRuleCheckerImpl::new(user_db.clone()));
 
     let aes_repo = Arc::new(AesGcmCipherImpl::new(secret.as_bytes()));
     let base64_repo = Arc::new(Base64RepositoryImpl);
@@ -57,7 +55,6 @@ pub fn create_all(
     let user_repo = Arc::new(UserRepositoryImpl::new(
         user_db,
         password_hasher,
-        user_rule_checker,
     ));
 
     let auth_repo = Arc::new(ValidateBearerAuthMiddlewareRepositoryImpl::new(
