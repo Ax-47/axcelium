@@ -7,10 +7,8 @@ use crate::infrastructure::{
 
 use super::repositories::Repositories;
 
-pub fn create_hello_service(repos: &Repositories) -> Arc<dyn HelloService> {
-    Arc::new(HelloServiceImpl {
-        repository: repos.hello_repo.clone(),
-    })
+pub fn create_hello_service() -> Arc<dyn HelloService> {
+    Arc::new(HelloServiceImpl {})
 }
 
 pub fn create_user_service(repos: &Repositories) -> Arc<dyn UserService> {

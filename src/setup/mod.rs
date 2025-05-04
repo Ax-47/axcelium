@@ -37,7 +37,7 @@ impl Container {
 
         core_service.lunch(do_gen_core).await;
 
-        let hello_service = services::create_hello_service(&repos);
+        let hello_service = services::create_hello_service();
         let user_service = services::create_user_service(&repos);
 
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(

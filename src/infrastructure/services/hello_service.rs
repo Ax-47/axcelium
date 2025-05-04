@@ -1,14 +1,9 @@
 use async_trait::async_trait;
-
-use crate::infrastructure::repositories::hello_repository::HelloRepository;
-use std::sync::Arc;
 #[derive(Clone)]
-pub struct HelloServiceImpl {
-    pub repository: Arc<dyn HelloRepository>,
-}
+pub struct HelloServiceImpl {}
 impl HelloServiceImpl {
-    pub fn new(repository: Arc<dyn HelloRepository>) -> Self {
-        HelloServiceImpl { repository }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 #[async_trait]
@@ -18,6 +13,6 @@ pub trait HelloService: 'static + Sync + Send {
 #[async_trait]
 impl HelloService for HelloServiceImpl {
     async fn hello_world(&self) -> String {
-        self.repository.hello_world().await
+        "Hello, World".to_string()
     }
 }

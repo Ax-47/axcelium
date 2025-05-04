@@ -10,7 +10,6 @@ use crate::infrastructure::{
         organization_repository::OrganizationDatabaseRepositoryImpl,
         user_repository::UserDatabaseRepositoryImpl,
     }, repositories::{
-        hello_repository::HelloRepositoryImpl,
         initial_core::InitialCoreImpl,
         user_repository::UserRepositoryImpl,
         validate_bearer_auth_repository::VaildateBearerAuthMiddlewareRepositoryImpl,
@@ -18,7 +17,6 @@ use crate::infrastructure::{
 };
 
 pub struct Repositories {
-    pub hello_repo: Arc<HelloRepositoryImpl>,
     pub user_repo: Arc<UserRepositoryImpl>,
     pub auth_repo: Arc<VaildateBearerAuthMiddlewareRepositoryImpl>,
 }
@@ -50,7 +48,6 @@ pub fn create_all(
         apporg_db_repo.clone(),
     ));
 
-    let hello_repo = Arc::new(HelloRepositoryImpl::new());
     let user_repo = Arc::new(UserRepositoryImpl::new(
         user_db,
         password_hasher,
@@ -75,7 +72,6 @@ pub fn create_all(
 
     (
         Repositories {
-            hello_repo,
             user_repo,
             auth_repo,
         },
