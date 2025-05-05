@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq,Serialize)]
 pub struct CreateUserResponse {
     pub user_id: String,
     pub username: String,

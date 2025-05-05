@@ -38,6 +38,7 @@ impl UserRepositoryImpl {
         }
     }
 }
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UserRepository: Send + Sync {
     fn new_user_organization(

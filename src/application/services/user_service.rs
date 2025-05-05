@@ -21,6 +21,8 @@ impl UserServiceImpl {
         UserServiceImpl { repository }
     }
 }
+
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UserService: 'static + Sync + Send {
     async fn create(

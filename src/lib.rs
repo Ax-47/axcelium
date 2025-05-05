@@ -5,3 +5,4 @@ pub mod infrastructure;
 pub mod routes;
 pub mod setup;
 pub mod config;
+pub mod tests;
