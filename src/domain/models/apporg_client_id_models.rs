@@ -10,7 +10,7 @@ fn serialize_cql_timestamp<S>(ts: &CqlTimestamp, serializer: S) -> Result<S::Ok,
 where
     S: Serializer,
 {
-    serializer.serialize_i64(ts.0) // timestamp in milliseconds
+    serializer.serialize_i64(ts.0)
 }
 fn deserialize_cql_timestamp<'de, D>(deserializer: D) -> Result<CqlTimestamp, D::Error>
 where
@@ -64,8 +64,6 @@ impl AppOrgByClientId {
             updated_at: now,
         }
     }
-}
-impl AppOrgByClientId {
     pub fn set_config(&mut self, config: &AppConfig) -> Result<(), serde_json::Error> {
         self.application_config = serde_json::to_string(config)?;
         self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());

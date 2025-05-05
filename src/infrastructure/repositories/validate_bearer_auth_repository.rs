@@ -4,9 +4,9 @@ use uuid::Uuid;
 
 use crate::domain::errors::repositories_errors::RepositoryResult;
 use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
-use crate::infrastructure::cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository;
-use crate::infrastructure::cipher::{
-    aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
+use crate::infrastructure::repositories::{
+    cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository,
+    cipher::{aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository},
 };
 pub struct ValidateBearerAuthMiddlewareRepositoryImpl {
     apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,

@@ -2,11 +2,13 @@ use crate::config;
 use crate::domain::models::application_models::Application;
 use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
 use crate::domain::models::organization_models::Organization;
-use crate::infrastructure::cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository;
-use crate::infrastructure::cipher::aes_gcm_repository::AesGcmCipherRepository;
-use crate::infrastructure::cipher::base64_repository::Base64Repository;
-use crate::infrastructure::database::application_repository::ApplicationDatabaseRepository;
-use crate::infrastructure::database::organization_repository::OrganizationDatabaseRepository;
+use crate::infrastructure::repositories::{
+    cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository,
+    cipher::aes_gcm_repository::AesGcmCipherRepository,
+    cipher::base64_repository::Base64Repository,
+    database::application_repository::ApplicationDatabaseRepository,
+    database::organization_repository::OrganizationDatabaseRepository,
+};
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -119,4 +121,3 @@ impl InitialCoreRepository for InitialCoreImpl {
             .unwrap();
     }
 }
-

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use redis::Client;
 use scylla::client::session::Session;
 
-use crate::infrastructure::{
+use crate::infrastructure::repositories::{
     cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
     cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
     cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
@@ -13,13 +13,11 @@ use crate::infrastructure::{
         organization_repository::OrganizationDatabaseRepositoryImpl,
         user_repository::UserDatabaseRepositoryImpl,
     },
-    repositories::{
         initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
         validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
-    },
     security::argon2_repository::PasswordHasherImpl,
-    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
 };
+use crate::infrastructure::services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl};
 
 pub struct Repositories {
     pub user_repo: Arc<UserRepositoryImpl>,

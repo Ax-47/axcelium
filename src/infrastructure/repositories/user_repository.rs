@@ -7,7 +7,7 @@ use crate::{
             user_models::{CreateUser, CreatedUser},
         },
     },
-    infrastructure::{
+    infrastructure::repositories::{
         database::user_repository::UserDatabaseRepository,
         security::argon2_repository::PasswordHasherRepository,
     },
@@ -73,7 +73,7 @@ impl UserRepository for UserRepositoryImpl {
         user: CreateUser,
         hashed_password: String,
     ) -> User {
-        User::new(c_apporg, user.username, hashed_password, user.email)
+        User::new(c_apporg.application_id,c_apporg.organization_id, user.username, hashed_password, user.email)
     }
 
     fn new_user_organization(

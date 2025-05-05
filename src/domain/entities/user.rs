@@ -2,8 +2,6 @@ use chrono::Utc;
 use scylla::{value::CqlTimestamp, DeserializeRow, SerializeRow};
 use uuid::Uuid;
 
-use crate::domain::models::apporg_client_id_models::CleanAppOrgByClientId;
-
 pub trait UserValidation {
     fn validate_name(&self) -> bool;
 }
@@ -28,24 +26,19 @@ pub struct User {
     pub mfa_enabled: bool,
     pub deactivated_at: Option<CqlTimestamp>,
 }
-impl UserValidation for User {
-    fn validate_name(&self) -> bool {
-        self.username.len() <= 2 || self.username.len() >= 50
-    }
-}
 impl User {
     pub fn new(
-        apporg: CleanAppOrgByClientId,
+        application_id: Uuid,
+        organization_id: Uuid,
         username: String,
         hashed_password: String,
         email: Option<String>,
     ) -> Self {
         let now = CqlTimestamp(Utc::now().timestamp_millis());
-
         Self {
             user_id: Uuid::new_v4(),
-            application_id: apporg.application_id,
-            organization_id: apporg.organization_id,
+            application_id,
+            organization_id,
             username,
             email,
             password_hash: hashed_password,
@@ -60,7 +53,15 @@ impl User {
         }
     }
 
+    pub fn validate_name(&self) -> bool {
+        !(self.username.len() <= 2 || self.username.len() >= 50)
+    }
+
     pub fn prepared_email(&self) -> String {
         self.email.clone().unwrap_or_default()
+    }
+
+    pub fn touch_updated(&mut self) {
+        self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());
     }
 }

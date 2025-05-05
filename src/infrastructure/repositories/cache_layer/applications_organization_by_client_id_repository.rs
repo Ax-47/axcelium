@@ -2,8 +2,8 @@ use crate::domain::{
     errors::repositories_errors::RepositoryResult,
     models::apporg_client_id_models::AppOrgByClientId,
 };
-use crate::infrastructure::cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheRepository;
-use crate::infrastructure::database::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepository;
+use crate::infrastructure::repositories::cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheRepository;
+use crate::infrastructure::repositories::database::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepository;
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
