@@ -29,6 +29,7 @@ serde_yaml = "0.9.34"
 config = "0.15.11"
 regex = "1.11.1"
 email_address = "0.2.9"
+mockall = "0.13.1"
 [dependencies.uuid]
 version = "1.11.0"
 features = [
