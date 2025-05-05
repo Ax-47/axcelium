@@ -1,9 +1,8 @@
 use uuid::Uuid;
 use scylla::value::CqlTimestamp;
-use scylla::{DeserializeRow, SerializeRow};
 use chrono::Utc;
 
-#[derive(Debug, Clone,DeserializeRow,SerializeRow)]
+#[derive(Debug, Clone)]
 pub struct Organization {
     pub organization_id: Uuid,
     pub name: String,

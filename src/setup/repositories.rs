@@ -3,6 +3,13 @@ use std::sync::Arc;
 use redis::Client;
 use scylla::client::session::Session;
 
+use crate::application::{
+    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
+    repositories::{
+        initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
+        validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
+    },
+};
 use crate::infrastructure::repositories::{
     cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
     cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
@@ -13,11 +20,8 @@ use crate::infrastructure::repositories::{
         organization_repository::OrganizationDatabaseRepositoryImpl,
         user_repository::UserDatabaseRepositoryImpl,
     },
-        initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
-        validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
     security::argon2_repository::PasswordHasherImpl,
 };
-use crate::infrastructure::services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl};
 
 pub struct Repositories {
     pub user_repo: Arc<UserRepositoryImpl>,
@@ -50,10 +54,7 @@ pub fn create_all(
         apporg_db_repo.clone(),
     ));
 
-    let user_repo = Arc::new(UserRepositoryImpl::new(
-        user_db,
-        password_hasher,
-    ));
+    let user_repo = Arc::new(UserRepositoryImpl::new(user_db, password_hasher));
 
     let auth_repo = Arc::new(ValidateBearerAuthMiddlewareRepositoryImpl::new(
         apporg_cache_layer.clone(),

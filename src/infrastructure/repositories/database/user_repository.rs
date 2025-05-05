@@ -1,7 +1,6 @@
-use crate::domain::{
-    entities::user_organization::UserOrganization, errors::repositories_errors::RepositoryResult,
-    entities::user::User,
-    models::user_models::CreatedUser,
+use crate::{
+    domain::errors::repositories_errors::RepositoryResult,
+    infrastructure::models::{user::{FoundUserModel, UserModel}, user_organization::UserOrganizationModel},
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
@@ -19,49 +18,50 @@ impl UserDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait UserDatabaseRepository: Send + Sync {
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
-    async fn insert_into_user(&self, user: &User) -> RepositoryResult<()>;
-    async fn insert_into_user_by_email(&self, user: &User) -> RepositoryResult<()>;
-    async fn insert_into_user_by_username(&self, user: &User) -> RepositoryResult<()>;
+    async fn create_user(&self, user: UserModel, u_org: UserOrganizationModel) -> RepositoryResult<()>;
+    async fn insert_into_user(&self, user: &UserModel) -> RepositoryResult<()>;
+    async fn insert_into_user_by_email(&self, user: &UserModel) -> RepositoryResult<()>;
+    async fn insert_into_user_by_username(&self, user: &UserModel) -> RepositoryResult<()>;
     async fn insert_into_user_organizations(
         &self,
-        user_org: &UserOrganization,
+        user_org: &UserOrganizationModel,
     ) -> RepositoryResult<()>;
     async fn insert_into_user_organizations_by_user(
         &self,
-        user_org: &UserOrganization,
+        user_org: &UserOrganizationModel,
     ) -> RepositoryResult<()>;
     async fn find_user_by_email(
         &self,
         email: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>>;
+    ) -> RepositoryResult<Option<FoundUserModel>>;
 
     async fn find_user_by_username(
         &self,
         username: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>>;
+    ) -> RepositoryResult<Option<FoundUserModel>>;
 }
 
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
+    async fn create_user(&self, user: UserModel, u_org: UserOrganizationModel) -> RepositoryResult<()> {
         let results = futures::future::join_all(vec![
             self.insert_into_user(&user),
             self.insert_into_user_by_email(&user),
             self.insert_into_user_by_username(&user),
             self.insert_into_user_organizations(&u_org),
             self.insert_into_user_organizations_by_user(&u_org),
-        ]).await;
+        ])
+        .await;
         if let Some(err) = results.into_iter().find_map(Result::err) {
             return Err(err);
         }
         Ok(())
     }
-    async fn insert_into_user(&self, user: &User) -> RepositoryResult<()> {
+    async fn insert_into_user(&self, user: &UserModel) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.users (
             user_id, organization_id, application_id,
             username, email, hashed_password,
@@ -76,7 +76,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
                     user.organization_id,
                     user.application_id,
                     user.username.clone(),
-                    user.prepared_email(),
+                    user.to_entity().prepared_email(),
                     user.password_hash.clone(),
                     user.created_at,
                     user.updated_at,
@@ -91,7 +91,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         Ok(())
     }
 
-    async fn insert_into_user_by_email(&self, user: &User) -> RepositoryResult<()> {
+    async fn insert_into_user_by_email(&self, user: &UserModel) -> RepositoryResult<()> {
         if user.email.is_some() {
             let query = "INSERT INTO axcelium.users_by_email (
                     email, organization_id, application_id,
@@ -105,7 +105,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         Ok(())
     }
 
-    async fn insert_into_user_by_username(&self, user: &User) -> RepositoryResult<()> {
+    async fn insert_into_user_by_username(&self, user: &UserModel) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.users_by_username (
                 username, organization_id, application_id,
                 email, user_id, password_hash,
@@ -119,7 +119,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
 
     async fn insert_into_user_organizations(
         &self,
-        user_org: &UserOrganization,
+        user_org: &UserOrganizationModel,
     ) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.user_organizations (
             organization_id, user_id, role,
@@ -133,7 +133,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
 
     async fn insert_into_user_organizations_by_user(
         &self,
-        user_org: &UserOrganization,
+        user_org: &UserOrganizationModel,
     ) -> RepositoryResult<()> {
         let query = "INSERT INTO axcelium.user_organizations_by_user (
             user_id, organization_id, role,
@@ -149,7 +149,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         email: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>> {
+    ) -> RepositoryResult<Option<FoundUserModel>> {
         let query = "SELECT username,user_id,email FROM axcelium.users_by_email \
                     WHERE email = ? AND application_id = ? AND organization_id = ?";
 
@@ -159,7 +159,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .await?
             .into_rows_result()?;
 
-        let row = result.maybe_first_row::<CreatedUser>()?;
+        let row = result.maybe_first_row::<FoundUserModel>()?;
         Ok(row)
     }
 
@@ -168,7 +168,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         username: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>> {
+    ) -> RepositoryResult<Option<FoundUserModel>> {
         let query = "SELECT username,user_id,email FROM axcelium.users_by_username \
                 WHERE username = ? AND application_id = ? AND organization_id = ?";
         let result = self
@@ -177,7 +177,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .await?
             .into_rows_result()?;
 
-        let row = result.maybe_first_row::<CreatedUser>()?;
+        let row = result.maybe_first_row::<FoundUserModel>()?;
         Ok(row)
     }
 }

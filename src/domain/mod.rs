@@ -1,3 +1,3 @@
 pub mod errors;
-pub mod models;
 pub mod entities;
+pub mod value_objects;

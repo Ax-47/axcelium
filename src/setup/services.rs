@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::infrastructure::{
+use crate::application::{
     services::hello_service::{HelloService, HelloServiceImpl},
     services::user_service::{UserService, UserServiceImpl},
 };

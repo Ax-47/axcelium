@@ -8,7 +8,7 @@ use std::{
     sync::Arc,
 };
 use std::rc::Rc;
-use crate::infrastructure::services::validate_bearer_auth_service::ValidateBearerAuthMiddlewareService;
+use super::super::services::validate_bearer_auth_service::ValidateBearerAuthMiddlewareService;
 use actix_web::HttpMessage;
 pub struct ValidateBearerAuth {
     middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>,

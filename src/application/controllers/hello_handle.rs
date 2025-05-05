@@ -1,7 +1,5 @@
-use crate::{
-    application::dto::response::hello::HelloResponse,
-    infrastructure::services::hello_service::HelloService,
-};
+use super::super::services::hello_service::HelloService;
+use crate::application::dto::response::hello::HelloResponse;
 use actix_web::{web, Result};
 
 pub async fn hello_handler(

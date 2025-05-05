@@ -1,7 +1,4 @@
-use crate::{
-    config, domain::models::apporg_client_id_models::AppOrgByClientId,
-    infrastructure::repositories::initial_core::InitialCoreRepository,
-};
+use crate::{application::repositories::initial_core::InitialCoreRepository, config, domain::entities::apporg_client_id::AppOrgByClientId};
 use async_trait::async_trait;
 use std::sync::Arc;
 #[derive(Clone)]
@@ -35,7 +32,11 @@ impl InitialCoreService for InitialCoreServiceImpl {
         if !cfg.core.generate_core_org_app {
             return;
         }
-        if self.repository.is_org_exist(cfg.organization.name.clone()).await {
+        if self
+            .repository
+            .is_org_exist(cfg.organization.name.clone())
+            .await
+        {
             return;
         }
         let org = self.repository.new_org(cfg.organization);
@@ -46,7 +47,9 @@ impl InitialCoreService for InitialCoreServiceImpl {
             .await;
         self.repository.create_app(app.clone()).await;
         let apporg = self.repository.new_apporg_by_client_id(app, org);
-        self.repository.create_apporg_by_client_id(apporg.clone()).await;
+        self.repository
+            .create_apporg_by_client_id(apporg.clone())
+            .await;
 
         self.print_info(apporg, client_key, client_secret);
     }

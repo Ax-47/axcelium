@@ -80,3 +80,10 @@ impl UserModel {
         }
     }
 }
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct FoundUserModel {
+    pub user_id: Uuid,
+    pub username: String,
+    pub email: Option<String>,
+}

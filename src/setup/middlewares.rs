@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::infrastructure::services::validate_bearer_auth_service::{
+use crate::application::services::validate_bearer_auth_service::{
     ValidateBearerAuthMiddlewareService, ValidateBearerAuthMiddlewareServiceImpl,
 };
 

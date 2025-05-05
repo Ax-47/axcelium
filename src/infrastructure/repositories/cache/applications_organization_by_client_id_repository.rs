@@ -1,7 +1,5 @@
-use crate::domain::{
-    errors::repositories_errors::RepositoryResult,
-    models::apporg_client_id_models::AppOrgByClientId,
-};
+use crate::domain::errors::repositories_errors::RepositoryResult;
+use crate::infrastructure::models::apporg_client_id::AppOrgModel;
 use async_trait::async_trait;
 use redis::{AsyncCommands, Client};
 use std::sync::Arc;
@@ -12,17 +10,17 @@ pub struct ApplicationsOrganizationByClientIdCacheImpl {
 }
 
 impl ApplicationsOrganizationByClientIdCacheImpl {
-    pub fn new(cache: Arc<Client>,ttl:u64) -> Self {
-        Self { cache,ttl }
+    pub fn new(cache: Arc<Client>, ttl: u64) -> Self {
+        Self { cache, ttl }
     }
 }
 #[async_trait]
-pub trait ApplicationsOrganizationByClientIdCacheRepository: Send+Sync {
-    async fn cache_apporg_by_client_id(&self, apporg: &AppOrgByClientId) -> RepositoryResult<()>;
+pub trait ApplicationsOrganizationByClientIdCacheRepository: Send + Sync {
+    async fn cache_apporg_by_client_id(&self, apporg: &AppOrgModel) -> RepositoryResult<()>;
     async fn get_cached_apporg_by_client_id(
         &self,
         client_id: Uuid,
-    ) -> RepositoryResult<Option<AppOrgByClientId>>;
+    ) -> RepositoryResult<Option<AppOrgModel>>;
     async fn invalidate_cache(&self, client_id: Uuid) -> RepositoryResult<()>;
 }
 
@@ -30,7 +28,7 @@ pub trait ApplicationsOrganizationByClientIdCacheRepository: Send+Sync {
 impl ApplicationsOrganizationByClientIdCacheRepository
     for ApplicationsOrganizationByClientIdCacheImpl
 {
-    async fn cache_apporg_by_client_id(&self, apporg: &AppOrgByClientId) -> RepositoryResult<()> {
+    async fn cache_apporg_by_client_id(&self, apporg: &AppOrgModel) -> RepositoryResult<()> {
         let mut conn = self.cache.get_multiplexed_tokio_connection().await?;
         let key = format!("apporg:client_id:{}", apporg.client_id);
         let value = serde_json::to_string(apporg)?;
@@ -41,7 +39,7 @@ impl ApplicationsOrganizationByClientIdCacheRepository
     async fn get_cached_apporg_by_client_id(
         &self,
         client_id: Uuid,
-    ) -> RepositoryResult<Option<AppOrgByClientId>> {
+    ) -> RepositoryResult<Option<AppOrgModel>> {
         let mut conn = self.cache.get_multiplexed_tokio_connection().await?;
         let key = format!("apporg:client_id:{}", client_id);
         let result: Option<String> = conn.get(key).await?;
@@ -57,7 +55,7 @@ impl ApplicationsOrganizationByClientIdCacheRepository
     async fn invalidate_cache(&self, client_id: Uuid) -> RepositoryResult<()> {
         let mut conn = self.cache.get_multiplexed_tokio_connection().await?;
         let key = format!("apporg:client_id:{}", client_id);
-        let _: () =conn.del(key).await?;
+        let _: () = conn.del(key).await?;
         Ok(())
     }
 }

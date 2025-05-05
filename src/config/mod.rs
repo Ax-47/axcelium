@@ -1,4 +1,4 @@
-use crate::domain::models::app_config::AppConfig;
+use crate::domain::value_objects::app_config::AppConfig;
 use serde::Deserialize;
 use std::{fs, path::Path};
 #[derive(Debug, Deserialize, Clone)]

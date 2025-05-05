@@ -1,15 +1,22 @@
+use crate::application::mappers::model::ModelMapper;
 use crate::{
-    domain::{
-        entities::{user::User, user_organization::UserOrganization},
-        errors::repositories_errors::RepositoryResult,
-        models::{
-            apporg_client_id_models::CleanAppOrgByClientId,
-            user_models::{CreateUser, CreatedUser},
-        },
+    application::{
+        dto::{payload::user::CreateUserPayload, response::user::CreateUserResponse},
+        mappers::{application::ApplicationMapper, user::found::FoundUserMapper},
     },
-    infrastructure::repositories::{
-        database::user_repository::UserDatabaseRepository,
-        security::argon2_repository::PasswordHasherRepository,
+    domain::{
+        entities::{
+            apporg_client_id::CleanAppOrgByClientId, user::User,
+            user_organization::UserOrganization,
+        },
+        errors::repositories_errors::RepositoryResult,
+    },
+    infrastructure::{
+        models::{user::UserModel, user_organization::UserOrganizationModel},
+        repositories::{
+            database::user_repository::UserDatabaseRepository,
+            security::argon2_repository::PasswordHasherRepository,
+        },
     },
 };
 use async_trait::async_trait;
@@ -41,7 +48,7 @@ pub trait UserRepository: Send + Sync {
     fn new_user(
         &self,
         apporg: CleanAppOrgByClientId,
-        user: CreateUser,
+        user: CreateUserPayload,
         hashed_password: String,
     ) -> User;
     fn hash_password(&self, password: String) -> RepositoryResult<String>;
@@ -50,14 +57,14 @@ pub trait UserRepository: Send + Sync {
         username: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>>;
+    ) -> RepositoryResult<Option<CreateUserResponse>>;
 
     async fn find_user_by_email(
         &self,
         email: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>>;
+    ) -> RepositoryResult<Option<CreateUserResponse>>;
 
     async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
 }
@@ -65,15 +72,26 @@ pub trait UserRepository: Send + Sync {
 #[async_trait]
 impl UserRepository for UserRepositoryImpl {
     async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
-        self.database_repo.create_user(user, u_org).await
+        self.database_repo
+            .create_user(
+                UserModel::from_entity(user),
+                UserOrganizationModel::from_entity(u_org),
+            )
+            .await
     }
     fn new_user(
         &self,
         c_apporg: CleanAppOrgByClientId,
-        user: CreateUser,
+        user: CreateUserPayload,
         hashed_password: String,
     ) -> User {
-        User::new(c_apporg.application_id,c_apporg.organization_id, user.username, hashed_password, user.email)
+        User::new(
+            c_apporg.application_id,
+            c_apporg.organization_id,
+            user.username,
+            hashed_password,
+            user.email,
+        )
     }
 
     fn new_user_organization(
@@ -91,10 +109,16 @@ impl UserRepository for UserRepositoryImpl {
         username: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>> {
-        self.database_repo
+    ) -> RepositoryResult<Option<CreateUserResponse>> {
+        let Some(user) = self
+            .database_repo
             .find_user_by_username(username, application_id, organization_id)
-            .await
+            .await?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(FoundUserMapper::to_dto(user)))
     }
 
     async fn find_user_by_email(
@@ -102,9 +126,14 @@ impl UserRepository for UserRepositoryImpl {
         email: String,
         application_id: Uuid,
         organization_id: Uuid,
-    ) -> RepositoryResult<Option<CreatedUser>> {
-        self.database_repo
+    ) -> RepositoryResult<Option<CreateUserResponse>> {
+        let Some(user) = self
+            .database_repo
             .find_user_by_email(email, application_id, organization_id)
-            .await
+            .await?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(FoundUserMapper::to_dto(user)))
     }
 }

@@ -1,5 +1,6 @@
-use crate::domain::{
-    errors::repositories_errors::RepositoryResult, models::application_models::Application,
+use crate::{
+    domain::errors::repositories_errors::RepositoryResult,
+    infrastructure::models::application::AppcalitionModel,
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
@@ -16,12 +17,12 @@ impl ApplicationDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait ApplicationDatabaseRepository: Send + Sync {
-    async fn create_application(&self, app: Application) -> RepositoryResult<()>;
+    async fn create_application(&self, app: AppcalitionModel) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl ApplicationDatabaseRepository for ApplicationDatabaseRepositoryImpl {
-    async fn create_application(&self, app: Application) -> RepositoryResult<()> {
+    async fn create_application(&self, app: AppcalitionModel) -> RepositoryResult<()> {
         let query = "
         INSERT INTO axcelium.applications (
             organization_id,

@@ -1,11 +1,10 @@
-use super::app_config::AppConfig;
+use super::super::value_objects::app_config::AppConfig;
 use chrono::Utc;
 use rand_core::{OsRng, TryRngCore};
 use scylla::value::CqlTimestamp;
-use scylla::{DeserializeRow, SerializeRow};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, DeserializeRow, SerializeRow)]
+#[derive(Debug, Clone)]
 pub struct Application {
     pub organization_id: Uuid,
     pub application_id: Uuid,

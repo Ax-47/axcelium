@@ -1,5 +1,6 @@
-use crate::domain::{
-    errors::repositories_errors::RepositoryResult, models::organization_models::Organization,
+use crate::{
+    domain::errors::repositories_errors::RepositoryResult,
+    infrastructure::models::organization::OrganizationModel,
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
@@ -18,7 +19,7 @@ impl OrganizationDatabaseRepositoryImpl {
 #[async_trait]
 pub trait OrganizationDatabaseRepository: Send + Sync {
     async fn find_organization(&self, name: String) -> RepositoryResult<Option<Uuid>>;
-    async fn create_organization(&self, org: Organization) -> RepositoryResult<()>;
+    async fn create_organization(&self, org: OrganizationModel) -> RepositoryResult<()>;
 }
 
 #[async_trait]
@@ -39,7 +40,7 @@ impl OrganizationDatabaseRepository for OrganizationDatabaseRepositoryImpl {
             .map(|row| row.0);
         Ok(res)
     }
-    async fn create_organization(&self, org: Organization) -> RepositoryResult<()> {
+    async fn create_organization(&self, org: OrganizationModel) -> RepositoryResult<()> {
         let query = "
         INSERT INTO axcelium.organizations (
             organization_id,

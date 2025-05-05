@@ -1,12 +1,12 @@
 use chrono::Utc;
-use scylla::{value::CqlTimestamp, DeserializeRow, SerializeRow};
+use scylla::value::CqlTimestamp;
 use uuid::Uuid;
 
 pub trait UserValidation {
     fn validate_name(&self) -> bool;
 }
 
-#[derive(Debug, Clone,SerializeRow,DeserializeRow)]
+#[derive(Debug, Clone)]
 pub struct User {
     pub user_id: Uuid,
     pub organization_id: Uuid,

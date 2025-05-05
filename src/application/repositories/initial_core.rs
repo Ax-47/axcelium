@@ -1,7 +1,10 @@
 use crate::config;
-use crate::domain::models::application_models::Application;
-use crate::domain::models::apporg_client_id_models::AppOrgByClientId;
-use crate::domain::models::organization_models::Organization;
+use crate::domain::entities::application::Application;
+use crate::domain::entities::apporg_client_id::AppOrgByClientId;
+use crate::domain::entities::organization::Organization;
+use crate::infrastructure::models::application::AppcalitionModel;
+use crate::infrastructure::models::apporg_client_id::AppOrgModel;
+use crate::infrastructure::models::organization::OrganizationModel;
 use crate::infrastructure::repositories::{
     cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository,
     cipher::aes_gcm_repository::AesGcmCipherRepository,
@@ -12,7 +15,7 @@ use crate::infrastructure::repositories::{
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-
+use crate::application::mappers::model::ModelMapper;
 pub struct InitialCoreImpl {
     aes_repo: Arc<dyn AesGcmCipherRepository>,
     base64_repo: Arc<dyn Base64Repository>,
@@ -85,7 +88,7 @@ impl InitialCoreRepository for InitialCoreImpl {
             .is_some()
     }
     async fn create_org(&self, org: Organization) {
-        self.org_db_repo.create_organization(org).await.unwrap()
+        self.org_db_repo.create_organization(OrganizationModel::from_entity(org)).await.unwrap()
     }
 
     async fn new_app(
@@ -109,14 +112,15 @@ impl InitialCoreRepository for InitialCoreImpl {
         )
     }
     async fn create_app(&self, app: Application) {
-        self.app_db_repo.create_application(app).await.unwrap()
+
+        self.app_db_repo.create_application(AppcalitionModel::from_entity(app)).await.unwrap()
     }
     fn new_apporg_by_client_id(&self, app: Application, org: Organization) -> AppOrgByClientId {
         AppOrgByClientId::new(org, app)
     }
     async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) {
         self.apporg_by_client_id_cachelayer_repo
-            .create_apporg_by_client_id(apporg)
+            .create_apporg_by_client_id(AppOrgModel::from_entity(apporg))
             .await
             .unwrap();
     }

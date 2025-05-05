@@ -1,4 +1,3 @@
-use crate::domain::models::user_models::CreateUser;
 use serde::Deserialize;
 use validator::{Validate, ValidationError};
 use email_address::EmailAddress;
@@ -22,14 +21,5 @@ fn validate_username_or_email(value: &str) -> Result<(), ValidationError> {
         Ok(())
     } else {
         Err(ValidationError::new("invalid_username_or_email"))
-    }
-}
-impl From<CreateUserPayload> for CreateUser {
-    fn from(dto: CreateUserPayload) -> Self {
-        CreateUser {
-            username: dto.username,
-            email: dto.email,
-            password: dto.password,
-        }
     }
 }

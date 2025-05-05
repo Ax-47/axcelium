@@ -1,12 +1,13 @@
 use crate::{
-    domain::{
-        errors::repositories_errors::{RepositoryError, RepositoryResult},
-        models::{
-            apporg_client_id_models::CleanAppOrgByClientId,
-            user_models::{CreateUser, CreatedUser},
-        },
+    application::{
+        dto::{payload::user::CreateUserPayload, response::user::CreateUserResponse},
+        repositories::user_repository::UserRepository,
     },
-    infrastructure::repositories::user_repository::UserRepository,
+    domain::{
+        entities::apporg_client_id::CleanAppOrgByClientId,
+        entities::apporg_client_id::HasAppConfig,
+        errors::repositories_errors::{RepositoryError, RepositoryResult},
+    },
 };
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -25,16 +26,16 @@ pub trait UserService: 'static + Sync + Send {
     async fn create(
         &self,
         c_apporg: CleanAppOrgByClientId,
-        user: CreateUser,
-    ) -> RepositoryResult<CreatedUser>;
+        user: CreateUserPayload,
+    ) -> RepositoryResult<CreateUserResponse>;
 }
 #[async_trait]
 impl UserService for UserServiceImpl {
     async fn create(
         &self,
         c_apporg: CleanAppOrgByClientId,
-        user: CreateUser,
-    ) -> RepositoryResult<CreatedUser> {
+        user: CreateUserPayload,
+    ) -> RepositoryResult<CreateUserResponse> {
         if !(2..=50).contains(&user.username.len()) {
             return Err(RepositoryError::new("username is not valid".into(), 400));
         }
@@ -78,15 +79,17 @@ impl UserService for UserServiceImpl {
             }
         }
         let hashed_password = self.repository.hash_password(user.password.clone())?;
-        let new_user = self.repository.new_user(c_apporg.clone(), user, hashed_password);
+        let new_user = self
+            .repository
+            .new_user(c_apporg.clone(), user, hashed_password);
         let new_uorg = self
             .repository
             .new_user_organization(c_apporg, new_user.clone());
         self.repository
             .create_user(new_user.clone(), new_uorg)
             .await?;
-        return Ok(CreatedUser {
-            user_id: new_user.user_id,
+        return Ok(CreateUserResponse {
+            user_id: new_user.user_id.to_string(),
             username: new_user.username,
             email: new_user.email,
         });

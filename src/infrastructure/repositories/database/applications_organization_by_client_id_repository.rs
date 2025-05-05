@@ -1,6 +1,6 @@
-use crate::domain::{
-    errors::repositories_errors::RepositoryResult,
-    models::apporg_client_id_models::AppOrgByClientId,
+use crate::{
+    domain::errors::repositories_errors::RepositoryResult,
+    infrastructure::models::apporg_client_id::AppOrgModel,
 };
 use async_trait::async_trait;
 use scylla::client::session::Session;
@@ -17,16 +17,18 @@ impl ApplicationsOrganizationByClientIdDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait ApplicationsOrganizationByClientIdDatabaseRepository: Send + Sync {
-    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()>;
-    async fn find_apporg_by_client_id(&self, client_id: Uuid)
-        -> RepositoryResult<Option<AppOrgByClientId>>;
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgModel) -> RepositoryResult<()>;
+    async fn find_apporg_by_client_id(
+        &self,
+        client_id: Uuid,
+    ) -> RepositoryResult<Option<AppOrgModel>>;
 }
 
 #[async_trait]
 impl ApplicationsOrganizationByClientIdDatabaseRepository
     for ApplicationsOrganizationByClientIdDatabaseRepositoryImpl
 {
-    async fn create_apporg_by_client_id(&self, apporg: AppOrgByClientId) -> RepositoryResult<()> {
+    async fn create_apporg_by_client_id(&self, apporg: AppOrgModel) -> RepositoryResult<()> {
         let query = "
             INSERT INTO axcelium.applications_organization_by_client_id (
                 client_id,
@@ -50,7 +52,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
     async fn find_apporg_by_client_id(
         &self,
         client_id: Uuid,
-    ) -> RepositoryResult<Option<AppOrgByClientId>> {
+    ) -> RepositoryResult<Option<AppOrgModel>> {
         let query = "
             SELECT client_id, application_id, organization_id, encrypted_client_secret,
                     organization_name, organization_slug,
@@ -65,7 +67,7 @@ impl ApplicationsOrganizationByClientIdDatabaseRepository
             .query_unpaged(query, (client_id,))
             .await?
             .into_rows_result()?
-            .maybe_first_row::<AppOrgByClientId>()?;
+            .maybe_first_row::<AppOrgModel>()?;
 
         Ok(row)
     }

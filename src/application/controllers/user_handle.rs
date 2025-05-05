@@ -1,10 +1,7 @@
+use super::super::services::user_service::UserService;
 use crate::{
     application::dto::{payload::user::CreateUserPayload, response::user::CreateUserResponse},
-    domain::{
-        errors::repositories_errors::ApiError,
-        models::apporg_client_id_models::CleanAppOrgByClientId,
-    },
-    infrastructure::services::user_service::UserService,
+    domain::{entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::ApiError},
 };
 use actix_web::HttpMessage;
 use actix_web::{web, Result};

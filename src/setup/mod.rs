@@ -1,7 +1,7 @@
 use crate::{
     application::middlewares::bearer_auth::ValidateBearerAuth,
     config,
-    infrastructure::services::{hello_service::HelloService, user_service::UserService},
+    application::services::{hello_service::HelloService, user_service::UserService},
 };
 use redis::Client;
 use scylla::client::session::Session;
