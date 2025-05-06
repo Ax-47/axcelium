@@ -231,19 +231,9 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         paging_state_u8: Option<Vec<u8>>,
     ) -> RepositoryResult<PaginatedUsersModel> {
         let query_str = r#"
-            SELECT user_id,
-                    organization_id,
-                    application_id,
-                    username,
-                    email,
-                    created_at,
-                    updated_at,
-                    is_active,
-                    is_verified,
-                    is_locked,
-                    last_login,
-                    mfa_enabled,
-                    deactivated_at
+            SELECT user_id,organization_id,application_id,username,
+                email,created_at,updated_at,is_active,is_verified,is_locked,
+                last_login,mfa_enabled,deactivated_at
             FROM axcelium.users
             WHERE organization_id = ? AND application_id = ?
         "#;
