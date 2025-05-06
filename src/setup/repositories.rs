@@ -6,7 +6,7 @@ use scylla::client::session::Session;
 use crate::application::{
     services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
     repositories::{
-        initial_core::InitialCoreImpl, user_repository::UserRepositoryImpl,
+        initial_core::InitialCoreImpl, users::create::CreateUserRepositoryImpl,
         validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
     },
 };
@@ -24,7 +24,7 @@ use crate::infrastructure::repositories::{
 };
 
 pub struct Repositories {
-    pub user_repo: Arc<UserRepositoryImpl>,
+    pub user_repo: Arc<CreateUserRepositoryImpl>,
     pub auth_repo: Arc<ValidateBearerAuthMiddlewareRepositoryImpl>,
 }
 
@@ -54,7 +54,7 @@ pub fn create_all(
         apporg_db_repo.clone(),
     ));
 
-    let user_repo = Arc::new(UserRepositoryImpl::new(user_db, password_hasher));
+    let user_repo = Arc::new(CreateUserRepositoryImpl::new(user_db, password_hasher));
 
     let auth_repo = Arc::new(ValidateBearerAuthMiddlewareRepositoryImpl::new(
         apporg_cache_layer.clone(),

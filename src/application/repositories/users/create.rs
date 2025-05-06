@@ -22,12 +22,12 @@ use crate::{
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-pub struct UserRepositoryImpl {
+pub struct CreateUserRepositoryImpl {
     database_repo: Arc<dyn UserDatabaseRepository>,
     hasher_repo: Arc<dyn PasswordHasherRepository>,
 }
 
-impl UserRepositoryImpl {
+impl CreateUserRepositoryImpl {
     pub fn new(
         database_repo: Arc<dyn UserDatabaseRepository>,
         hasher_repo: Arc<dyn PasswordHasherRepository>,
@@ -40,7 +40,7 @@ impl UserRepositoryImpl {
 }
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait UserRepository: Send + Sync {
+pub trait CreateUserRepository: Send + Sync {
     fn new_user_organization(
         &self,
         c_apporg: CleanAppOrgByClientId,
@@ -71,7 +71,7 @@ pub trait UserRepository: Send + Sync {
 }
 
 #[async_trait]
-impl UserRepository for UserRepositoryImpl {
+impl CreateUserRepository for CreateUserRepositoryImpl {
     async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
         self.database_repo
             .create_user(

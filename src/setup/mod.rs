@@ -1,7 +1,7 @@
 use crate::{
     application::middlewares::bearer_auth::ValidateBearerAuth,
     config,
-    application::services::{hello_service::HelloService, user_service::UserService},
+    application::services::{hello_service::HelloService, users::create::CreateUserService},
 };
 use redis::Client;
 use scylla::client::session::Session;
@@ -11,7 +11,7 @@ mod repositories;
 mod services;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
-    pub user_service: Arc<dyn UserService>,
+    pub user_service: Arc<dyn CreateUserService>,
     pub validate_bearer_auth_middleware_service: Arc<ValidateBearerAuth>,
 }
 

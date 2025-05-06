@@ -1,7 +1,7 @@
 use crate::{
     application::{
         dto::{payload::user::CreateUserPayload, response::user::CreateUserResponse},
-        repositories::user_repository::UserRepository,
+        repositories::users::create::CreateUserRepository,
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
@@ -13,32 +13,32 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct UserServiceImpl {
-    pub repository: Arc<dyn UserRepository>,
+pub struct CreateUserServiceImpl {
+    pub repository: Arc<dyn CreateUserRepository>,
 }
-impl UserServiceImpl {
-    pub fn new(repository: Arc<dyn UserRepository>) -> Self {
-        UserServiceImpl { repository }
+impl CreateUserServiceImpl {
+    pub fn new(repository: Arc<dyn CreateUserRepository>) -> Self {
+        CreateUserServiceImpl { repository }
     }
 }
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait UserService: 'static + Sync + Send {
-    async fn create(
+pub trait CreateUserService: 'static + Sync + Send {
+    async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
         user: CreateUserPayload,
     ) -> RepositoryResult<CreateUserResponse>;
 }
 #[async_trait]
-impl UserService for UserServiceImpl {
-    async fn create(
+impl CreateUserService for CreateUserServiceImpl {
+    async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
         user: CreateUserPayload,
     ) -> RepositoryResult<CreateUserResponse> {
-        if !(2..=50).contains(&user.username.len()) {
+        if !(2..=50).contains(&user.username.len()){
             return Err(RepositoryError::new("username is not valid".into(), 400));
         }
         let Ok(config) = c_apporg.get_config() else {
