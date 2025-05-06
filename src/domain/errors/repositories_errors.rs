@@ -121,7 +121,6 @@ impl From<FromUtf8Error> for RepositoryError {
         RepositoryError::new("failed to convert".to_string(), 500)
     }
 }
-
 impl From<FirstRowError> for RepositoryError {
     fn from(err: FirstRowError) -> Self {
         RepositoryError::new(format!("failed to Query: {}", err), 500)

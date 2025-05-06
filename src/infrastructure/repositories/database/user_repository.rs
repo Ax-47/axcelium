@@ -1,7 +1,7 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::models::{
-        user::{CleannedUserModel, FoundUserModel, PaginatedUsers, UserModel},
+        user::{CleannedUserModel, FoundUserModel, PaginatedUsersModel, UserModel},
         user_organization::UserOrganizationModel,
     },
 };
@@ -55,7 +55,7 @@ pub trait UserDatabaseRepository: Send + Sync {
         application_id: Uuid,
         page_size: i32,
         paging_state: Option<Vec<u8>>,
-    ) -> RepositoryResult<PaginatedUsers>;
+    ) -> RepositoryResult<PaginatedUsersModel>;
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
@@ -229,7 +229,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         application_id: Uuid,
         page_size: i32,
         paging_state_u8: Option<Vec<u8>>,
-    ) -> RepositoryResult<PaginatedUsers> {
+    ) -> RepositoryResult<PaginatedUsersModel> {
         let query_str = r#"
             SELECT user_id,
                     organization_id,
@@ -275,7 +275,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             ControlFlow::Continue(state) => state.as_bytes_slice().map(|arc| arc.as_ref().to_vec()),
         };
 
-        Ok(PaginatedUsers {
+        Ok(PaginatedUsersModel {
             users,
             paging_state: next_page_state,
         })

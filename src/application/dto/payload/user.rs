@@ -1,10 +1,10 @@
+use email_address::EmailAddress;
 use serde::Deserialize;
 use validator::{Validate, ValidationError};
-use email_address::EmailAddress;
 
 #[derive(Debug, Validate, Deserialize)]
 pub struct CreateUserPayload {
-    #[validate(custom (function= "validate_username_or_email"))]
+    #[validate(custom(function = "validate_username_or_email"))]
     pub username: String,
 
     #[validate(email)]
@@ -22,4 +22,9 @@ fn validate_username_or_email(value: &str) -> Result<(), ValidationError> {
     } else {
         Err(ValidationError::new("invalid_username_or_email"))
     }
+}
+#[derive(Deserialize)]
+pub struct PaginationQuery {
+    pub page_size: Option<i32>,
+    pub paging_state: Option<String>,
 }

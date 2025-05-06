@@ -4,11 +4,17 @@ use redis::Client;
 use scylla::client::session::Session;
 
 use crate::application::{
-    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
     repositories::{
-        initial_core::InitialCoreImpl, users::create::CreateUserRepositoryImpl,
-        validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepositoryImpl,
+        initial_core::InitialCoreImpl,
+        users::{
+            create::{CreateUserRepository, CreateUserRepositoryImpl},
+            get::{GetUsersRepository, GetUsersRepositoryImpl},
+        },
+        validate_bearer_auth_repository::{
+            ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
+        },
     },
+    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
 };
 use crate::infrastructure::repositories::{
     cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
@@ -24,8 +30,9 @@ use crate::infrastructure::repositories::{
 };
 
 pub struct Repositories {
-    pub user_repo: Arc<CreateUserRepositoryImpl>,
-    pub auth_repo: Arc<ValidateBearerAuthMiddlewareRepositoryImpl>,
+    pub create_user_repo: Arc<dyn CreateUserRepository>,
+    pub get_users_repo: Arc<dyn GetUsersRepository>,
+    pub auth_repo: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
 }
 
 pub fn create_all(
@@ -54,14 +61,20 @@ pub fn create_all(
         apporg_db_repo.clone(),
     ));
 
-    let user_repo = Arc::new(CreateUserRepositoryImpl::new(user_db, password_hasher));
+    let create_user_repo = Arc::new(CreateUserRepositoryImpl::new(
+        user_db.clone(),
+        password_hasher,
+    ));
 
     let auth_repo = Arc::new(ValidateBearerAuthMiddlewareRepositoryImpl::new(
         apporg_cache_layer.clone(),
         base64_repo.clone(),
         aes_repo.clone(),
     ));
-
+    let get_users_repo = Arc::new(GetUsersRepositoryImpl::new(
+        user_db.clone(),
+        base64_repo.clone(),
+    ));
     let core_repo = Arc::new(InitialCoreImpl::new(
         aes_repo,
         base64_repo,
@@ -74,7 +87,8 @@ pub fn create_all(
 
     (
         Repositories {
-            user_repo,
+            create_user_repo,
+            get_users_repo,
             auth_repo,
         },
         core_service,

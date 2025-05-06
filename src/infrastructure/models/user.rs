@@ -120,7 +120,7 @@ pub struct FoundUserModel {
     pub email: Option<String>,
 }
 
-pub struct PaginatedUsers {
+pub struct PaginatedUsersModel {
     pub users: Vec<CleannedUserModel>,
     pub paging_state: Option<Vec<u8>>,
 }

@@ -1,7 +1,12 @@
 use crate::{
-    application::middlewares::bearer_auth::ValidateBearerAuth,
+    application::{
+        middlewares::bearer_auth::ValidateBearerAuth,
+        services::{
+            hello_service::HelloService,
+            users::{create::CreateUserService, get::GetUsersService},
+        },
+    },
     config,
-    application::services::{hello_service::HelloService, users::create::CreateUserService},
 };
 use redis::Client;
 use scylla::client::session::Session;
@@ -11,7 +16,8 @@ mod repositories;
 mod services;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
-    pub user_service: Arc<dyn CreateUserService>,
+    pub create_user_service: Arc<dyn CreateUserService>,
+    pub get_users_service: Arc<dyn GetUsersService>,
     pub validate_bearer_auth_middleware_service: Arc<ValidateBearerAuth>,
 }
 
@@ -25,14 +31,16 @@ impl Container {
         core_service.lunch(cfg).await;
 
         let hello_service = services::create_hello_service();
-        let user_service = services::create_user_service(&repos);
+        let create_user_service = services::create_create_user_service(&repos);
+        let get_users_service = services::create_get_users_service(&repos);
 
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
         Self {
             hello_service,
-            user_service,
+            create_user_service,
+            get_users_service,
             validate_bearer_auth_middleware_service,
         }
     }
