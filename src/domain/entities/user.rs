@@ -14,7 +14,7 @@ pub struct User {
 
     pub username: String,
     pub email: Option<String>,
-    pub password_hash: String,
+    pub hashed_password: String,
 
     pub created_at: CqlTimestamp,
     pub updated_at: CqlTimestamp,
@@ -41,7 +41,7 @@ impl User {
             organization_id,
             username,
             email,
-            password_hash: hashed_password,
+            hashed_password,
             created_at: now,
             updated_at: now,
             is_active: true,

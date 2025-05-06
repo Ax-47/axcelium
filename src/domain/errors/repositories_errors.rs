@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
-use scylla::errors::{ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError};
+use scylla::errors::{DeserializationError, ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError, PrepareError, RowsError};
 use serde::Serialize;
 use std::{fmt, string::FromUtf8Error};
 use redis::RedisError;
@@ -124,6 +124,21 @@ impl From<FromUtf8Error> for RepositoryError {
 
 impl From<FirstRowError> for RepositoryError {
     fn from(err: FirstRowError) -> Self {
+        RepositoryError::new(format!("failed to Query: {}", err), 500)
+    }
+}
+impl From<RowsError> for RepositoryError{
+    fn from(err: RowsError) -> Self {
+        RepositoryError::new(format!("failed to Query: {}", err), 500)
+    }
+}
+impl From<DeserializationError>for RepositoryError {
+    fn from(err: DeserializationError) -> Self {
+        RepositoryError::new(format!("failed to Query: {}", err), 500)
+    }
+}
+impl From<PrepareError>for RepositoryError {
+    fn from(err: PrepareError) -> Self {
         RepositoryError::new(format!("failed to Query: {}", err), 500)
     }
 }

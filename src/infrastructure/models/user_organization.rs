@@ -1,5 +1,5 @@
 use crate::application::mappers::model::ModelMapper;
-use super::scylla_serialize::{
+use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, serialize_cql_timestamp,
 };
 use crate::domain::entities::user_organization::UserOrganization;

@@ -1,4 +1,4 @@
-use super::scylla_serialize::{
+use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, deserialize_optional_cql_timestamp, serialize_cql_timestamp,
     serialize_optional_cql_timestamp,
 };
@@ -14,7 +14,7 @@ pub struct UserModel {
     pub application_id: Uuid,
     pub username: String,
     pub email: Option<String>,
-    pub password_hash: String,
+    pub hashed_password: String,
     #[serde(
         serialize_with = "serialize_cql_timestamp",
         deserialize_with = "deserialize_cql_timestamp"
@@ -49,7 +49,7 @@ impl UserModel {
             application_id: entity.application_id,
             username: entity.username,
             email: entity.email,
-            password_hash: entity.password_hash,
+            hashed_password: entity.hashed_password,
             created_at: entity.created_at,
             updated_at: entity.updated_at,
             is_active: entity.is_active,
@@ -68,7 +68,7 @@ impl UserModel {
             application_id: self.application_id,
             username: self.username.clone(),
             email: self.email.clone(),
-            password_hash: self.password_hash.clone(),
+            hashed_password: self.hashed_password.clone(),
             created_at: self.created_at,
             updated_at: self.updated_at,
             is_active: self.is_active,
@@ -82,8 +82,45 @@ impl UserModel {
 }
 
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct CleannedUserModel {
+    pub user_id: Uuid,
+    pub organization_id: Uuid,
+    pub application_id: Uuid,
+    pub username: String,
+    pub email: Option<String>,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub created_at: CqlTimestamp,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub updated_at: CqlTimestamp,
+    pub is_active: bool,
+    pub is_verified: bool,
+    pub is_locked: bool,
+    #[serde(
+        serialize_with = "serialize_optional_cql_timestamp",
+        deserialize_with = "deserialize_optional_cql_timestamp"
+    )]
+    pub last_login: Option<CqlTimestamp>,
+    pub mfa_enabled: bool,
+    #[serde(
+        serialize_with = "serialize_optional_cql_timestamp",
+        deserialize_with = "deserialize_optional_cql_timestamp"
+    )]
+    pub deactivated_at: Option<CqlTimestamp>,
+}
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct FoundUserModel {
     pub user_id: Uuid,
     pub username: String,
     pub email: Option<String>,
+}
+
+pub struct PaginatedUsers {
+    pub users: Vec<CleannedUserModel>,
+    pub paging_state: Option<Vec<u8>>,
 }
