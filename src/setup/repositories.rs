@@ -8,6 +8,7 @@ use crate::application::{
         initial_core::InitialCoreImpl,
         users::{
             create::{CreateUserRepository, CreateUserRepositoryImpl},
+            get_user::{GetUserRepository, GetUserRepositoryImpl},
             get_users::{GetUsersRepository, GetUsersRepositoryImpl},
         },
         validate_bearer_auth_repository::{
@@ -32,6 +33,7 @@ use crate::infrastructure::repositories::{
 pub struct Repositories {
     pub create_user_repo: Arc<dyn CreateUserRepository>,
     pub get_users_repo: Arc<dyn GetUsersRepository>,
+    pub get_user_repo: Arc<dyn GetUserRepository>,
     pub auth_repo: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
 }
 
@@ -75,6 +77,8 @@ pub fn create_all(
         user_db.clone(),
         base64_repo.clone(),
     ));
+
+    let get_user_repo = Arc::new(GetUserRepositoryImpl::new(user_db.clone()));
     let core_repo = Arc::new(InitialCoreImpl::new(
         aes_repo,
         base64_repo,
@@ -90,6 +94,7 @@ pub fn create_all(
             create_user_repo,
             get_users_repo,
             auth_repo,
+            get_user_repo,
         },
         core_service,
     )

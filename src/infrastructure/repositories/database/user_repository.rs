@@ -49,6 +49,12 @@ pub trait UserDatabaseRepository: Send + Sync {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<FoundUserModel>>;
+    async fn find_user(
+        &self,
+        application_id: Uuid,
+        organization_id: Uuid,
+        user_id: Uuid,
+    ) -> RepositoryResult<Option<CleannedUserModel>>;
     async fn find_all_users_paginated(
         &self,
         organization_id: Uuid,
@@ -269,5 +275,27 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             users,
             paging_state: next_page_state,
         })
+    }
+
+    async fn find_user(
+        &self,
+        application_id: Uuid,
+        organization_id: Uuid,
+        user_id: Uuid,
+    ) -> RepositoryResult<Option<CleannedUserModel>> {
+        let query = r#"
+            SELECT user_id,organization_id,application_id,username,
+                email,created_at,updated_at,is_active,is_verified,is_locked,
+                last_login,mfa_enabled,deactivated_at
+            FROM axcelium.users
+            WHERE organization_id = ? AND application_id = ? AND user_id =?;
+        "#;
+        let result = self
+            .database
+            .query_unpaged(query, (organization_id, application_id, user_id))
+            .await?
+            .into_rows_result()?;
+
+        Ok(result.maybe_first_row::<CleannedUserModel>()?)
     }
 }

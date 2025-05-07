@@ -1,5 +1,6 @@
 use email_address::EmailAddress;
 use serde::Deserialize;
+use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 #[derive(Debug, Validate, Deserialize)]
@@ -27,4 +28,9 @@ fn validate_username_or_email(value: &str) -> Result<(), ValidationError> {
 pub struct PaginationQuery {
     pub page_size: Option<i32>,
     pub paging_state: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct GetUserQuery {
+    pub user_id: Uuid,
 }
