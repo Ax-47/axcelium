@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::application::services::{hello_service::{HelloService, HelloServiceImpl}, users::{create::{CreateUserService, CreateUserServiceImpl}, get::{GetUsersService, GetUsersServiceImpl}}};
+use crate::application::services::{hello_service::{HelloService, HelloServiceImpl}, users::{create::{CreateUserService, CreateUserServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}}};
 
 use super::repositories::Repositories;
 

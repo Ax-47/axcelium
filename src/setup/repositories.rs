@@ -8,7 +8,7 @@ use crate::application::{
         initial_core::InitialCoreImpl,
         users::{
             create::{CreateUserRepository, CreateUserRepositoryImpl},
-            get::{GetUsersRepository, GetUsersRepositoryImpl},
+            get_users::{GetUsersRepository, GetUsersRepositoryImpl},
         },
         validate_bearer_auth_repository::{
             ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,

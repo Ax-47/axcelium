@@ -5,7 +5,7 @@ use crate::{
             payload::user::{CreateUserPayload, PaginationQuery},
             response::user::{CreateUserResponse, GetUsersResponse},
         },
-        services::users::get::GetUsersService,
+        services::users::get_users::GetUsersService,
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::ApiError,

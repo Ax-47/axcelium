@@ -3,7 +3,7 @@ use crate::{
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
             hello_service::HelloService,
-            users::{create::CreateUserService, get::GetUsersService},
+            users::{create::CreateUserService, get_users::GetUsersService},
         },
     },
     config,

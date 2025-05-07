@@ -1,6 +1,6 @@
 use crate::{
     application::{
-        dto::response::user::GetUsersResponse, repositories::users::get::GetUsersRepository,
+        dto::response::user::GetUsersResponse, repositories::users::get_users::GetUsersRepository,
     },
     domain::errors::repositories_errors::RepositoryResult,
 };
