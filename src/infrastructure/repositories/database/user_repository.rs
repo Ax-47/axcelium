@@ -6,7 +6,11 @@ use crate::{
     },
 };
 use async_trait::async_trait;
-use scylla::{client::session::Session, response::PagingState, statement::Statement};
+use scylla::{
+    client::session::Session,
+    response::PagingState,
+    statement::{batch::Batch, Consistency, Statement},
+};
 use std::{ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 pub struct UserDatabaseRepositoryImpl {
@@ -24,17 +28,6 @@ pub trait UserDatabaseRepository: Send + Sync {
         &self,
         user: UserModel,
         u_org: UserOrganizationModel,
-    ) -> RepositoryResult<()>;
-    async fn insert_into_user(&self, user: &UserModel) -> RepositoryResult<()>;
-    async fn insert_into_user_by_email(&self, user: &UserModel) -> RepositoryResult<()>;
-    async fn insert_into_user_by_username(&self, user: &UserModel) -> RepositoryResult<()>;
-    async fn insert_into_user_organizations(
-        &self,
-        user_org: &UserOrganizationModel,
-    ) -> RepositoryResult<()>;
-    async fn insert_into_user_organizations_by_user(
-        &self,
-        user_org: &UserOrganizationModel,
     ) -> RepositoryResult<()>;
     async fn find_user_by_email(
         &self,
@@ -70,120 +63,61 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         user: UserModel,
         u_org: UserOrganizationModel,
     ) -> RepositoryResult<()> {
-        let inserts = vec![
-            self.insert_into_user(&user),
-            self.insert_into_user_by_email(&user),
-            self.insert_into_user_by_username(&user),
-            self.insert_into_user_organizations(&u_org),
-            self.insert_into_user_organizations_by_user(&u_org),
-        ];
-
-        for result in futures::future::join_all(inserts).await {
-            if let Err(err) = result {
-                return Err(err);
-            }
-        }
-
-        Ok(())
-    }
-
-    async fn insert_into_user(&self, user: &UserModel) -> RepositoryResult<()> {
-        let query = r#"
-            INSERT INTO axcelium.users (
-                user_id, organization_id, application_id,
-                username, email, hashed_password,
-                created_at, updated_at,
-                is_active, is_verified, is_locked, mfa_enabled
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#;
-
-        self.database
-            .query_unpaged(
-                query,
-                (
-                    user.user_id,
-                    user.organization_id,
-                    user.application_id,
-                    user.username.clone(),
-                    user.to_entity().prepared_email(),
-                    user.hashed_password.clone(),
-                    user.created_at,
-                    user.updated_at,
-                    user.is_active,
-                    user.is_verified,
-                    user.is_locked,
-                    user.mfa_enabled,
-                ),
-            )
-            .await?;
-
-        Ok(())
-    }
-
-    async fn insert_into_user_by_email(&self, user: &UserModel) -> RepositoryResult<()> {
-        if let Some(_) = &user.email {
-            let query = r#"
+        let mut batch = Batch::default();
+        batch.set_consistency(Consistency::Quorum);
+        let query1 = r#"
+        INSERT INTO axcelium.users (
+            user_id, organization_id, application_id,
+            username, email, hashed_password,
+            created_at, updated_at,
+            is_active, is_verified, is_locked, mfa_enabled,last_login,deactivated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+    "#;
+        batch.append_statement(query1);
+        let use_email = user.email.is_some();
+        if use_email {
+            let query2 = r#"
                 INSERT INTO axcelium.users_by_email (
                     email, organization_id, application_id,
-                    user_id, username, password_hash,
+                    user_id, username, hashed_password,
                     created_at, updated_at,
                     is_active, is_verified, is_locked,
                     last_login, mfa_enabled, deactivated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#;
-
-            self.database.query_unpaged(query, user).await?;
+            batch.append_statement(query2);
         }
-
-        Ok(())
-    }
-
-    async fn insert_into_user_by_username(&self, user: &UserModel) -> RepositoryResult<()> {
-        let query = r#"
-            INSERT INTO axcelium.users_by_username (
-                username, organization_id, application_id,
-                email, user_id, password_hash,
-                created_at, updated_at,
-                is_active, is_verified, is_locked,
-                last_login, mfa_enabled, deactivated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#;
-
-        self.database.query_unpaged(query, user).await?;
-        Ok(())
-    }
-
-    async fn insert_into_user_organizations(
-        &self,
-        user_org: &UserOrganizationModel,
-    ) -> RepositoryResult<()> {
-        let query = r#"
-            INSERT INTO axcelium.user_organizations (
-                organization_id, user_id, role,
-                username, user_email,
-                organization_name, organization_slug, contact_email,
-                joined_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#;
-
-        self.database.query_unpaged(query, user_org).await?;
-        Ok(())
-    }
-
-    async fn insert_into_user_organizations_by_user(
-        &self,
-        user_org: &UserOrganizationModel,
-    ) -> RepositoryResult<()> {
-        let query = r#"
-            INSERT INTO axcelium.user_organizations_by_user (
-                user_id, organization_id, role,
-                username, user_email,
-                organization_name, organization_slug, contact_email,
-                joined_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        "#;
-
-        self.database.query_unpaged(query, user_org).await?;
+        let query3 = r#"
+        INSERT INTO axcelium.users_by_username (
+            username, organization_id, application_id,
+            email, user_id, hashed_password,
+            created_at, updated_at,
+            is_active, is_verified, is_locked,
+            last_login, mfa_enabled, deactivated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    "#;
+        batch.append_statement(query3);
+        let query4 = r#"
+        INSERT INTO axcelium.user_organizations (
+            organization_id, user_id, role,
+            username, user_email,
+            organization_name, organization_slug, contact_email,
+            joined_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    "#;
+        batch.append_statement(query4);
+        let query5 = r#"
+        INSERT INTO axcelium.user_organizations_by_user (
+            user_id, organization_id, role,
+            username, user_email,
+            organization_name, organization_slug, contact_email,
+            joined_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    "#;
+        batch.append_statement(query5);
+        self.database
+            .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
+            .await?;
         Ok(())
     }
 
