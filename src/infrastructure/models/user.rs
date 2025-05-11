@@ -124,3 +124,15 @@ pub struct PaginatedUsersModel {
     pub users: Vec<CleannedUserModel>,
     pub paging_state: Option<Vec<u8>>,
 }
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct UpdateUserModel {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub hashed_password: Option<String>,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub updated_at: CqlTimestamp,
+}
