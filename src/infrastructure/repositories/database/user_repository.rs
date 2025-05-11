@@ -1,8 +1,10 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::models::{
-        user::{CleannedUserModel, FoundUserModel, PaginatedUsersModel, UserModel},
-        user_organization::UserOrganizationModel,
+        user::{
+            CleannedUserModel, FoundUserModel, PaginatedUsersModel, UpdateUserModel, UserModel,
+        },
+        user_organization::{UpdateUserOrganizationModel, UserOrganizationModel},
     },
 };
 use async_trait::async_trait;
@@ -55,6 +57,12 @@ pub trait UserDatabaseRepository: Send + Sync {
         page_size: i32,
         paging_state: Option<Vec<u8>>,
     ) -> RepositoryResult<PaginatedUsersModel>;
+
+    async fn update_user(
+        &self,
+        user: UpdateUserModel,
+        u_org: UpdateUserOrganizationModel,
+    ) -> RepositoryResult<()>;
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
@@ -114,10 +122,17 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             joined_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     "#;
+
         batch.append_statement(query5);
-        self.database
-            .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
-            .await?;
+        if use_email {
+            self.database
+                .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
+                .await?;
+        } else {
+            self.database
+                .batch(&batch, ((&user), (&user), (&u_org), (&u_org)))
+                .await?;
+        }
         Ok(())
     }
 
@@ -231,5 +246,108 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .into_rows_result()?;
 
         Ok(result.maybe_first_row::<CleannedUserModel>()?)
+    }
+
+    async fn update_user(
+        &self,
+        user: UpdateUserModel,
+        u_org: UpdateUserOrganizationModel,
+    ) -> RepositoryResult<()> {
+        let mut sets = vec![];
+        if user.username.is_some() {
+            sets.push("username = ?");
+        }
+
+        if user.email.is_some() {
+            sets.push("email = ?");
+        }
+
+        if user.hashed_password.is_some() {
+            sets.push("hashed_password = ?");
+        }
+        sets.push("updated_at = ?");
+
+        let mut sets2 = vec![];
+        if u_org.role.is_some() {
+            sets2.push("role = ?");
+        }
+        if u_org.username.is_some() {
+            sets2.push("username = ?");
+        }
+
+        if u_org.user_email.is_some() {
+            sets2.push("user_email = ?");
+        }
+        if u_org.organization_name.is_some() {
+            sets2.push("organization_name = ?");
+        }
+
+        if u_org.organization_slug.is_some() {
+            sets2.push("organization_slug = ?");
+        }
+        if u_org.contact_email.is_some() {
+            sets2.push("contact_email = ?");
+        }
+
+        sets2.push("updated_at = ?");
+
+        let mut batch = Batch::default();
+        batch.set_consistency(Consistency::Quorum);
+        let query1 = format!(
+            r#"
+            UPDATE axcelium.users
+            SET {}
+            WHERE organization_id = ? AND application_id = ? AND user_id = ?
+            "#,
+            sets.join(", ")
+        );
+
+        batch.append_statement(query1.as_str());
+        let use_email = user.email.is_some();
+        if use_email {
+            let query2 = format!(
+                r#"
+                UPDATE axcelium.users_by_email
+            SET {}
+            WHERE organization_id = ? AND application_id = ? AND user_id = ?
+            "#,
+                sets.join(", ")
+            );
+            batch.append_statement(query2.as_str());
+        }
+
+        let query3 = format!(
+            r#"
+                UPDATE axcelium.users_by_username
+            SET {}
+            WHERE organization_id = ? AND application_id = ? AND user_id = ?
+            "#,
+            sets.join(", ")
+        );
+        batch.append_statement(query3.as_str());
+        let query4 = format!(
+            r#"
+                UPDATE axcelium.user_organizations
+            SET {}
+            WHERE organization_id = ? AND application_id = ? AND user_id = ?
+            "#,
+            sets2.join(", ")
+        );
+
+        batch.append_statement(query4.as_str());
+
+        let query5 = format!(
+            r#"
+                UPDATE axcelium.user_organizations_by_user
+            SET {}
+            WHERE organization_id = ? AND application_id = ? AND user_id = ?
+            "#,
+            sets2.join(", ")
+        );
+        batch.append_statement(query5.as_str());
+        self.database
+            .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
+            .await?;
+        Ok(())
     }
 }

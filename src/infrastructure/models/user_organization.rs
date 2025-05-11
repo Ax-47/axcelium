@@ -53,3 +53,13 @@ impl ModelMapper<UserOrganization> for UserOrganizationModel {
         }
     }
 }
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct UpdateUserOrganizationModel {
+    pub role: Option<String>,
+    pub username: Option<String>,
+    pub user_email: Option<String>,
+    pub organization_name: Option<String>,
+    pub organization_slug: Option<String>,
+    pub contact_email: Option<String>,
+}
