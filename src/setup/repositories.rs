@@ -10,6 +10,7 @@ use crate::application::{
             create::{CreateUserRepository, CreateUserRepositoryImpl},
             get_user::{GetUserRepository, GetUserRepositoryImpl},
             get_users::{GetUsersRepository, GetUsersRepositoryImpl},
+            update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
         },
         validate_bearer_auth_repository::{
             ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
@@ -35,6 +36,7 @@ pub struct Repositories {
     pub get_users_repo: Arc<dyn GetUsersRepository>,
     pub get_user_repo: Arc<dyn GetUserRepository>,
     pub auth_repo: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
+    pub update_user_repo: Arc<dyn UpdateUserRepository>
 }
 
 pub fn create_all(
@@ -45,24 +47,20 @@ pub fn create_all(
 ) -> (Repositories, Arc<dyn InitialCoreService>) {
     let user_db = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
     let password_hasher = Arc::new(PasswordHasherImpl::new());
-
     let aes_repo = Arc::new(AesGcmCipherImpl::new(secret.as_bytes()));
     let base64_repo = Arc::new(Base64RepositoryImpl);
-
     let org_db_repo = Arc::new(OrganizationDatabaseRepositoryImpl::new(database.clone()));
     let app_db_repo = Arc::new(ApplicationDatabaseRepositoryImpl::new(database.clone()));
     let apporg_db_repo =
         Arc::new(ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()));
-
+    let update_user_repo = Arc::new(UpdateUserRepositoryImpl::new(user_db.clone()));
     let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
         cache, cache_ttl,
     ));
-
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,
         apporg_db_repo.clone(),
     ));
-
     let create_user_repo = Arc::new(CreateUserRepositoryImpl::new(
         user_db.clone(),
         password_hasher,
@@ -95,6 +93,7 @@ pub fn create_all(
             get_users_repo,
             auth_repo,
             get_user_repo,
+            update_user_repo,
         },
         core_service,
     )

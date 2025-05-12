@@ -5,7 +5,7 @@ use crate::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery},
             response::user::{CreateUserResponse, GetUserResponse, GetUsersResponse},
         },
-        services::users::{get_user::GetUserService, get_users::GetUsersService},
+        services::users::{get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService},
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::ApiError,
@@ -61,6 +61,22 @@ pub async fn get_user_handle(
     path: web::Path<GetUserQuery>,
     user_service: web::Data<dyn GetUserService>,
 ) -> Result<web::Json<GetUserResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(apporg.organization_id, apporg.application_id, path.user_id)
+        .await?;
+    Ok(web::Json(created_user))
+}
+
+pub async fn update_user_handle(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetUserQuery>,
+    user_service: web::Data<dyn UpdateUserService>,
+) -> Result<web::Json<()>, ApiError> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
