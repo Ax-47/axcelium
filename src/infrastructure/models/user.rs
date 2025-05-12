@@ -1,10 +1,11 @@
+use crate::domain::entities::user::User;
 use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, deserialize_optional_cql_timestamp, serialize_cql_timestamp,
     serialize_optional_cql_timestamp,
 };
-use crate::domain::entities::user::User;
+use chrono::Utc;
 use scylla::value::CqlTimestamp;
-use scylla::{DeserializeRow, SerializeRow};
+use scylla::{DeserializeRow, SerializeRow, SerializeValue};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
@@ -125,7 +126,7 @@ pub struct PaginatedUsersModel {
     pub paging_state: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+#[derive(Debug, Clone, SerializeRow,SerializeValue, DeserializeRow, Serialize, Deserialize)]
 pub struct UpdateUserModel {
     pub username: Option<String>,
     pub email: Option<String>,
@@ -135,4 +136,19 @@ pub struct UpdateUserModel {
         deserialize_with = "deserialize_cql_timestamp"
     )]
     pub updated_at: CqlTimestamp,
+}
+impl UpdateUserModel {
+    pub fn new(
+        username: Option<String>,
+        email: Option<String>,
+        hashed_password: Option<String>,
+    ) -> Self {
+        let updated_at = CqlTimestamp(Utc::now().timestamp_millis());
+        Self {
+            username,
+            email,
+            hashed_password,
+            updated_at,
+        }
+    }
 }

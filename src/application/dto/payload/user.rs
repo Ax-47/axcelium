@@ -34,3 +34,13 @@ pub struct PaginationQuery {
 pub struct GetUserQuery {
     pub user_id: Uuid,
 }
+
+#[derive(Debug, Validate, Deserialize)]
+pub struct UpdateUserPayload {
+    #[validate(custom(function = "validate_username_or_email"))]
+    pub username: Option<String>,
+    #[validate(email)]
+    pub email: Option<String>,
+    #[validate(length(min = 8))]
+    pub password: Option<String>,
+}

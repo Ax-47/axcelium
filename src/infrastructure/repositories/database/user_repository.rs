@@ -9,9 +9,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use scylla::{
-    client::session::Session,
-    response::PagingState,
-    statement::{batch::Batch, Consistency, Statement},
+    client::session::Session, response::PagingState, serialize::row::SerializeRow, statement::{batch::Batch, Consistency, Statement}
 };
 use std::{ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
@@ -62,6 +60,9 @@ pub trait UserDatabaseRepository: Send + Sync {
         &self,
         user: UpdateUserModel,
         u_org: UpdateUserOrganizationModel,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
     ) -> RepositoryResult<()>;
 }
 #[async_trait]
@@ -252,102 +253,97 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         &self,
         user: UpdateUserModel,
         u_org: UpdateUserOrganizationModel,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
     ) -> RepositoryResult<()> {
-        let mut sets = vec![];
-        if user.username.is_some() {
-            sets.push("username = ?");
-        }
-
-        if user.email.is_some() {
-            sets.push("email = ?");
-        }
-
-        if user.hashed_password.is_some() {
-            sets.push("hashed_password = ?");
-        }
-        sets.push("updated_at = ?");
-
-        let mut sets2 = vec![];
-        if u_org.role.is_some() {
-            sets2.push("role = ?");
-        }
-        if u_org.username.is_some() {
-            sets2.push("username = ?");
-        }
-
-        if u_org.user_email.is_some() {
-            sets2.push("user_email = ?");
-        }
-        if u_org.organization_name.is_some() {
-            sets2.push("organization_name = ?");
-        }
-
-        if u_org.organization_slug.is_some() {
-            sets2.push("organization_slug = ?");
-        }
-        if u_org.contact_email.is_some() {
-            sets2.push("contact_email = ?");
-        }
-
-        sets2.push("updated_at = ?");
-
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
-        let query1 = format!(
-            r#"
-            UPDATE axcelium.users
-            SET {}
-            WHERE organization_id = ? AND application_id = ? AND user_id = ?
-            "#,
-            sets.join(", ")
+
+
+        // Common values
+        let common_user_values = (
+            user.username.as_ref(),
+            user.email.as_ref(),
+            user.hashed_password.as_ref(),
+            user.updated_at,
+            organization_id,
+            application_id,
+            user_id,
+        );
+        let common_org_values = (
+            u_org.username.as_ref(),
+            u_org.user_email.as_ref(),
+            organization_id,
+            application_id,
+            user_id,
         );
 
-        batch.append_statement(query1.as_str());
-        let use_email = user.email.is_some();
-        if use_email {
-            let query2 = format!(
-                r#"
-                UPDATE axcelium.users_by_email
-            SET {}
+        // Add axcelium.users
+        let query1 = r#"
+        UPDATE axcelium.users
+        SET 
+            username = COALESCE(?, username),
+            email = COALESCE(?, email),
+            hashed_password = COALESCE(?, hashed_password),
+            updated_at = ?
+        WHERE organization_id = ? AND application_id = ? AND user_id = ?
+    "#;
+        batch.append_statement(query1);
+        let mut binds: Vec<&(dyn SerializeRow + Sync)> = vec![&common_user_values];
+
+        // Add axcelium.users_by_email only if email is being updated
+        if user.email.is_some() {
+            let query2 = r#"
+            UPDATE axcelium.users_by_email
+            SET 
+                username = COALESCE(?, username),
+                email = COALESCE(?, email),
+                hashed_password = COALESCE(?, hashed_password),
+                updated_at = ?
             WHERE organization_id = ? AND application_id = ? AND user_id = ?
-            "#,
-                sets.join(", ")
-            );
-            batch.append_statement(query2.as_str());
+        "#;
+            batch.append_statement(query2);
+            binds.push(&common_user_values);
         }
 
-        let query3 = format!(
-            r#"
-                UPDATE axcelium.users_by_username
-            SET {}
-            WHERE organization_id = ? AND application_id = ? AND user_id = ?
-            "#,
-            sets.join(", ")
-        );
-        batch.append_statement(query3.as_str());
-        let query4 = format!(
-            r#"
-                UPDATE axcelium.user_organizations
-            SET {}
-            WHERE organization_id = ? AND application_id = ? AND user_id = ?
-            "#,
-            sets2.join(", ")
-        );
+        // Add axcelium.users_by_username
+        let query3 = r#"
+        UPDATE axcelium.users_by_username
+        SET 
+            username = COALESCE(?, username),
+            email = COALESCE(?, email),
+            hashed_password = COALESCE(?, hashed_password),
+            updated_at = ?
+        WHERE organization_id = ? AND application_id = ? AND user_id = ?
+    "#;
+        batch.append_statement(query3);
+        binds.push(&common_user_values);
 
-        batch.append_statement(query4.as_str());
+        // Add user_organizations
+        let query4 = r#"
+        UPDATE axcelium.user_organizations
+        SET 
+            username = COALESCE(?, username),
+            user_email = COALESCE(?, user_email)
+        WHERE organization_id = ? AND application_id = ? AND user_id = ?
+    "#;
+        batch.append_statement(query4);
+        binds.push(&common_org_values);
 
-        let query5 = format!(
-            r#"
-                UPDATE axcelium.user_organizations_by_user
-            SET {}
-            WHERE organization_id = ? AND application_id = ? AND user_id = ?
-            "#,
-            sets2.join(", ")
-        );
-        batch.append_statement(query5.as_str());
-        self.database
-            .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
-            .await?;
+        // Add user_organizations_by_user
+        let query5 = r#"
+        UPDATE axcelium.user_organizations_by_user
+        SET 
+            username = COALESCE(?, username),
+            user_email = COALESCE(?, user_email)
+        WHERE organization_id = ? AND application_id = ? AND user_id = ?
+    "#;
+        batch.append_statement(query5);
+        binds.push(&common_org_values);
+
+        // Execute batch
+        self.database.batch(&batch, binds).await?;
         Ok(())
     }
 }

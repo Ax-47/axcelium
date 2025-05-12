@@ -1,5 +1,8 @@
 use crate::{
-    application::repositories::users::update_user::UpdateUserRepository,
+    application::{
+        dto::payload::user::UpdateUserPayload,
+        repositories::users::update_user::UpdateUserRepository,
+    },
     domain::errors::repositories_errors::RepositoryResult,
 };
 use async_trait::async_trait;
@@ -19,11 +22,27 @@ impl UpdateUserServiceImpl {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UpdateUserService: 'static + Sync + Send {
-    async fn execute(&self, organization_id: Uuid, application_id: Uuid, user_id: Uuid) -> RepositoryResult<()>;
+    async fn execute(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+        update: UpdateUserPayload,
+    ) -> RepositoryResult<()>;
 }
 #[async_trait]
 impl UpdateUserService for UpdateUserServiceImpl {
-    async fn execute(&self, organization_id: Uuid, application_id: Uuid, user_id: Uuid) -> RepositoryResult<()> {
+    async fn execute(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+        update: UpdateUserPayload,
+    ) -> RepositoryResult<()> {
+        println!("test");
+        self.repository
+            .update_user(organization_id, application_id, user_id, update)
+            .await?;
         Ok(())
     }
 }

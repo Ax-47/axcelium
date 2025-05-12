@@ -1,10 +1,10 @@
 use crate::application::mappers::model::ModelMapper;
+use crate::domain::entities::user_organization::UserOrganization;
 use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, serialize_cql_timestamp,
 };
-use crate::domain::entities::user_organization::UserOrganization;
 use scylla::value::CqlTimestamp;
-use scylla::{DeserializeRow, SerializeRow};
+use scylla::{DeserializeRow, SerializeRow, SerializeValue};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
@@ -34,7 +34,7 @@ impl ModelMapper<UserOrganization> for UserOrganizationModel {
             user_email: entity.user_email,
             organization_name: entity.organization_name,
             organization_slug: entity.organization_slug,
-            contact_email:entity.contact_email,
+            contact_email: entity.contact_email,
             joined_at: entity.joined_at,
         }
     }
@@ -48,18 +48,22 @@ impl ModelMapper<UserOrganization> for UserOrganizationModel {
             user_email: self.user_email.clone(),
             organization_name: self.organization_name.clone(),
             organization_slug: self.organization_slug.clone(),
-            contact_email:self.contact_email.clone(),
+            contact_email: self.contact_email.clone(),
             joined_at: self.joined_at,
         }
     }
 }
 
-#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+#[derive(Debug, Clone, SerializeRow, SerializeValue, DeserializeRow, Serialize, Deserialize)]
 pub struct UpdateUserOrganizationModel {
-    pub role: Option<String>,
     pub username: Option<String>,
     pub user_email: Option<String>,
-    pub organization_name: Option<String>,
-    pub organization_slug: Option<String>,
-    pub contact_email: Option<String>,
+}
+impl UpdateUserOrganizationModel {
+    pub fn new(username: Option<String>, user_email: Option<String>) -> Self {
+        Self {
+            username,
+            user_email,
+        }
+    }
 }

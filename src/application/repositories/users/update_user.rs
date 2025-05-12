@@ -1,6 +1,10 @@
 use crate::{
+    application::dto::payload::user::UpdateUserPayload,
     domain::errors::repositories_errors::RepositoryResult,
-    infrastructure::{models::user::CleannedUserModel, repositories::database::user_repository::UserDatabaseRepository},
+    infrastructure::{
+        models::{user::UpdateUserModel, user_organization::UpdateUserOrganizationModel},
+        repositories::database::user_repository::UserDatabaseRepository,
+    },
 };
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -17,22 +21,38 @@ impl UpdateUserRepositoryImpl {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UpdateUserRepository: Send + Sync {
-    async fn find_user(
+    async fn update_user(
         &self,
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
-    ) -> RepositoryResult<Option<CleannedUserModel>>;
+        update: UpdateUserPayload,
+    ) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl UpdateUserRepository for UpdateUserRepositoryImpl {
-    async fn find_user(
+    async fn update_user(
         &self,
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
-    ) -> RepositoryResult<Option<CleannedUserModel>>{
-        self.database_repo.find_user(application_id, organization_id, user_id).await
+        update: UpdateUserPayload,
+    ) -> RepositoryResult<()> {
+        let update_user = UpdateUserModel::new(
+            update.username.clone(),
+            update.email.clone(),
+            update.password,
+        );
+        let update_user_org = UpdateUserOrganizationModel::new(update.username, update.email);
+        self.database_repo
+            .update_user(
+                update_user,
+                update_user_org,
+                application_id,
+                organization_id,
+                user_id,
+            )
+            .await
     }
 }

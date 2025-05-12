@@ -18,6 +18,6 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .route("", web::post().to(create_user_handle))
             .route("", web::get().to(get_users_handle))
             .route("/{user_id}", web::get().to(get_user_handle))
-            .route("/{user_id}", web::post().to(update_user_handle)),
+            .route("/{user_id}", web::put().to(update_user_handle)),
     );
 }

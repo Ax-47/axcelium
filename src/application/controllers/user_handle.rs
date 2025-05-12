@@ -2,7 +2,7 @@ use super::super::services::users::create::CreateUserService;
 use crate::{
     application::{
         dto::{
-            payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery},
+            payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
             response::user::{CreateUserResponse, GetUserResponse, GetUsersResponse},
         },
         services::users::{get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService},
@@ -75,6 +75,7 @@ pub async fn get_user_handle(
 pub async fn update_user_handle(
     req: actix_web::HttpRequest,
     path: web::Path<GetUserQuery>,
+    post_data: web::Json<UpdateUserPayload>,
     user_service: web::Data<dyn UpdateUserService>,
 ) -> Result<web::Json<()>, ApiError> {
     let apporg = req
@@ -83,7 +84,7 @@ pub async fn update_user_handle(
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(apporg.organization_id, apporg.application_id, path.user_id)
+        .execute(apporg.organization_id, apporg.application_id, path.user_id,post_data.into_inner().into())
         .await?;
     Ok(web::Json(created_user))
 }
