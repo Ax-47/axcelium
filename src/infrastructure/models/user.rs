@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
 use crate::domain::entities::user::User;
 use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, deserialize_optional_cql_timestamp, serialize_cql_timestamp,
     serialize_optional_cql_timestamp,
 };
 use chrono::Utc;
-use scylla::value::CqlTimestamp;
+use scylla::value::{CqlTimestamp, CqlValue};
 use scylla::{DeserializeRow, SerializeRow, SerializeValue};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -80,6 +82,44 @@ impl UserModel {
             deactivated_at: self.deactivated_at,
         }
     }
+    pub fn to_bind_map(&self) -> HashMap<&'static str, CqlValue> {
+        let mut map = HashMap::new();
+
+        map.insert("user_id", CqlValue::Uuid(self.user_id));
+        map.insert("organization_id", CqlValue::Uuid(self.organization_id));
+        map.insert("application_id", CqlValue::Uuid(self.application_id));
+        map.insert("username", CqlValue::Text(self.username.clone()));
+        if let Some(ref email) = self.email {
+            map.insert("email", CqlValue::Text(email.clone()));
+        } else {
+            map.insert("email", CqlValue::Empty);
+        }
+        map.insert(
+            "hashed_password",
+            CqlValue::Text(self.hashed_password.clone()),
+        );
+        map.insert("created_at", CqlValue::Timestamp(self.created_at));
+        map.insert("updated_at", CqlValue::Timestamp(self.updated_at));
+        map.insert("is_active", CqlValue::Boolean(self.is_active));
+        map.insert("is_verified", CqlValue::Boolean(self.is_verified));
+        map.insert("is_locked", CqlValue::Boolean(self.is_locked));
+
+        if let Some(ts) = self.last_login {
+            map.insert("last_login", CqlValue::Timestamp(ts));
+        } else {
+            map.insert("last_login", CqlValue::Empty);
+        }
+
+        map.insert("mfa_enabled", CqlValue::Boolean(self.mfa_enabled));
+
+        if let Some(ts) = self.deactivated_at {
+            map.insert("deactivated_at", CqlValue::Timestamp(ts));
+        } else {
+            map.insert("deactivated_at", CqlValue::Empty);
+        }
+
+        map
+    }
 }
 
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
@@ -126,7 +166,7 @@ pub struct PaginatedUsersModel {
     pub paging_state: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone, SerializeRow,SerializeValue, DeserializeRow, Serialize, Deserialize)]
+#[derive(Debug, Clone, SerializeRow, SerializeValue, DeserializeRow, Serialize, Deserialize)]
 pub struct UpdateUserModel {
     pub username: Option<String>,
     pub email: Option<String>,

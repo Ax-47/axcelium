@@ -2,7 +2,7 @@ use crate::{
     application::dto::payload::user::UpdateUserPayload,
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::{
-        models::{user::UpdateUserModel, user_organization::UpdateUserOrganizationModel},
+        models::user::UpdateUserModel,
         repositories::database::user_repository::UserDatabaseRepository,
     },
 };
@@ -39,20 +39,9 @@ impl UpdateUserRepository for UpdateUserRepositoryImpl {
         user_id: Uuid,
         update: UpdateUserPayload,
     ) -> RepositoryResult<()> {
-        let update_user = UpdateUserModel::new(
-            update.username.clone(),
-            update.email.clone(),
-            update.password,
-        );
-        let update_user_org = UpdateUserOrganizationModel::new(update.username, update.email);
+        let update_user = UpdateUserModel::new(update.username, update.email, update.password);
         self.database_repo
-            .update_user(
-                update_user,
-                update_user_org,
-                application_id,
-                organization_id,
-                user_id,
-            )
+            .update_user(update_user, organization_id,application_id,  user_id)
             .await
     }
 }
