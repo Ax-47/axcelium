@@ -287,18 +287,18 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
-        let mut userbind: HashMap<&str, CqlValue> = HashMap::new();
-        let mut userorgbind: HashMap<&str, CqlValue> = HashMap::new();
-        let mut delusernamebind: HashMap<&str, CqlValue> = HashMap::new();
-        let mut set_clauses: Vec<&'static str> = vec![];
-        let mut set2_clauses: Vec<&'static str> = vec![];
-        let mut binds: Vec<&HashMap<&str, CqlValue>> = vec![];
         let Some(mut fetched_user) = self
             .find_raw_user(application_id, organization_id, user_id)
             .await?
         else {
             return Err(RepositoryError::new("not found user".to_string(), 400));
         };
+        let mut userbind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut userorgbind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut delusernamebind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut set_clauses: Vec<&'static str> = vec![];
+        let mut set2_clauses: Vec<&'static str> = vec![];
+        let mut binds: Vec<&HashMap<&str, CqlValue>> = vec![];
 
         let has_email = user.email.is_some();
         if let Some(ref u) = user.username {
@@ -345,7 +345,6 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         batch.append_statement(query1.as_str());
         binds.push(&userbind);
         let insert_user_bind = fetched_user.to_bind_map();
-        println!("{:#?}", insert_user_bind);
 
         if has_email {
             let del = "
@@ -365,16 +364,12 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
                 :is_active, :is_verified, :is_locked,
                 :last_login, :mfa_enabled, :deactivated_at
             )";
-            println!("{:#?}", insert_user_bind);
             batch.append_statement(del);
             binds.push(&delusernamebind);
             batch.append_statement(query2);
             binds.push(&insert_user_bind);
         }
         if user.username.is_some() {
-            // println!("{:#?}",has_email);
-
-            println!("121232");
             let del = "
             DELETE FROM axcelium.users_by_username
             WHERE organization_id = :organization_id  AND application_id = :application_id AND username = :username";
@@ -393,13 +388,11 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
                 :last_login, :mfa_enabled, :deactivated_at
             )";
 
-            println!("121232");
             batch.append_statement(del);
             binds.push(&delusernamebind);
             batch.append_statement(query3);
             binds.push(&insert_user_bind);
 
-            println!("121232");
         }
 
         let query4 = format!(
@@ -423,8 +416,6 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
 
         binds.push(&userorgbind);
         batch.append_statement(query5.as_str());
-
-        println!("{:#?}", binds);
         self.database.batch(&batch, &binds).await?;
         Ok(())
     }

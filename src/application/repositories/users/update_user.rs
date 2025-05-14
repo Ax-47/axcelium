@@ -41,7 +41,7 @@ impl UpdateUserRepository for UpdateUserRepositoryImpl {
     ) -> RepositoryResult<()> {
         let update_user = UpdateUserModel::new(update.username, update.email, update.password);
         self.database_repo
-            .update_user(update_user, organization_id,application_id,  user_id)
+            .update_user(update_user, organization_id, application_id, user_id)
             .await
     }
 }

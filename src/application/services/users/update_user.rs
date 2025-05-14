@@ -1,6 +1,6 @@
 use crate::{
     application::{
-        dto::payload::user::UpdateUserPayload,
+        dto::{payload::user::UpdateUserPayload, response::user::UpdateUsersResponse},
         repositories::users::update_user::UpdateUserRepository,
     },
     domain::errors::repositories_errors::RepositoryResult,
@@ -28,7 +28,7 @@ pub trait UpdateUserService: 'static + Sync + Send {
         application_id: Uuid,
         user_id: Uuid,
         update: UpdateUserPayload,
-    ) -> RepositoryResult<()>;
+    ) -> RepositoryResult<UpdateUsersResponse>;
 }
 #[async_trait]
 impl UpdateUserService for UpdateUserServiceImpl {
@@ -38,11 +38,12 @@ impl UpdateUserService for UpdateUserServiceImpl {
         application_id: Uuid,
         user_id: Uuid,
         update: UpdateUserPayload,
-    ) -> RepositoryResult<()> {
-        println!("test");
+    ) -> RepositoryResult<UpdateUsersResponse> {
         self.repository
             .update_user(organization_id, application_id, user_id, update)
             .await?;
-        Ok(())
+        Ok(UpdateUsersResponse {
+            massage: "success".to_string(),
+        })
     }
 }

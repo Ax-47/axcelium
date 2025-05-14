@@ -3,7 +3,7 @@ use crate::{
     application::{
         dto::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
-            response::user::{CreateUserResponse, GetUserResponse, GetUsersResponse},
+            response::user::{CreateUserResponse, GetUserResponse, GetUsersResponse, UpdateUsersResponse},
         },
         services::users::{get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService},
     },
@@ -77,7 +77,7 @@ pub async fn update_user_handle(
     path: web::Path<GetUserQuery>,
     post_data: web::Json<UpdateUserPayload>,
     user_service: web::Data<dyn UpdateUserService>,
-) -> Result<web::Json<()>, ApiError> {
+) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()

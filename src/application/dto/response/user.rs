@@ -50,3 +50,8 @@ pub struct GetUserResponse {
     )]
     pub deactivated_at: Option<CqlTimestamp>,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UpdateUsersResponse {
+    pub massage: String,
+}
