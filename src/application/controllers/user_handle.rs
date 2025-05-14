@@ -8,7 +8,7 @@ use crate::{
             },
         },
         services::users::{
-            get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService,
+            delete::DeleteUserService, get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService
         },
     },
     domain::{
@@ -105,8 +105,7 @@ pub async fn update_user_handle(
 pub async fn delate_user_handle(
     req: actix_web::HttpRequest,
     path: web::Path<GetUserQuery>,
-    post_data: web::Json<UpdateUserPayload>,
-    user_service: web::Data<dyn UpdateUserService>,
+    user_service: web::Data<dyn DeleteUserService>,
 ) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
     let apporg = req
         .extensions()
@@ -118,7 +117,6 @@ pub async fn delate_user_handle(
             apporg.organization_id,
             apporg.application_id,
             path.user_id,
-            post_data.into_inner().into(),
         )
         .await?;
     Ok(web::Json(created_user))

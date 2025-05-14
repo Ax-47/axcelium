@@ -1,6 +1,7 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::{
+        models::user::CleannedUserModel,
         repositories::database::user_repository::UserDatabaseRepository,
     },
 };
@@ -24,7 +25,14 @@ pub trait DeleteUserRepository: Send + Sync {
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
+        user: CleannedUserModel,
     ) -> RepositoryResult<()>;
+    async fn find_user(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+    ) -> RepositoryResult<Option<CleannedUserModel>>;
 }
 
 #[async_trait]
@@ -34,7 +42,18 @@ impl DeleteUserRepository for DeleteUserRepositoryImpl {
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
+        user: CleannedUserModel,
     ) -> RepositoryResult<()> {
         Ok(())
+    }
+    async fn find_user(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+    ) -> RepositoryResult<Option<CleannedUserModel>> {
+        self.database_repo
+            .find_user(application_id, organization_id, user_id)
+            .await
     }
 }
