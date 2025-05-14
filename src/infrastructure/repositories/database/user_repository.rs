@@ -317,47 +317,40 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
-
-        let mut binds: Vec<Vec<CqlValue>> = vec![];
-
+        let mut del_user_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut del_email_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut del_username_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut del_user_org_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut binds: Vec<&HashMap<&str, CqlValue>> = vec![];
         batch.append_statement(DELETE_USERS);
-        binds.push(vec![
-            CqlValue::Uuid(user_id),
-            CqlValue::Uuid(organization_id),
-            CqlValue::Uuid(application_id),
-        ]);
-
-        if let Some(email) = &user.email {
+        del_user_bind.insert("user_id", CqlValue::Uuid(user_id));
+        del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        del_user_bind.insert("application_id", CqlValue::Uuid(application_id));
+        binds.push(&del_user_bind);
+        if let Some(email) = user.email {
             batch.append_statement(DELETE_USERS_BY_EMAIL);
-            binds.push(vec![
-                CqlValue::Text(email.clone()),
-                CqlValue::Uuid(organization_id),
-                CqlValue::Uuid(application_id),
-            ]);
+            del_email_bind.insert("email", CqlValue::Text(email));
+            del_email_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+            del_email_bind.insert("application_id", CqlValue::Uuid(application_id));
+
+            binds.push(&del_email_bind);
         }
-
         batch.append_statement(DELETE_USERS_BY_USERNAME);
-        binds.push(vec![
-            CqlValue::Text(user.username.clone()),
-            CqlValue::Uuid(organization_id),
-            CqlValue::Uuid(application_id),
-        ]);
+        del_username_bind.insert("username", CqlValue::Text(user.username));
+        del_username_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        del_username_bind.insert("application_id", CqlValue::Uuid(application_id));
 
+        binds.push(&del_username_bind);
         batch.append_statement(DELETE_USER_ORG);
-        binds.push(vec![
-            CqlValue::Uuid(organization_id),
-            CqlValue::Uuid(user_id),
-        ]);
 
+        del_user_org_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        del_user_org_bind.insert("user_id", CqlValue::Uuid(user_id));
+
+        binds.push(&del_user_org_bind);
+
+        binds.push(&del_user_org_bind);
         batch.append_statement(DELETE_USER_ORG_BY_USER);
-        binds.push(vec![
-            CqlValue::Uuid(organization_id),
-            CqlValue::Uuid(user_id),
-        ]);
-
-        let bind_refs: Vec<&[CqlValue]> = binds.iter().map(|b| b.as_slice()).collect();
-
-        self.database.batch(&batch, &bind_refs).await?;
+        self.database.batch(&batch, &binds).await?;
         Ok(())
     }
 }

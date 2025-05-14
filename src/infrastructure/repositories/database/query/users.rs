@@ -141,14 +141,14 @@ pub fn update_user_org_by_user_query(set_clauses: &[&str]) -> String {
 }
 pub const DELETE_USERS: &str = r#"
     DELETE FROM axcelium.users 
-    WHERE user_id = ? AND organization_id = ? AND application_id = ?
+    WHERE user_id = :user_id AND organization_id = :organization_id AND application_id = :application_id
 "#;
 pub const DELETE_USER_ORG: &str = r#"
     DELETE FROM axcelium.user_organizations 
-    WHERE organization_id = ? AND user_id = ?
+    WHERE organization_id = :organization_id AND user_id = :user_id
 "#;
 
 pub const DELETE_USER_ORG_BY_USER: &str = r#"
     DELETE FROM axcelium.user_organizations_by_user 
-    WHERE organization_id = ? AND user_id = ?
+    WHERE organization_id = :organization_id AND user_id = :user_id
 "#;
