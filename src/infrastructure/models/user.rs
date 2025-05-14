@@ -63,7 +63,6 @@ impl UserModel {
             deactivated_at: entity.deactivated_at,
         }
     }
-
     pub fn to_entity(&self) -> User {
         User {
             user_id: self.user_id,

@@ -3,7 +3,7 @@ use crate::{
         dto::{payload::user::UpdateUserPayload, response::user::UpdateUsersResponse},
         repositories::users::update_user::UpdateUserRepository,
     },
-    domain::errors::repositories_errors::RepositoryResult,
+    domain::errors::repositories_errors::{RepositoryError, RepositoryResult},
 };
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -39,8 +39,21 @@ impl UpdateUserService for UpdateUserServiceImpl {
         user_id: Uuid,
         update: UpdateUserPayload,
     ) -> RepositoryResult<UpdateUsersResponse> {
+        let Some(fetched_user) = self
+            .repository
+            .find_user(application_id, organization_id, user_id)
+            .await?
+        else {
+            return Err(RepositoryError::new("not found user".to_string(), 400));
+        };
         self.repository
-            .update_user(organization_id, application_id, user_id, update)
+            .update_user(
+                organization_id,
+                application_id,
+                user_id,
+                update,
+                fetched_user,
+            )
             .await?;
         Ok(UpdateUsersResponse {
             massage: "success".to_string(),
