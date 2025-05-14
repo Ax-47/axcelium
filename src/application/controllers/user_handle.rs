@@ -3,9 +3,13 @@ use crate::{
     application::{
         dto::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
-            response::user::{CreateUserResponse, GetUserResponse, GetUsersResponse, UpdateUsersResponse},
+            response::user::{
+                CreateUserResponse, GetUserResponse, GetUsersResponse, UpdateUsersResponse,
+            },
         },
-        services::users::{get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService},
+        services::users::{
+            get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService,
+        },
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::ApiError,
@@ -78,13 +82,44 @@ pub async fn update_user_handle(
     post_data: web::Json<UpdateUserPayload>,
     user_service: web::Data<dyn UpdateUserService>,
 ) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
+    let user: UpdateUserPayload = post_data.into_inner().into();
+    if user.email.is_some() || user.password.is_some() || user.username.is_some() {
+        return Err(ApiError::new("empty input".to_string(), 400));
+    }
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(apporg.organization_id, apporg.application_id, path.user_id,post_data.into_inner().into())
+        .execute(
+            apporg.organization_id,
+            apporg.application_id,
+            path.user_id,
+            user,
+        )
+        .await?;
+    Ok(web::Json(created_user))
+}
+
+pub async fn delate_user_handle(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetUserQuery>,
+    post_data: web::Json<UpdateUserPayload>,
+    user_service: web::Data<dyn UpdateUserService>,
+) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(
+            apporg.organization_id,
+            apporg.application_id,
+            path.user_id,
+            post_data.into_inner().into(),
+        )
         .await?;
     Ok(web::Json(created_user))
 }
