@@ -8,6 +8,7 @@ use crate::application::{
         initial_core::InitialCoreImpl,
         users::{
             create::{CreateUserRepository, CreateUserRepositoryImpl},
+            delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
             get_user::{GetUserRepository, GetUserRepositoryImpl},
             get_users::{GetUsersRepository, GetUsersRepositoryImpl},
             update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
@@ -36,7 +37,8 @@ pub struct Repositories {
     pub get_users_repo: Arc<dyn GetUsersRepository>,
     pub get_user_repo: Arc<dyn GetUserRepository>,
     pub auth_repo: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
-    pub update_user_repo: Arc<dyn UpdateUserRepository>
+    pub update_user_repo: Arc<dyn UpdateUserRepository>,
+    pub del_user_repo: Arc<dyn DeleteUserRepository>,
 }
 
 pub fn create_all(
@@ -84,7 +86,7 @@ pub fn create_all(
         app_db_repo,
         apporg_cache_layer.clone(),
     ));
-
+    let del_user_repo = Arc::new(DeleteUserRepositoryImpl::new(user_db.clone()));
     let core_service = Arc::new(InitialCoreServiceImpl::new(core_repo));
 
     (
@@ -94,6 +96,7 @@ pub fn create_all(
             auth_repo,
             get_user_repo,
             update_user_repo,
+            del_user_repo,
         },
         core_service,
     )

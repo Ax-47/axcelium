@@ -3,10 +3,7 @@ use std::sync::Arc;
 use crate::application::services::{
     hello_service::{HelloService, HelloServiceImpl},
     users::{
-        create::{CreateUserService, CreateUserServiceImpl},
-        get_user::{GetUserService, GetUserServiceImpl},
-        get_users::{GetUsersService, GetUsersServiceImpl},
-        update_user::{UpdateUserService, UpdateUserServiceImpl},
+        create::{CreateUserService, CreateUserServiceImpl}, delete::{DeleteUserService, DeleteUserServiceImpl}, get_user::{GetUserService, GetUserServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}, update_user::{UpdateUserService, UpdateUserServiceImpl}
     },
 };
 
@@ -36,5 +33,11 @@ pub fn create_get_user_service(repos: &Repositories) -> Arc<dyn GetUserService> 
 pub fn create_update_user_service(repos: &Repositories) -> Arc<dyn UpdateUserService> {
     Arc::new(UpdateUserServiceImpl {
         repository: repos.update_user_repo.clone(),
+    })
+}
+
+pub fn create_delete_user_service(repos: &Repositories) -> Arc<dyn DeleteUserService> {
+    Arc::new(DeleteUserServiceImpl {
+        repository: repos.del_user_repo.clone(),
     })
 }

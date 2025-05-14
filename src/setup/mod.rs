@@ -4,8 +4,8 @@ use crate::{
         services::{
             hello_service::HelloService,
             users::{
-                create::CreateUserService, get_user::GetUserService, get_users::GetUsersService,
-                update_user::UpdateUserService,
+                create::CreateUserService, delete::DeleteUserService, get_user::GetUserService,
+                get_users::GetUsersService, update_user::UpdateUserService,
             },
         },
     },
@@ -23,6 +23,7 @@ pub struct Container {
     pub get_users_service: Arc<dyn GetUsersService>,
     pub get_user_service: Arc<dyn GetUserService>,
     pub update_user_service: Arc<dyn UpdateUserService>,
+    pub del_user_service: Arc<dyn DeleteUserService>,
     pub validate_bearer_auth_middleware_service: Arc<ValidateBearerAuth>,
 }
 
@@ -40,6 +41,7 @@ impl Container {
         let get_users_service = services::create_get_users_service(&repos);
         let get_user_service = services::create_get_user_service(&repos);
         let update_user_service = services::create_update_user_service(&repos);
+        let del_user_service = services::create_delete_user_service(&repos);
 
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
@@ -51,6 +53,7 @@ impl Container {
             get_user_service,
             update_user_service,
             validate_bearer_auth_middleware_service,
+            del_user_service,
         }
     }
 }
