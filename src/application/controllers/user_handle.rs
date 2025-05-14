@@ -8,7 +8,8 @@ use crate::{
             },
         },
         services::users::{
-            delete::DeleteUserService, get_user::GetUserService, get_users::GetUsersService, update_user::UpdateUserService
+            delete::DeleteUserService, get_user::GetUserService, get_users::GetUsersService,
+            update_user::UpdateUserService,
         },
     },
     domain::{
@@ -83,7 +84,7 @@ pub async fn update_user_handle(
     user_service: web::Data<dyn UpdateUserService>,
 ) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
     let user: UpdateUserPayload = post_data.into_inner().into();
-    if user.email.is_some() || user.password.is_some() || user.username.is_some() {
+    if user.email.is_some() && user.password.is_some() && user.username.is_some() {
         return Err(ApiError::new("empty input".to_string(), 400));
     }
     let apporg = req
@@ -113,11 +114,7 @@ pub async fn delate_user_handle(
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(
-            apporg.organization_id,
-            apporg.application_id,
-            path.user_id,
-        )
+        .execute(apporg.organization_id, apporg.application_id, path.user_id)
         .await?;
     Ok(web::Json(created_user))
 }

@@ -115,6 +115,14 @@ pub const INSERT_USERS_BY_EMAIL_SEC: &str = "
         :is_active, :is_verified, :is_locked,
         :last_login, :mfa_enabled, :deactivated_at
     )";
+
+pub fn update_users_by_email(set_clauses: &[&str]) -> String {
+    format!(
+        "UPDATE axcelium.users_by_email SET {}, updated_at = :updated_at \
+        WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email AND user_id = :user_id" ,
+        set_clauses.join(", ")
+    )
+}
 // Dynamic queries
 pub fn update_users_query(set_clauses: &[&str]) -> String {
     format!(

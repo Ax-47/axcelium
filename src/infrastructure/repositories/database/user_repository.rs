@@ -18,12 +18,12 @@ use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 
 use super::query::users::{
-    update_user_org_by_user_query, update_user_org_query, update_users_query, DELETE_USERS,
-    DELETE_USERS_BY_EMAIL, DELETE_USERS_BY_USERNAME, DELETE_USER_ORG, DELETE_USER_ORG_BY_USER,
-    INSERT_USER, INSERT_USERS_BY_EMAIL_SEC, INSERT_USERS_BY_USERNAME_SEC, INSERT_USER_BY_EMAIL,
-    INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION, INSERT_USER_ORG_BY_USER,
-    QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL,
-    QUERY_FIND_USER_BY_USERNAME,
+    update_user_org_by_user_query, update_user_org_query, update_users_by_email,
+    update_users_query, DELETE_USERS, DELETE_USERS_BY_EMAIL, DELETE_USERS_BY_USERNAME,
+    DELETE_USER_ORG, DELETE_USER_ORG_BY_USER, INSERT_USER, INSERT_USERS_BY_EMAIL_SEC,
+    INSERT_USERS_BY_USERNAME_SEC, INSERT_USER_BY_EMAIL, INSERT_USER_BY_USERNAME,
+    INSERT_USER_ORGANIZATION, INSERT_USER_ORG_BY_USER, QUERY_FIND_ALL_USERS_PAGINATED,
+    QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
 };
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
@@ -236,6 +236,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
         let mut user_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut user_email_bind: HashMap<&str, CqlValue> = HashMap::new();
         let mut org_bind: HashMap<&str, CqlValue> = HashMap::new();
         let mut del_username_bind: HashMap<&str, CqlValue> = HashMap::new();
         let mut del_email_bind: HashMap<&str, CqlValue> = HashMap::new();
@@ -251,6 +252,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             update_user.username = username.clone();
             let cql = CqlValue::Text(username.clone());
             user_bind.insert("username", cql.clone());
+            user_email_bind.insert("username", cql.clone());
             org_bind.insert("username", cql);
         }
         if let Some(email) = user.email {
@@ -258,18 +260,27 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             set_clauses_org.push("user_email = :user_email");
             update_user.email = Some(email.clone());
             user_bind.insert("email", CqlValue::Text(email.clone()));
+            user_email_bind.insert("email", CqlValue::Text(email.clone()));
             org_bind.insert("user_email", CqlValue::Text(email));
         }
         if let Some(pwd) = user.hashed_password {
             set_clauses_main.push("hashed_password = :hashed_password");
             update_user.hashed_password = pwd.clone();
-            user_bind.insert("hashed_password", CqlValue::Text(pwd));
+            user_bind.insert("hashed_password", CqlValue::Text(pwd.clone()));
+            user_email_bind.insert("hashed_password", CqlValue::Text(pwd));
         }
 
         user_bind.insert("updated_at", CqlValue::Timestamp(user.updated_at));
         user_bind.insert("organization_id", CqlValue::Uuid(organization_id));
         user_bind.insert("application_id", CqlValue::Uuid(application_id));
         user_bind.insert("user_id", CqlValue::Uuid(user_id));
+        if let Some(email) = old_user.email.clone() {
+            user_email_bind.insert("updated_at", CqlValue::Timestamp(user.updated_at));
+            user_email_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+            user_email_bind.insert("application_id", CqlValue::Uuid(application_id));
+            user_email_bind.insert("email", CqlValue::Text(email));
+            user_email_bind.insert("user_id", CqlValue::Uuid(user_id));
+        }
 
         org_bind.insert("organization_id", CqlValue::Uuid(organization_id));
         org_bind.insert("user_id", CqlValue::Uuid(user_id));
@@ -297,6 +308,10 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             binds.push(&del_username_bind);
             batch.append_statement(INSERT_USERS_BY_USERNAME_SEC);
             binds.push(&insert_user_bind);
+            if old_user.email.is_some() {
+                batch.append_statement(update_users_by_email(&set_clauses_main).as_str());
+                binds.push(&user_email_bind);
+            }
         }
 
         batch.append_statement(update_user_org_query(&set_clauses_org).as_str());
