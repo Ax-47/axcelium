@@ -16,6 +16,11 @@ use scylla::{
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
+
+use super::query::users::{
+    INSERT_USER, INSERT_USER_BY_EMAIL, INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION,
+    INSERT_USER_ORG_BY_USER,
+};
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
 }
@@ -90,57 +95,14 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
-        let query1 = r#"
-        INSERT INTO axcelium.users (
-            user_id, organization_id, application_id,
-            username, email, hashed_password,
-            created_at, updated_at,
-            is_active, is_verified, is_locked, mfa_enabled,last_login,deactivated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
-    "#;
-        batch.append_statement(query1);
+        batch.append_statement(INSERT_USER);
         let use_email = user.email.is_some();
         if use_email {
-            let query2 = r#"
-                INSERT INTO axcelium.users_by_email (
-                    email, organization_id, application_id,
-                    user_id, username, hashed_password,
-                    created_at, updated_at,
-                    is_active, is_verified, is_locked,
-                    last_login, mfa_enabled, deactivated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            "#;
-            batch.append_statement(query2);
+            batch.append_statement(INSERT_USER_BY_EMAIL);
         }
-        let query3 = r#"
-        INSERT INTO axcelium.users_by_username (
-            username, organization_id, application_id,
-            email, user_id, hashed_password,
-            created_at, updated_at,
-            is_active, is_verified, is_locked,
-            last_login, mfa_enabled, deactivated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    "#;
-        batch.append_statement(query3);
-        let query4 = r#"
-        INSERT INTO axcelium.user_organizations (
-            organization_id, user_id, role,
-            username, user_email,
-            organization_name, organization_slug, contact_email,
-            joined_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    "#;
-        batch.append_statement(query4);
-        let query5 = r#"
-        INSERT INTO axcelium.user_organizations_by_user (
-            user_id, organization_id, role,
-            username, user_email,
-            organization_name, organization_slug, contact_email,
-            joined_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    "#;
-
-        batch.append_statement(query5);
+        batch.append_statement(INSERT_USER_BY_USERNAME);
+        batch.append_statement(INSERT_USER_ORGANIZATION);
+        batch.append_statement(INSERT_USER_ORG_BY_USER);
         if use_email {
             self.database
                 .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
