@@ -44,3 +44,14 @@ pub const INSERT_USER_ORG_BY_USER: &str = r#"
         joined_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 "#;
+pub const QUERY_FIND_USER_BY_EMAIL: &str = r#"
+    SELECT username, user_id, email
+    FROM axcelium.users_by_email
+    WHERE email = ? AND application_id = ? AND organization_id = ?
+"#;
+
+pub const QUERY_FIND_USER_BY_USERNAME: &str = r#"
+    SELECT username, user_id, email
+    FROM axcelium.users_by_username
+    WHERE username = ? AND application_id = ? AND organization_id = ?
+"#;

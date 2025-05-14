@@ -19,7 +19,7 @@ use uuid::Uuid;
 
 use super::query::users::{
     INSERT_USER, INSERT_USER_BY_EMAIL, INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION,
-    INSERT_USER_ORG_BY_USER,
+    INSERT_USER_ORG_BY_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
 };
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
@@ -121,15 +121,12 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<FoundUserModel>> {
-        let query = r#"
-            SELECT username, user_id, email
-            FROM axcelium.users_by_email
-            WHERE email = ? AND application_id = ? AND organization_id = ?
-        "#;
-
         let result = self
             .database
-            .query_unpaged(query, (email, application_id, organization_id))
+            .query_unpaged(
+                QUERY_FIND_USER_BY_EMAIL,
+                (email, application_id, organization_id),
+            )
             .await?
             .into_rows_result()?;
 
@@ -142,15 +139,12 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         application_id: Uuid,
         organization_id: Uuid,
     ) -> RepositoryResult<Option<FoundUserModel>> {
-        let query = r#"
-            SELECT username, user_id, email
-            FROM axcelium.users_by_username
-            WHERE username = ? AND application_id = ? AND organization_id = ?
-        "#;
-
         let result = self
             .database
-            .query_unpaged(query, (username, application_id, organization_id))
+            .query_unpaged(
+                QUERY_FIND_USER_BY_USERNAME,
+                (username, application_id, organization_id),
+            )
             .await?
             .into_rows_result()?;
 
