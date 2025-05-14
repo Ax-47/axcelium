@@ -72,6 +72,14 @@ pub trait UserDatabaseRepository: Send + Sync {
         application_id: Uuid,
         user_id: Uuid,
     ) -> RepositoryResult<()>;
+
+    async fn delete_user(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+        user: CleannedUserModel,
+    ) -> RepositoryResult<()>;
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
@@ -392,7 +400,6 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             binds.push(&delusernamebind);
             batch.append_statement(query3);
             binds.push(&insert_user_bind);
-
         }
 
         let query4 = format!(
@@ -417,6 +424,76 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         binds.push(&userorgbind);
         batch.append_statement(query5.as_str());
         self.database.batch(&batch, &binds).await?;
+        Ok(())
+    }
+
+    async fn delete_user(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
+        user: CleannedUserModel,
+    ) -> RepositoryResult<()> {
+        let mut batch = Batch::default();
+        batch.set_consistency(Consistency::Quorum);
+        let query1 = r#"
+        DELETE FROM axcelium.users 
+        WHERE user_id = ? AND organization_id = ? AND application_id = ?
+    "#;
+        batch.append_statement(query1);
+
+        if user.email.is_some() {
+            let query2 = r#"
+            DELETE FROM axcelium.users_by_email 
+            WHERE email = ? AND organization_id = ? AND application_id = ?
+        "#;
+            batch.append_statement(query2);
+        }
+
+        let query3 = r#"
+        DELETE FROM axcelium.users_by_username 
+        WHERE username = ? AND organization_id = ? AND application_id = ?
+    "#;
+        batch.append_statement(query3);
+
+        let query4 = r#"
+        DELETE FROM axcelium.user_organizations 
+        WHERE organization_id = ? AND user_id = ?
+    "#;
+        batch.append_statement(query4);
+
+        let query5 = r#"
+        DELETE FROM axcelium.user_organizations_by_user 
+        WHERE  organization_id = ? AND user_id = ? 
+    "#;
+        batch.append_statement(query5);
+        if user.email.is_some() {
+            self.database
+                .batch(
+                    &batch,
+                    (
+                        (user_id, organization_id, application_id),
+                        (user.email, organization_id, application_id),
+                        (user.username, organization_id, application_id),
+                        (organization_id, user_id),
+                        (organization_id, user_id),
+                    ),
+                )
+                .await?;
+        } else {
+            self.database
+                .batch(
+                    &batch,
+                    (
+                        (user_id, organization_id, application_id),
+                        (user.username, organization_id, application_id),
+                        (organization_id, user_id),
+                        (organization_id, user_id),
+                    ),
+                )
+                .await?;
+        }
+
         Ok(())
     }
 }

@@ -44,7 +44,7 @@ impl DeleteUserRepository for DeleteUserRepositoryImpl {
         user_id: Uuid,
         user: CleannedUserModel,
     ) -> RepositoryResult<()> {
-        Ok(())
+        self.database_repo.delete_user(organization_id, application_id, user_id, user).await
     }
     async fn find_user(
         &self,
