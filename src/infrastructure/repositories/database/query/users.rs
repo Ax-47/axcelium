@@ -80,7 +80,7 @@ pub const QUERY_FIND_RAW_USER: &str = r#"
 // Static queries
 pub const DELETE_USERS_BY_EMAIL: &str = "
     DELETE FROM axcelium.users_by_email
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id";
+    WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email";
 
 pub const DELETE_USERS_BY_USERNAME: &str = "
     DELETE FROM axcelium.users_by_username
