@@ -18,7 +18,7 @@ use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 
 use super::query::users::{
-    update_user_org_by_user_query, update_user_org_query, update_users_query, DELETE_USERS_BY_EMAIL, DELETE_USERS_BY_USERNAME, INSERT_USER, INSERT_USERS_BY_EMAIL_SEC, INSERT_USERS_BY_USERNAME_SEC, INSERT_USER_BY_EMAIL, INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION, INSERT_USER_ORG_BY_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME
+    update_user_org_by_user_query, update_user_org_query, update_users_query, DELETE_USERS, DELETE_USERS_BY_EMAIL, DELETE_USERS_BY_USERNAME, DELETE_USER_ORG, DELETE_USER_ORG_BY_USER, INSERT_USER, INSERT_USERS_BY_EMAIL_SEC, INSERT_USERS_BY_USERNAME_SEC, INSERT_USER_BY_EMAIL, INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION, INSERT_USER_ORG_BY_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME
 };
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
@@ -234,68 +234,70 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         else {
             return Err(RepositoryError::new("not found user".to_string(), 400));
         }; // BL
-        let mut userbind: HashMap<&str, CqlValue> = HashMap::new();
-        let mut userorgbind: HashMap<&str, CqlValue> = HashMap::new();
-        let mut delusernamebind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut user_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut org_bind: HashMap<&str, CqlValue> = HashMap::new();
+        let mut del_username_bind: HashMap<&str, CqlValue> = HashMap::new();
         let mut set_clauses_main: Vec<&'static str> = vec![];
         let mut set_clauses_org: Vec<&'static str> = vec![];
         let mut binds: Vec<&HashMap<&str, CqlValue>> = vec![];
 
+        let has_username = user.username.is_some();
         let has_email = user.email.is_some();
-        if let Some(ref u) = user.username {
+        if let Some(ref username) = user.username {
             set_clauses_main.push("username = :username");
             set_clauses_org.push("username = :username");
-            fetched_user.username = u.clone();
-            userbind.insert("username", CqlValue::Text(u.clone()));
-            userorgbind.insert("username", CqlValue::Text(u.clone()));
+            fetched_user.username = username.clone();
+            let cql = CqlValue::Text(username.clone());
+            user_bind.insert("username", cql.clone());
+            org_bind.insert("username", cql);
         }
-        if let Some(e) = user.email {
+        if let Some(email) = user.email {
             set_clauses_main.push("email = :email");
             set_clauses_org.push("user_email = :user_email");
-            fetched_user.email = Some(e.clone());
-            userbind.insert("email", CqlValue::Text(e.clone()));
-            userorgbind.insert("user_email", CqlValue::Text(e));
+            fetched_user.email = Some(email.clone());
+            user_bind.insert("email", CqlValue::Text(email.clone()));
+            org_bind.insert("user_email", CqlValue::Text(email));
         }
-        if let Some(p) = user.hashed_password {
+        if let Some(pwd) = user.hashed_password {
             set_clauses_main.push("hashed_password = :hashed_password");
-            fetched_user.hashed_password = p.clone();
-            userbind.insert("hashed_password", CqlValue::Text(p));
+            fetched_user.hashed_password = pwd.clone();
+            user_bind.insert("hashed_password", CqlValue::Text(pwd));
         }
 
-        userbind.insert("updated_at", CqlValue::Timestamp(user.updated_at));
-        userbind.insert("organization_id", CqlValue::Uuid(organization_id));
-        userbind.insert("application_id", CqlValue::Uuid(application_id));
-        userbind.insert("user_id", CqlValue::Uuid(user_id));
+        user_bind.insert("updated_at", CqlValue::Timestamp(user.updated_at));
+        user_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        user_bind.insert("application_id", CqlValue::Uuid(application_id));
+        user_bind.insert("user_id", CqlValue::Uuid(user_id));
 
-        delusernamebind.insert("organization_id", CqlValue::Uuid(organization_id));
-        delusernamebind.insert("application_id", CqlValue::Uuid(application_id));
-        delusernamebind.insert("username", CqlValue::Text(fetched_user.username.clone()));
+        del_username_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        del_username_bind.insert("application_id", CqlValue::Uuid(application_id));
+        del_username_bind.insert("username", CqlValue::Text(fetched_user.username.clone()));
 
-        userorgbind.insert("organization_id", CqlValue::Uuid(organization_id));
-        userorgbind.insert("user_id", CqlValue::Uuid(user_id));
+        org_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        org_bind.insert("user_id", CqlValue::Uuid(user_id));
 
         batch.append_statement(update_users_query(&set_clauses_main).as_str());
-        binds.push(&userbind);
+        binds.push(&user_bind);
         let insert_user_bind = fetched_user.to_bind_map();
 
         if has_email {
             batch.append_statement(DELETE_USERS_BY_EMAIL);
-            binds.push(&delusernamebind);
+            binds.push(&del_username_bind);
             batch.append_statement(INSERT_USERS_BY_EMAIL_SEC);
             binds.push(&insert_user_bind);
         }
-        if user.username.is_some() {
+        if has_username {
             batch.append_statement(DELETE_USERS_BY_USERNAME);
-            binds.push(&delusernamebind);
+            binds.push(&del_username_bind);
             batch.append_statement(INSERT_USERS_BY_USERNAME_SEC);
             binds.push(&insert_user_bind);
         }
 
         batch.append_statement(update_user_org_query(&set_clauses_org).as_str());
-        binds.push(&userorgbind);
+        binds.push(&org_bind);
 
         batch.append_statement(update_user_org_by_user_query(&set_clauses_org).as_str());
-        binds.push(&userorgbind);
+        binds.push(&org_bind);
         self.database.batch(&batch, &binds).await?;
         Ok(())
     }
@@ -309,64 +311,47 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut batch = Batch::default();
         batch.set_consistency(Consistency::Quorum);
-        let query1 = r#"
-        DELETE FROM axcelium.users 
-        WHERE user_id = ? AND organization_id = ? AND application_id = ?
-    "#;
-        batch.append_statement(query1);
 
-        if user.email.is_some() {
-            let query2 = r#"
-            DELETE FROM axcelium.users_by_email 
-            WHERE email = ? AND organization_id = ? AND application_id = ?
-        "#;
-            batch.append_statement(query2);
+        let mut binds: Vec<Vec<CqlValue>> = vec![];
+
+        batch.append_statement(DELETE_USERS);
+        binds.push(vec![
+            CqlValue::Uuid(user_id),
+            CqlValue::Uuid(organization_id),
+            CqlValue::Uuid(application_id),
+        ]);
+
+        if let Some(email) = &user.email {
+            batch.append_statement(DELETE_USERS_BY_EMAIL);
+            binds.push(vec![
+                CqlValue::Text(email.clone()),
+                CqlValue::Uuid(organization_id),
+                CqlValue::Uuid(application_id),
+            ]);
         }
 
-        let query3 = r#"
-        DELETE FROM axcelium.users_by_username 
-        WHERE username = ? AND organization_id = ? AND application_id = ?
-    "#;
-        batch.append_statement(query3);
+        batch.append_statement(DELETE_USERS_BY_USERNAME);
+        binds.push(vec![
+            CqlValue::Text(user.username.clone()),
+            CqlValue::Uuid(organization_id),
+            CqlValue::Uuid(application_id),
+        ]);
 
-        let query4 = r#"
-        DELETE FROM axcelium.user_organizations 
-        WHERE organization_id = ? AND user_id = ?
-    "#;
-        batch.append_statement(query4);
+        batch.append_statement(DELETE_USER_ORG);
+        binds.push(vec![
+            CqlValue::Uuid(organization_id),
+            CqlValue::Uuid(user_id),
+        ]);
 
-        let query5 = r#"
-        DELETE FROM axcelium.user_organizations_by_user 
-        WHERE  organization_id = ? AND user_id = ? 
-    "#;
-        batch.append_statement(query5);
-        if user.email.is_some() {
-            self.database
-                .batch(
-                    &batch,
-                    (
-                        (user_id, organization_id, application_id),
-                        (user.email, organization_id, application_id),
-                        (user.username, organization_id, application_id),
-                        (organization_id, user_id),
-                        (organization_id, user_id),
-                    ),
-                )
-                .await?;
-        } else {
-            self.database
-                .batch(
-                    &batch,
-                    (
-                        (user_id, organization_id, application_id),
-                        (user.username, organization_id, application_id),
-                        (organization_id, user_id),
-                        (organization_id, user_id),
-                    ),
-                )
-                .await?;
-        }
+        batch.append_statement(DELETE_USER_ORG_BY_USER);
+        binds.push(vec![
+            CqlValue::Uuid(organization_id),
+            CqlValue::Uuid(user_id),
+        ]);
 
+        let bind_refs: Vec<&[CqlValue]> = binds.iter().map(|b| b.as_slice()).collect();
+
+        self.database.batch(&batch, &bind_refs).await?;
         Ok(())
     }
 }
