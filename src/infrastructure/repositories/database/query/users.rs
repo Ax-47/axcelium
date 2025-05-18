@@ -79,21 +79,6 @@ pub const INSERT_USERS_BY_EMAIL_SEC: &str = "
         :last_login, :mfa_enabled, :deactivated_at
     )";
 
-pub fn update_users_by_email(set_clauses: &[&str]) -> String {
-    format!(
-        "UPDATE axcelium.users_by_email SET {}, updated_at = :updated_at \
-        WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email AND user_id = :user_id" ,
-        set_clauses.join(", ")
-    )
-}
-
-pub fn update_users_by_username(set_clauses: &[&str]) -> String {
-    format!(
-        "UPDATE axcelium.users_by_username SET {}, updated_at = :updated_at \
-        WHERE organization_id = :organization_id AND application_id = :application_id AND username = :username AND user_id = :user_id" ,
-        set_clauses.join(", ")
-    )
-}
 // Dynamic queries
 pub fn update_users_query(set_clauses: &[&str]) -> String {
     format!(
@@ -103,31 +88,22 @@ pub fn update_users_query(set_clauses: &[&str]) -> String {
     )
 }
 
-pub fn update_user_org_query(set_clauses: &[&str]) -> String {
-    format!(
-        "UPDATE axcelium.user_organizations SET {} \
-        WHERE organization_id = :organization_id AND user_id = :user_id",
-        set_clauses.join(", ")
-    )
-}
+pub const UPDATE_USER_USERNAME: &str = r#"
+        UPDATE axcelium.users SET username=:username, updated_at = :updated_at \
+        WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id";
+"#;
 
-pub fn update_user_org_by_user_query(set_clauses: &[&str]) -> String {
-    format!(
-        "UPDATE axcelium.user_organizations_by_user SET {} \
-        WHERE organization_id = :organization_id AND user_id = :user_id",
-        set_clauses.join(", ")
-    )
-}
-pub const DELETE_USERS: &str = r#"
-    DELETE FROM axcelium.users 
+pub const UPDATE_USER_PASSWORD: &str = r#"
+        UPDATE axcelium.users SET hashed_password=:hashed_password, updated_at = :updated_at \
+        WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id";
+"#;
+
+pub const UPDATE_USER_EMAIL: &str = r#"
+        UPDATE axcelium.users SET email=:email, updated_at = :updated_at \
+        WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id";
+"#;
+
+pub const DELETE_USER: &str = r#"
+    DELETE FROM axcelium.users
     WHERE user_id = :user_id AND organization_id = :organization_id AND application_id = :application_id
-"#;
-pub const DELETE_USER_ORG: &str = r#"
-    DELETE FROM axcelium.user_organizations 
-    WHERE organization_id = :organization_id AND user_id = :user_id
-"#;
-
-pub const DELETE_USER_ORG_BY_USER: &str = r#"
-    DELETE FROM axcelium.user_organizations_by_user 
-    WHERE organization_id = :organization_id AND user_id = :user_id
 "#;
