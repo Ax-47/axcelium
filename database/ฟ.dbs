@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="ScyllaDB" database="ScyllaDB" id="539bb9fa-07de-4594-a48e-c7ca628405d0" >
+	<schema name="axcelium" options="axcelium WITH replication = {&#039;class&#039;: &#039;org.apache.cassandra.locator.SimpleStrategy&#039;, &#039;replication_factor&#039;: &#039;1&#039;} AND durable_writes = true AND tablets = {&#039;enabled&#039;: false}" >
+		<table name="applications" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="client_id" type="UUID" jt="102" />
+			<column name="config" type="TEXT" jt="12" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="description" type="TEXT" jt="12" />
+			<column name="encrypted_client_secret" type="TEXT" jt="12" />
+			<column name="name" type="TEXT" jt="12" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<index name="pk_applications" unique="PRIMARY_KEY" >
+				<column name="organization_id" />
+				<column name="application_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="application_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="applications_organization_by_client_id" spec="" >
+			<column name="client_id" type="UUID" jt="102" />
+			<column name="application_config" type="TEXT" jt="12" />
+			<column name="application_description" type="TEXT" jt="12" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="application_name" type="TEXT" jt="12" />
+			<column name="contact_email" type="TEXT" jt="12" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="encrypted_client_secret" type="TEXT" jt="12" />
+			<column name="is_active" type="BOOLEAN" jt="16" />
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="organization_name" type="TEXT" jt="12" />
+			<column name="organization_slug" type="TEXT" jt="12" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<index name="pk_applications_organization_by_client_id" unique="PRIMARY_KEY" >
+				<column name="client_id" />
+			</index>
+			<options><![CDATA[WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="organizations" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="contact_email" type="TEXT" jt="12" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="is_active" type="BOOLEAN" jt="16" />
+			<column name="name" type="TEXT" jt="12" />
+			<column name="slug" type="TEXT" jt="12" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<index name="pk_organizations" unique="PRIMARY_KEY" >
+				<column name="organization_id" />
+			</index>
+			<options><![CDATA[WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="user_organizations" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="user_id" type="UUID" jt="102" />
+			<column name="contact_email" type="TEXT" jt="12" />
+			<column name="joined_at" type="TIMESTAMP" jt="93" />
+			<column name="organization_name" type="TEXT" jt="12" />
+			<column name="organization_slug" type="TEXT" jt="12" />
+			<column name="role" type="TEXT" jt="12" />
+			<column name="user_email" type="TEXT" jt="12" />
+			<column name="username" type="TEXT" jt="12" />
+			<index name="pk_user_organizations" unique="PRIMARY_KEY" >
+				<column name="organization_id" />
+				<column name="user_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="user_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="user_organizations_by_user" spec="" >
+			<column name="user_id" type="UUID" jt="102" />
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="contact_email" type="TEXT" jt="12" />
+			<column name="joined_at" type="TIMESTAMP" jt="93" />
+			<column name="organization_name" type="TEXT" jt="12" />
+			<column name="organization_slug" type="TEXT" jt="12" />
+			<column name="role" type="TEXT" jt="12" />
+			<column name="user_email" type="TEXT" jt="12" />
+			<column name="username" type="TEXT" jt="12" />
+			<index name="pk_user_organizations_by_user" unique="PRIMARY_KEY" >
+				<column name="user_id" />
+				<column name="organization_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="organization_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="users" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="user_id" type="UUID" jt="102" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="deactivated_at" type="TIMESTAMP" jt="93" />
+			<column name="email" type="TEXT" jt="12" />
+			<column name="hashed_password" type="TEXT" jt="12" />
+			<column name="is_active" type="BOOLEAN" jt="16" />
+			<column name="is_locked" type="BOOLEAN" jt="16" />
+			<column name="is_verified" type="BOOLEAN" jt="16" />
+			<column name="last_login" type="TIMESTAMP" jt="93" />
+			<column name="mfa_enabled" type="BOOLEAN" jt="16" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<column name="username" type="TEXT" jt="12" />
+			<index name="pk_users" unique="PRIMARY_KEY" >
+				<column name="user_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="user_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="users_by_email" spec="" >
+			<column name="email" type="TEXT" jt="12" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="user_id" type="UUID" jt="102" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="deactivated_at" type="TIMESTAMP" jt="93" />
+			<column name="hashed_password" type="TEXT" jt="12" />
+			<column name="is_active" type="BOOLEAN" jt="16" />
+			<column name="is_locked" type="BOOLEAN" jt="16" />
+			<column name="is_verified" type="BOOLEAN" jt="16" />
+			<column name="last_login" type="TIMESTAMP" jt="93" />
+			<column name="mfa_enabled" type="BOOLEAN" jt="16" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<column name="username" type="TEXT" jt="12" />
+			<index name="pk_users_by_email" unique="PRIMARY_KEY" >
+				<column name="user_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="user_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="users_by_username" spec="" >
+			<column name="username" type="TEXT" jt="12" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="user_id" type="UUID" jt="102" />
+			<column name="created_at" type="TIMESTAMP" jt="93" />
+			<column name="deactivated_at" type="TIMESTAMP" jt="93" />
+			<column name="email" type="TEXT" jt="12" />
+			<column name="hashed_password" type="TEXT" jt="12" />
+			<column name="is_active" type="BOOLEAN" jt="16" />
+			<column name="is_locked" type="BOOLEAN" jt="16" />
+			<column name="is_verified" type="BOOLEAN" jt="16" />
+			<column name="last_login" type="TIMESTAMP" jt="93" />
+			<column name="mfa_enabled" type="BOOLEAN" jt="16" />
+			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<index name="pk_users_by_username" unique="PRIMARY_KEY" >
+				<column name="user_id" />
+			</index>
+			<index name="ClusterOrder" unique="SORT" >
+				<column name="user_id" options=" ASC" />
+			</index>
+			<options><![CDATA[WITH
+    AND bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+	</schema>
+	<layout name="Main Diagram" id="9a89d42f-c892-4fde-9f72-1946a2a97572" show_relation="columns" >
+		<entity schema="axcelium" name="applications" color="BED3F4" x="57" y="209" />
+		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="589" y="95" />
+		<entity schema="axcelium" name="organizations" color="BED3F4" x="342" y="209" />
+		<entity schema="axcelium" name="user_organizations" color="BED3F4" x="342" y="551" />
+		<entity schema="axcelium" name="user_organizations_by_user" color="C7F4BE" x="969" y="532" />
+		<entity schema="axcelium" name="users" color="C7F4BE" x="988" y="95" />
+		<entity schema="axcelium" name="users_by_email" color="C7F4BE" x="1254" y="95" />
+		<entity schema="axcelium" name="users_by_username" color="C7F4BE" x="1254" y="532" />
+		<group name="applications" color="ECF0F7" >
+			<entity schema="axcelium" name="applications" />
+			<entity schema="axcelium" name="organizations" />
+			<entity schema="axcelium" name="user_organizations" />
+			<entity schema="axcelium" name="applications_organization_by_client_id" />
+		</group>
+		<group name="users" color="EEF7EC" >
+			<entity schema="axcelium" name="users" />
+			<entity schema="axcelium" name="users_by_email" />
+			<entity schema="axcelium" name="users_by_username" />
+			<entity schema="axcelium" name="user_organizations_by_user" />
+		</group>
+		<script name="SQL_Editor" id="e738d8bf-a5a3-4303-9b78-9843c919a284" language="SQL" >
+			<string><![CDATA[select email from axcelium.users;
+select email from axcelium.users_by_email;
+select email from axcelium.users_by_username;
+select user_email from axcelium.user_organizations;
+select user_email from axcelium.user_organizations_by_user;]]></string>
+		</script>
+	</layout>
+	<layout name="~Diagram with Sample Tools" id="0feadedc-ed10-44c6-8e0c-a30b80c9a53b" show_column_type="y" show_relation="columns" >
+		<entity schema="axcelium" name="applications" color="BED3F4" x="57" y="57" />
+		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="665" y="57" />
+		<entity schema="axcelium" name="organizations" color="BED3F4" x="380" y="57" />
+		<entity schema="axcelium" name="user_organizations" color="BED3F4" x="380" y="399" />
+		<entity schema="axcelium" name="user_organizations_by_user" color="C7F4BE" x="1045" y="494" />
+		<entity schema="axcelium" name="users" color="C7F4BE" x="1045" y="57" />
+		<entity schema="axcelium" name="users_by_username" color="C7F4BE" x="1349" y="494" />
+		<entity schema="axcelium" name="users_by_email" color="C7F4BE" x="1349" y="57" />
+		<script name="SQL Editor" id="63c43d93-593b-40bb-9c3a-6f0a309c542a" language="SQL" >
+			<string><![CDATA[SELECT
+	organization_id, application_id, client_id, config, created_at, "description", encrypted_client_secret, name, updated_at
+FROM
+	axcelium.applications;]]></string>
+		</script>
+		<browser id="c44867e2-c768-4e4d-8d83-2fa08a37c56d" name="Relational Data Editor" confirm_updates="y" >
+			<browse_table schema="axcelium" entity="applications" fk_out="n" x="20" y="20" width="270" height="-60" />
+		</browser>
+		<browser id="075c232a-b75f-4678-ae93-f183fd70af6b" name="users_by_email" confirm_updates="y" >
+			<browse_table schema="axcelium" entity="users_by_email" fk_out="n" x="20" y="20" width="270" height="239" />
+		</browser>
+		<query id="acf516cf-96b1-44f6-a493-6b350a29efcd" name="Query Builder" >
+			<query_table schema="axcelium" name="applications" alias="" x="57" y="57" >
+				<column name="organization_id" />
+				<column name="application_id" />
+				<column name="client_id" />
+				<column name="config" />
+				<column name="created_at" />
+				<column name="description" />
+				<column name="encrypted_client_secret" />
+				<column name="name" />
+				<column name="updated_at" />
+			</query_table>
+		</query>
+	</layout>
+</project>

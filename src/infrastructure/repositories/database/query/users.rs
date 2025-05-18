@@ -80,7 +80,7 @@ pub const QUERY_FIND_RAW_USER: &str = r#"
 // Static queries
 pub const DELETE_USERS_BY_EMAIL: &str = "
     DELETE FROM axcelium.users_by_email
-    WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email";
+    WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email ";
 
 pub const DELETE_USERS_BY_USERNAME: &str = "
     DELETE FROM axcelium.users_by_username
@@ -120,6 +120,14 @@ pub fn update_users_by_email(set_clauses: &[&str]) -> String {
     format!(
         "UPDATE axcelium.users_by_email SET {}, updated_at = :updated_at \
         WHERE organization_id = :organization_id AND application_id = :application_id AND email = :email AND user_id = :user_id" ,
+        set_clauses.join(", ")
+    )
+}
+
+pub fn update_users_by_username(set_clauses: &[&str]) -> String {
+    format!(
+        "UPDATE axcelium.users_by_username SET {}, updated_at = :updated_at \
+        WHERE organization_id = :organization_id AND application_id = :application_id AND username = :username AND user_id = :user_id" ,
         set_clauses.join(", ")
     )
 }

@@ -11,10 +11,15 @@ CREATE TABLE axcelium.users (
   is_verified BOOLEAN,
   is_locked BOOLEAN,
   last_login TIMESTAMP,
-  mfa_enabled BOOLEAN,
+  mfa_enabled BOOLEAN ,
   deactivated_at TIMESTAMP,
-  PRIMARY KEY ((organization_id, application_id), user_id)
+  locked_at TIMESTAMP,
+  PRIMARY KEY ((user_id, organization_id, application_id))
 );
+CREATE INDEX users_app_sec_ix ON axcelium.users((organization_id, application_id), created_at);
+CREATE INDEX users_username_sec_ix ON axcelium.users((organization_id, application_id, username));
+CREATE INDEX users_email_sec_ix ON axcelium.users((organization_id, application_id, email));
+
 CREATE TABLE axcelium.applications (
   application_id UUID,
   organization_id UUID,
@@ -25,8 +30,11 @@ CREATE TABLE axcelium.applications (
   config TEXT,
   created_at TIMESTAMP,
   updated_at TIMESTAMP,
-  PRIMARY KEY (organization_id, application_id)
+  PRIMARY KEY ((organization_id, application_id))
 );
+
+CREATE INDEX applications_client_id_sec_ix ON axcelium.users((organization_id, application_id, email));
+
 CREATE TABLE axcelium.organizations (
   organization_id UUID PRIMARY KEY,
   name TEXT,
@@ -50,68 +58,4 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   is_active BOOLEAN,
   created_at TIMESTAMP,
   updated_at TIMESTAMP
-);
-CREATE TABLE axcelium.users_by_email (
-  email TEXT,
-  organization_id UUID,
-  application_id UUID,
-  user_id UUID,
-  username TEXT,
-  hashed_password TEXT,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP,
-  is_active BOOLEAN,
-  is_verified BOOLEAN,
-  is_locked BOOLEAN,
-  last_login TIMESTAMP,
-  mfa_enabled BOOLEAN,
-  deactivated_at TIMESTAMP,
-  PRIMARY KEY (
-    (email, application_id, organization_id),
-    user_id
-  )
-);
-CREATE TABLE axcelium.users_by_username (
-  username TEXT,
-  organization_id UUID,
-  application_id UUID,
-  email TEXT,
-  user_id UUID,
-  hashed_password TEXT,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP,
-  is_active BOOLEAN,
-  is_verified BOOLEAN,
-  is_locked BOOLEAN,
-  last_login TIMESTAMP,
-  mfa_enabled BOOLEAN,
-  deactivated_at TIMESTAMP,
-  PRIMARY KEY (
-    (username, application_id, organization_id),
-    user_id
-  )
-);
-CREATE TABLE axcelium.user_organizations (
-  organization_id UUID,
-  user_id UUID,
-  role TEXT,
-  username TEXT,
-  user_email TEXT,
-  organization_name TEXT,
-  organization_slug TEXT,
-  contact_email TEXT,
-  joined_at TIMESTAMP,
-  PRIMARY KEY ((organization_id), user_id)
-);
-CREATE TABLE axcelium.user_organizations_by_user (
-  user_id UUID,
-  organization_id UUID,
-  role TEXT,
-  username TEXT,
-  user_email TEXT,
-  organization_name TEXT,
-  organization_slug TEXT,
-  contact_email TEXT,
-  joined_at TIMESTAMP,
-  PRIMARY KEY ((user_id), organization_id)
 );
