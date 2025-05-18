@@ -1,4 +1,3 @@
-use crate::application::mappers::model::ModelMapper;
 use crate::{
     application::{
         dto::{payload::user::CreateUserPayload, response::user::CreateUserResponse},
@@ -12,7 +11,7 @@ use crate::{
         errors::repositories_errors::RepositoryResult,
     },
     infrastructure::{
-        models::{user::UserModel, user_organization::UserOrganizationModel},
+        models::user::UserModel,
         repositories::{
             database::user_repository::UserDatabaseRepository,
             security::argon2_repository::PasswordHasherRepository,
@@ -67,17 +66,14 @@ pub trait CreateUserRepository: Send + Sync {
         organization_id: Uuid,
     ) -> RepositoryResult<Option<CreateUserResponse>>;
 
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()>;
+    async fn create_user(&self, user: User) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl CreateUserRepository for CreateUserRepositoryImpl {
-    async fn create_user(&self, user: User, u_org: UserOrganization) -> RepositoryResult<()> {
+    async fn create_user(&self, user: User) -> RepositoryResult<()> {
         self.database_repo
-            .create_user(
-                UserModel::from_entity(user),
-                UserOrganizationModel::from_entity(u_org),
-            )
+            .create_user(UserModel::from_entity(user))
             .await
     }
     fn new_user(

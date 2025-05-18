@@ -42,6 +42,12 @@ pub struct UserModel {
         deserialize_with = "deserialize_optional_cql_timestamp"
     )]
     pub deactivated_at: Option<CqlTimestamp>,
+
+    #[serde(
+        serialize_with = "serialize_optional_cql_timestamp",
+        deserialize_with = "deserialize_optional_cql_timestamp"
+    )]
+    pub locked_at: Option<CqlTimestamp>,
 }
 
 impl UserModel {
@@ -61,6 +67,7 @@ impl UserModel {
             last_login: entity.last_login,
             mfa_enabled: entity.mfa_enabled,
             deactivated_at: entity.deactivated_at,
+            locked_at: entity.locked_at,
         }
     }
     pub fn to_entity(&self) -> User {
@@ -79,6 +86,7 @@ impl UserModel {
             last_login: self.last_login,
             mfa_enabled: self.mfa_enabled,
             deactivated_at: self.deactivated_at,
+            locked_at: self.locked_at,
         }
     }
     pub fn to_bind_map(&self) -> HashMap<&'static str, CqlValue> {

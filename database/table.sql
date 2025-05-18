@@ -11,15 +11,30 @@ CREATE TABLE axcelium.users (
   is_verified BOOLEAN,
   is_locked BOOLEAN,
   last_login TIMESTAMP,
-  mfa_enabled BOOLEAN ,
+  mfa_enabled BOOLEAN,
   deactivated_at TIMESTAMP,
   locked_at TIMESTAMP,
   PRIMARY KEY ((user_id, organization_id, application_id))
 );
-CREATE INDEX users_app_sec_ix ON axcelium.users((organization_id, application_id), created_at);
-CREATE INDEX users_username_sec_ix ON axcelium.users((organization_id, application_id, username));
-CREATE INDEX users_email_sec_ix ON axcelium.users((organization_id, application_id, email));
-
+CREATE MATERIALIZED VIEW users_by_app AS
+SELECT *
+FROM axcelium.users
+WHERE organization_id IS NOT NULL
+  AND application_id IS NOT NULL
+  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id), created_at) WITH CLUSTERING
+ORDER BY (created_at DESC);
+CREATE MATERIALIZED VIEW users_by_username AS
+SELECT *
+FROM axcelium.users
+WHERE organization_id IS NOT NULL
+  AND application_id IS NOT NULL
+  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id, username));
+CREATE MATERIALIZED VIEW users_by_email_app_org AS
+SELECT *
+FROM axcelium.users
+WHERE organization_id IS NOT NULL
+  AND application_id IS NOT NULL
+  AND email IS NOT NULL PRIMARY KEY ((organization_id, application_id, email));
 CREATE TABLE axcelium.applications (
   application_id UUID,
   organization_id UUID,
@@ -32,9 +47,7 @@ CREATE TABLE axcelium.applications (
   updated_at TIMESTAMP,
   PRIMARY KEY ((organization_id, application_id))
 );
-
 CREATE INDEX applications_client_id_sec_ix ON axcelium.users((organization_id, application_id, email));
-
 CREATE TABLE axcelium.organizations (
   organization_id UUID PRIMARY KEY,
   name TEXT,
@@ -54,6 +67,11 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   application_name TEXT,
   application_config TEXT,
   application_description TEXT,
+  contact_email TEXT,
+  is_active BOOLEAN,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+); application_description TEXT,
   contact_email TEXT,
   is_active BOOLEAN,
   created_at TIMESTAMP,

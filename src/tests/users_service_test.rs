@@ -155,7 +155,7 @@ mod tests {
         mock.expect_new_user_organization()
             .returning(move |_, _| uorg.clone());
 
-        mock.expect_create_user().returning(|_, _| Ok(()));
+        mock.expect_create_user().returning(|_| Ok(()));
 
         let service = CreateUserServiceImpl::new(Arc::new(mock));
 

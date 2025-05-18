@@ -41,13 +41,13 @@ pub struct Repositories {
     pub del_user_repo: Arc<dyn DeleteUserRepository>,
 }
 
-pub fn create_all(
+pub async fn create_all(
     database: Arc<Session>,
     cache: Arc<Client>,
     secret: &str,
     cache_ttl: u64,
 ) -> (Repositories, Arc<dyn InitialCoreService>) {
-    let user_db = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()));
+    let user_db = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()).await);
     let password_hasher = Arc::new(PasswordHasherImpl::new());
     let aes_repo = Arc::new(AesGcmCipherImpl::new(secret.as_bytes()));
     let base64_repo = Arc::new(Base64RepositoryImpl);

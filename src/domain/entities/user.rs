@@ -25,6 +25,7 @@ pub struct User {
     pub last_login: Option<CqlTimestamp>,
     pub mfa_enabled: bool,
     pub deactivated_at: Option<CqlTimestamp>,
+    pub locked_at: Option<CqlTimestamp>,
 }
 impl User {
     pub fn new(
@@ -50,6 +51,7 @@ impl User {
             last_login: None,
             mfa_enabled: false,
             deactivated_at: None,
+            locked_at:None
         }
     }
 

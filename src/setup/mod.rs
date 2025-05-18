@@ -32,7 +32,7 @@ impl Container {
         let secret = cfg.core.secret.clone();
         let cache_ttl = cfg.core.cache_ttl.clone();
         let (repos, core_service) =
-            repositories::create_all(database.clone(), cache, &secret, cache_ttl);
+            repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
 
         core_service.lunch(cfg).await;
 

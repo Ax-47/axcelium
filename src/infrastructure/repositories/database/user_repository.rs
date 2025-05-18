@@ -1,17 +1,14 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
-    infrastructure::models::{
-        user::{
-            CleannedUserModel, FoundUserModel, PaginatedUsersModel, UpdateUserModel, UserModel,
-        },
-        user_organization::UserOrganizationModel,
+    infrastructure::models::user::{
+        CleannedUserModel, FoundUserModel, PaginatedUsersModel, UpdateUserModel, UserModel,
     },
 };
 use async_trait::async_trait;
 use scylla::{
     client::session::Session,
     response::PagingState,
-    statement::{batch::Batch, Consistency, Statement},
+    statement::{batch::Batch, prepared::PreparedStatement, Consistency, SerialConsistency},
     value::CqlValue,
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
@@ -21,27 +18,49 @@ use super::query::users::{
     update_user_org_by_user_query, update_user_org_query, update_users_by_email,
     update_users_by_username, update_users_query, DELETE_USERS, DELETE_USERS_BY_EMAIL,
     DELETE_USERS_BY_USERNAME, DELETE_USER_ORG, DELETE_USER_ORG_BY_USER, INSERT_USER,
-    INSERT_USERS_BY_EMAIL_SEC, INSERT_USERS_BY_USERNAME_SEC, INSERT_USER_BY_EMAIL,
-    INSERT_USER_BY_USERNAME, INSERT_USER_ORGANIZATION, INSERT_USER_ORG_BY_USER,
-    QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL,
-    QUERY_FIND_USER_BY_USERNAME,
+    INSERT_USERS_BY_EMAIL_SEC, INSERT_USERS_BY_USERNAME_SEC, QUERY_FIND_ALL_USERS_PAGINATED,
+    QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
 };
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
+    insert_user: PreparedStatement,
+    find_username: PreparedStatement,
+    find_email: PreparedStatement,
+    find_clean_user: PreparedStatement,
+    find_all_users: PreparedStatement,
 }
 
 impl UserDatabaseRepositoryImpl {
-    pub fn new(database: Arc<Session>) -> Self {
-        Self { database }
+    pub async fn new(database: Arc<Session>) -> Self {
+        let mut insert_user = database.prepare(INSERT_USER).await.unwrap();
+        insert_user.set_consistency(Consistency::Quorum);
+        insert_user.set_serial_consistency(Some(SerialConsistency::Serial));
+
+        let mut find_username = database.prepare(QUERY_FIND_USER_BY_USERNAME).await.unwrap();
+        find_username.set_consistency(Consistency::Quorum);
+
+        let mut find_email = database.prepare(QUERY_FIND_USER_BY_EMAIL).await.unwrap();
+        find_email.set_consistency(Consistency::Quorum);
+
+        let mut find_clean_user = database.prepare(QUERY_FIND_USER).await.unwrap();
+        find_clean_user.set_consistency(Consistency::One);
+        let find_all_users = database
+            .prepare(QUERY_FIND_ALL_USERS_PAGINATED)
+            .await
+            .unwrap();
+        Self {
+            database,
+            insert_user,
+            find_username,
+            find_email,
+            find_clean_user,
+            find_all_users,
+        }
     }
 }
 #[async_trait]
 pub trait UserDatabaseRepository: Send + Sync {
-    async fn create_user(
-        &self,
-        user: UserModel,
-        u_org: UserOrganizationModel,
-    ) -> RepositoryResult<()>;
+    async fn create_user(&self, user: UserModel) -> RepositoryResult<()>;
     async fn find_user_by_email(
         &self,
         email: String,
@@ -94,30 +113,10 @@ pub trait UserDatabaseRepository: Send + Sync {
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
-    async fn create_user(
-        &self,
-        user: UserModel,
-        u_org: UserOrganizationModel,
-    ) -> RepositoryResult<()> {
-        let mut batch = Batch::default();
-        batch.set_consistency(Consistency::Quorum);
-        batch.append_statement(INSERT_USER);
-        let use_email = user.email.is_some();
-        if use_email {
-            batch.append_statement(INSERT_USER_BY_EMAIL);
-        }
-        batch.append_statement(INSERT_USER_BY_USERNAME);
-        batch.append_statement(INSERT_USER_ORGANIZATION);
-        batch.append_statement(INSERT_USER_ORG_BY_USER);
-        if use_email {
-            self.database
-                .batch(&batch, ((&user), (&user), (&user), (&u_org), (&u_org)))
-                .await?;
-        } else {
-            self.database
-                .batch(&batch, ((&user), (&user), (&u_org), (&u_org)))
-                .await?;
-        }
+    async fn create_user(&self, user: UserModel) -> RepositoryResult<()> {
+        self.database
+            .execute_unpaged(&self.insert_user, user)
+            .await?;
         Ok(())
     }
 
@@ -129,10 +128,7 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<Option<FoundUserModel>> {
         let result = self
             .database
-            .query_unpaged(
-                QUERY_FIND_USER_BY_EMAIL,
-                (email, application_id, organization_id),
-            )
+            .execute_unpaged(&self.find_email, (email, application_id, organization_id))
             .await?
             .into_rows_result()?;
 
@@ -147,8 +143,8 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<Option<FoundUserModel>> {
         let result = self
             .database
-            .query_unpaged(
-                QUERY_FIND_USER_BY_USERNAME,
+            .execute_unpaged(
+                &self.find_username,
                 (username, application_id, organization_id),
             )
             .await?
@@ -164,20 +160,14 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         page_size: i32,
         paging_state_u8: Option<Vec<u8>>,
     ) -> RepositoryResult<PaginatedUsersModel> {
-        let paged_prepared = self
-            .database
-            .prepare(Statement::new(QUERY_FIND_ALL_USERS_PAGINATED).with_page_size(page_size))
-            .await?;
+        let mut prepared = self.find_all_users.clone();
+        prepared.set_page_size(page_size);
         let paging_state = paging_state_u8
             .map(PagingState::new_from_raw_bytes)
             .unwrap_or_else(PagingState::start);
         let (res, paging_state_response) = self
             .database
-            .execute_single_page(
-                &paged_prepared,
-                &(organization_id, application_id),
-                paging_state,
-            )
+            .execute_single_page(&prepared, &(organization_id, application_id), paging_state)
             .await?;
         let users = res
             .into_rows_result()?
@@ -202,7 +192,10 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<Option<CleannedUserModel>> {
         let result = self
             .database
-            .query_unpaged(QUERY_FIND_USER, (organization_id, application_id, user_id))
+            .execute_unpaged(
+                &self.find_clean_user,
+                (organization_id, application_id, user_id),
+            )
             .await?
             .into_rows_result()?;
 

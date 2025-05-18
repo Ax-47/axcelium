@@ -84,11 +84,8 @@ impl CreateUserService for CreateUserServiceImpl {
         let new_user = self
             .repository
             .new_user(c_apporg.clone(), user, hashed_password);
-        let new_uorg = self
-            .repository
-            .new_user_organization(c_apporg, new_user.clone());
         self.repository
-            .create_user(new_user.clone(), new_uorg)
+            .create_user(new_user.clone())
             .await?;
         return Ok(CreateUserResponse {
             user_id: new_user.user_id.to_string(),
