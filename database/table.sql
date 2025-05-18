@@ -28,7 +28,7 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id, username));
+  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id, username),user_id);
 CREATE MATERIALIZED VIEW users_by_email_app_org AS
 SELECT *
 FROM axcelium.users
