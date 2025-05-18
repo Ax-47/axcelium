@@ -21,7 +21,7 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id), created_at) WITH CLUSTERING
+  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id), created_at,user_id) WITH CLUSTERING
 ORDER BY (created_at DESC);
 CREATE MATERIALIZED VIEW users_by_username AS
 SELECT *
