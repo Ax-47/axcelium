@@ -363,6 +363,8 @@ dependencies = [
  "redis",
  "regex",
  "scylla",
+ "scylla_macro",
+ "scylla_macro_derive",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -2011,6 +2013,18 @@ checksum = "e67d343ebea5cc079bfa89ca4b231b432207c3748baaa3b00e5c238e7644e838"
 dependencies = [
  "darling",
  "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "scylla_macro"
+version = "0.1.0"
+
+[[package]]
+name = "scylla_macro_derive"
+version = "0.1.0"
+dependencies = [
  "quote",
  "syn",
 ]
