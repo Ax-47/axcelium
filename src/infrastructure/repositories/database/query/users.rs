@@ -1,4 +1,3 @@
-
 pub const INSERT_USER: &str = r#"
     INSERT INTO axcelium.users (
         user_id, organization_id, application_id,

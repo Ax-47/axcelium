@@ -3,7 +3,11 @@ use std::sync::Arc;
 use crate::application::services::{
     hello_service::{HelloService, HelloServiceImpl},
     users::{
-        create::{CreateUserService, CreateUserServiceImpl}, delete::{DeleteUserService, DeleteUserServiceImpl}, get_user::{GetUserService, GetUserServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}, update_user::{UpdateUserService, UpdateUserServiceImpl}
+        create::{CreateUserService, CreateUserServiceImpl},
+        delete::{DeleteUserService, DeleteUserServiceImpl},
+        get_user::{GetUserService, GetUserServiceImpl},
+        get_users::{GetUsersService, GetUsersServiceImpl},
+        update_user::{UpdateUserService, UpdateUserServiceImpl},
     },
 };
 

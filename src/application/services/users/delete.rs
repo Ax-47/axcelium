@@ -44,7 +44,7 @@ impl DeleteUserService for DeleteUserServiceImpl {
             return Err(RepositoryError::new("not found".to_string(), 404));
         };
         self.repository
-            .delete_user(organization_id, application_id, user_id,user)
+            .delete_user(organization_id, application_id, user_id, user)
             .await?;
         Ok(UpdateUsersResponse {
             massage: "success".to_string(),

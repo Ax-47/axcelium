@@ -1,6 +1,6 @@
-use uuid::Uuid;
-use scylla::value::CqlTimestamp;
 use chrono::Utc;
+use scylla::value::CqlTimestamp;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Organization {
@@ -14,7 +14,7 @@ pub struct Organization {
 }
 
 impl Organization {
-    pub fn new(name:String,slug:String,contact_email:String) -> Self {
+    pub fn new(name: String, slug: String, contact_email: String) -> Self {
         let now = CqlTimestamp(Utc::now().timestamp_millis());
 
         Self {

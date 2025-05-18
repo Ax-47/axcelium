@@ -1,6 +1,3 @@
-use async_trait::async_trait;
-use std::sync::Arc;
-use uuid::Uuid;
 use crate::application::mappers::model::ModelMapper;
 use crate::domain::entities::apporg_client_id::AppOrgByClientId;
 use crate::domain::errors::repositories_errors::RepositoryResult;
@@ -8,6 +5,9 @@ use crate::infrastructure::repositories::{
     cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerRepository,
     cipher::{aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository},
 };
+use async_trait::async_trait;
+use std::sync::Arc;
+use uuid::Uuid;
 pub struct ValidateBearerAuthMiddlewareRepositoryImpl {
     apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
     base64_repo: Arc<dyn Base64Repository>,
@@ -59,11 +59,13 @@ impl ValidateBearerAuthMiddlewareRepository for ValidateBearerAuthMiddlewareRepo
         &self,
         client_id: Uuid,
     ) -> RepositoryResult<Option<AppOrgByClientId>> {
-        let Some(fetched)=self.apporg_cachelayer_repo
+        let Some(fetched) = self
+            .apporg_cachelayer_repo
             .find_apporg_by_client_id(client_id)
-            .await? else{
-                return Ok(None);
-            };
+            .await?
+        else {
+            return Ok(None);
+        };
 
         Ok(Some(fetched.to_entity()))
     }

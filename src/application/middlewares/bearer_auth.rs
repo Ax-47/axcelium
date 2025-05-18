@@ -1,15 +1,15 @@
-use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    Error,
-};
-use futures_util::future::LocalBoxFuture;
-use std::{
-    future::{ready, Ready},
-    sync::Arc,
-};
-use std::rc::Rc;
 use super::super::services::validate_bearer_auth_service::ValidateBearerAuthMiddlewareService;
 use actix_web::HttpMessage;
+use actix_web::{
+    Error,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
+};
+use futures_util::future::LocalBoxFuture;
+use std::rc::Rc;
+use std::{
+    future::{Ready, ready},
+    sync::Arc,
+};
 pub struct ValidateBearerAuth {
     middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>,
 }
@@ -20,7 +20,7 @@ impl ValidateBearerAuth {
 }
 impl<S, B> Transform<S, ServiceRequest> for ValidateBearerAuth
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>+ 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -39,13 +39,13 @@ where
 }
 
 pub struct ValidateBearerAuthMiddleware<S> {
-    service:  Rc<S>,
+    service: Rc<S>,
     middleware_service: Arc<dyn ValidateBearerAuthMiddlewareService>,
 }
 
 impl<S, B> Service<ServiceRequest> for ValidateBearerAuthMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>+ 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
@@ -64,7 +64,7 @@ where
                 None => None,
             };
 
-            let apporg=middleware_service.authentication(token).await?;
+            let apporg = middleware_service.authentication(token).await?;
             req.extensions_mut().insert(apporg);
             let res = srv.call(req).await?;
 

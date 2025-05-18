@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use scylla::{
     client::session::Session,
     response::PagingState,
-    statement::{batch::Batch, prepared::PreparedStatement, Consistency, SerialConsistency},
+    statement::{Consistency, SerialConsistency, batch::Batch, prepared::PreparedStatement},
     value::CqlValue,
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};

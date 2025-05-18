@@ -92,7 +92,10 @@ impl Config {
         let interpolated = interpolate_env_vars(&raw);
 
         let settings: config::Config = config::Config::builder()
-            .add_source(config::File::from_str(&interpolated, config::FileFormat::Yaml))
+            .add_source(config::File::from_str(
+                &interpolated,
+                config::FileFormat::Yaml,
+            ))
             .build()?;
 
         let config: Config = settings.try_deserialize()?;

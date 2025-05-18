@@ -46,7 +46,8 @@ impl UpdateUserRepository for UpdateUserRepositoryImpl {
         user_id: Uuid,
     ) -> RepositoryResult<Option<UserModel>> {
         self.database_repo
-            .find_raw_user(application_id, organization_id, user_id).await
+            .find_raw_user(application_id, organization_id, user_id)
+            .await
     }
     async fn update_user(
         &self,

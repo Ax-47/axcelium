@@ -37,9 +37,9 @@ pub trait GetUsersRepository: Send + Sync {
         page_size: i32,
         paging_state_u8: Option<Vec<u8>>,
     ) -> RepositoryResult<PaginatedUsersModel>;
-    fn bytes_to_base64(&self,bytes:Vec<u8>) -> String;
+    fn bytes_to_base64(&self, bytes: Vec<u8>) -> String;
 
-    fn base64_to_bytes(&self,base64:String) -> RepositoryResult<Vec<u8>>;
+    fn base64_to_bytes(&self, base64: String) -> RepositoryResult<Vec<u8>>;
 }
 
 #[async_trait]
@@ -56,12 +56,12 @@ impl GetUsersRepository for GetUsersRepositoryImpl {
             .await
     }
 
-    fn bytes_to_base64(&self,bytes:Vec<u8>) -> String{
+    fn bytes_to_base64(&self, bytes: Vec<u8>) -> String {
         self.base64_repo.encode(bytes.as_slice())
     }
 
-    fn base64_to_bytes(&self,base64:String) -> RepositoryResult<Vec<u8>>{
-        let decoded =self.base64_repo.decode(base64.as_str())?;
+    fn base64_to_bytes(&self, base64: String) -> RepositoryResult<Vec<u8>> {
+        let decoded = self.base64_repo.decode(base64.as_str())?;
         Ok(decoded)
     }
 }

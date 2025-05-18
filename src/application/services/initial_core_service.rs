@@ -1,4 +1,7 @@
-use crate::{application::repositories::initial_core::InitialCoreRepository, config, domain::entities::apporg_client_id::AppOrgByClientId};
+use crate::{
+    application::repositories::initial_core::InitialCoreRepository, config,
+    domain::entities::apporg_client_id::AppOrgByClientId,
+};
 use async_trait::async_trait;
 use std::sync::Arc;
 #[derive(Clone)]

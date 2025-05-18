@@ -1,4 +1,10 @@
-use crate::{application::repositories::validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepository, domain::{entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::{RepositoryError, RepositoryResult}}};
+use crate::{
+    application::repositories::validate_bearer_auth_repository::ValidateBearerAuthMiddlewareRepository,
+    domain::{
+        entities::apporg_client_id::CleanAppOrgByClientId,
+        errors::repositories_errors::{RepositoryError, RepositoryResult},
+    },
+};
 use async_trait::async_trait;
 use std::sync::Arc;
 #[derive(Clone)]

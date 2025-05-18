@@ -2,11 +2,11 @@ pub mod hello;
 pub mod users;
 
 use crate::setup::Container;
+use actix_web::App;
+use actix_web::Error;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::web::ServiceConfig;
-use actix_web::App;
-use actix_web::Error;
 use std::sync::Arc;
 
 pub fn configure_routes(cfg: &mut ServiceConfig, container: Arc<Container>) {

@@ -1,9 +1,9 @@
 use crate::domain::errors::repositories_errors::RepositoryResult;
 use aes_gcm::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
 };
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 
 use async_trait::async_trait;
 
@@ -42,8 +42,7 @@ impl AesGcmCipherRepository for AesGcmCipherImpl {
         let ciphertext_bytes = general_purpose::STANDARD.decode(ciphertext_b64)?;
         let nonce = Nonce::from_slice(&nonce_bytes);
         let plaintext = self.cipher.decrypt(nonce, ciphertext_bytes.as_ref())?;
-        let result =
-            String::from_utf8_lossy(plaintext.as_slice()).into_owned();
+        let result = String::from_utf8_lossy(plaintext.as_slice()).into_owned();
 
         Ok(result)
     }

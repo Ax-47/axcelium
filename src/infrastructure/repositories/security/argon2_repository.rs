@@ -1,6 +1,6 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
     Argon2, PasswordHash,
+    password_hash::{PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use async_trait::async_trait;
 

@@ -1,6 +1,9 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
-    infrastructure::{models::user::CleannedUserModel, repositories::database::user_repository::UserDatabaseRepository},
+    infrastructure::{
+        models::user::CleannedUserModel,
+        repositories::database::user_repository::UserDatabaseRepository,
+    },
 };
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -32,7 +35,9 @@ impl GetUserRepository for GetUserRepositoryImpl {
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
-    ) -> RepositoryResult<Option<CleannedUserModel>>{
-        self.database_repo.find_user(application_id, organization_id, user_id).await
+    ) -> RepositoryResult<Option<CleannedUserModel>> {
+        self.database_repo
+            .find_user(application_id, organization_id, user_id)
+            .await
     }
 }

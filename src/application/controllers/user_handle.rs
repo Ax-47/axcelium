@@ -17,7 +17,7 @@ use crate::{
     },
 };
 use actix_web::HttpMessage;
-use actix_web::{web, Result};
+use actix_web::{Result, web};
 use validator::Validate;
 pub async fn create_user_handle(
     req: actix_web::HttpRequest,

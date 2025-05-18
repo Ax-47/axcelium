@@ -1,6 +1,6 @@
+use crate::config;
 use scylla::client::session::Session;
 use scylla::client::session_builder::SessionBuilder;
-use crate::config;
 
 pub async fn get_db_pool(cfg: config::DatabaseConfig) -> Session {
     let mut builder = SessionBuilder::new();
@@ -10,6 +10,7 @@ pub async fn get_db_pool(cfg: config::DatabaseConfig) -> Session {
     let session = builder
         .user(cfg.username, cfg.password)
         .build()
-        .await.unwrap();
+        .await
+        .unwrap();
     session
 }

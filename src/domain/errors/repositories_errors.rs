@@ -1,8 +1,11 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
-use scylla::errors::{DeserializationError, ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError, PrepareError, RowsError};
+use redis::RedisError;
+use scylla::errors::{
+    DeserializationError, ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError,
+    PrepareError, RowsError,
+};
 use serde::Serialize;
 use std::{fmt, string::FromUtf8Error};
-use redis::RedisError;
 #[derive(Debug, Serialize)]
 pub struct CommonError {
     pub message: String,
@@ -104,7 +107,7 @@ pub type RepositoryResult<T> = Result<T, RepositoryError>;
 // === Error Mappings ===
 impl From<uuid::Error> for RepositoryError {
     fn from(e: uuid::Error) -> Self {
-        println!("{}",e);
+        println!("{}", e);
         RepositoryError::new("invalid UUID for client_id".to_string(), 400)
     }
 }
@@ -126,17 +129,17 @@ impl From<FirstRowError> for RepositoryError {
         RepositoryError::new(format!("failed to Query: {}", err), 500)
     }
 }
-impl From<RowsError> for RepositoryError{
+impl From<RowsError> for RepositoryError {
     fn from(err: RowsError) -> Self {
         RepositoryError::new(format!("failed to Query: {}", err), 500)
     }
 }
-impl From<DeserializationError>for RepositoryError {
+impl From<DeserializationError> for RepositoryError {
     fn from(err: DeserializationError) -> Self {
         RepositoryError::new(format!("failed to Query: {}", err), 500)
     }
 }
-impl From<PrepareError>for RepositoryError {
+impl From<PrepareError> for RepositoryError {
     fn from(err: PrepareError) -> Self {
         RepositoryError::new(format!("failed to Query: {}", err), 500)
     }
@@ -171,13 +174,13 @@ impl From<base64::DecodeError> for RepositoryError {
         RepositoryError::new("Cipher failed.".to_string(), 500)
     }
 }
-impl From<RedisError> for  RepositoryError{
+impl From<RedisError> for RepositoryError {
     fn from(e: RedisError) -> Self {
         println!("{e}");
         RepositoryError::new("caching error failed.".to_string(), 500)
     }
 }
-impl From< serde_json::Error> for  RepositoryError{
+impl From<serde_json::Error> for RepositoryError {
     fn from(_: serde_json::Error) -> Self {
         RepositoryError::new("convert error".to_string(), 500)
     }

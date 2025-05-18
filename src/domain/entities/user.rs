@@ -51,7 +51,7 @@ impl User {
             last_login: None,
             mfa_enabled: false,
             deactivated_at: None,
-            locked_at:None
+            locked_at: None,
         }
     }
 

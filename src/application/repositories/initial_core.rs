@@ -1,3 +1,4 @@
+use crate::application::mappers::model::ModelMapper;
 use crate::config;
 use crate::domain::entities::application::Application;
 use crate::domain::entities::apporg_client_id::AppOrgByClientId;
@@ -15,7 +16,6 @@ use crate::infrastructure::repositories::{
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-use crate::application::mappers::model::ModelMapper;
 pub struct InitialCoreImpl {
     aes_repo: Arc<dyn AesGcmCipherRepository>,
     base64_repo: Arc<dyn Base64Repository>,
@@ -88,7 +88,10 @@ impl InitialCoreRepository for InitialCoreImpl {
             .is_some()
     }
     async fn create_org(&self, org: Organization) {
-        self.org_db_repo.create_organization(OrganizationModel::from_entity(org)).await.unwrap()
+        self.org_db_repo
+            .create_organization(OrganizationModel::from_entity(org))
+            .await
+            .unwrap()
     }
 
     async fn new_app(
@@ -112,8 +115,10 @@ impl InitialCoreRepository for InitialCoreImpl {
         )
     }
     async fn create_app(&self, app: Application) {
-
-        self.app_db_repo.create_application(AppcalitionModel::from_entity(app)).await.unwrap()
+        self.app_db_repo
+            .create_application(AppcalitionModel::from_entity(app))
+            .await
+            .unwrap()
     }
     fn new_apporg_by_client_id(&self, app: Application, org: Organization) -> AppOrgByClientId {
         AppOrgByClientId::new(org, app)

@@ -38,7 +38,7 @@ impl CreateUserService for CreateUserServiceImpl {
         c_apporg: CleanAppOrgByClientId,
         user: CreateUserPayload,
     ) -> RepositoryResult<CreateUserResponse> {
-        if !(2..=50).contains(&user.username.len()){
+        if !(2..=50).contains(&user.username.len()) {
             return Err(RepositoryError::new("username is not valid".into(), 400));
         }
         let Ok(config) = c_apporg.get_config() else {
@@ -84,9 +84,7 @@ impl CreateUserService for CreateUserServiceImpl {
         let new_user = self
             .repository
             .new_user(c_apporg.clone(), user, hashed_password);
-        self.repository
-            .create_user(new_user.clone())
-            .await?;
+        self.repository.create_user(new_user.clone()).await?;
         return Ok(CreateUserResponse {
             user_id: new_user.user_id.to_string(),
             username: new_user.username,

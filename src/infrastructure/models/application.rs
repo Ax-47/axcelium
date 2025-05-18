@@ -1,6 +1,8 @@
 use crate::application::mappers::model::ModelMapper;
-use crate::infrastructure::repositories::database::scylla_serialize::{deserialize_cql_timestamp, serialize_cql_timestamp};
 use crate::domain::entities::application::Application;
+use crate::infrastructure::repositories::database::scylla_serialize::{
+    deserialize_cql_timestamp, serialize_cql_timestamp,
+};
 use scylla::value::CqlTimestamp;
 use scylla::{DeserializeRow, SerializeRow};
 use serde::{Deserialize, Serialize};
