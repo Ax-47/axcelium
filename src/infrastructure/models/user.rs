@@ -160,6 +160,11 @@ pub struct CleannedUserModel {
         deserialize_with = "deserialize_optional_cql_timestamp"
     )]
     pub deactivated_at: Option<CqlTimestamp>,
+    #[serde(
+        serialize_with = "serialize_optional_cql_timestamp",
+        deserialize_with = "deserialize_optional_cql_timestamp"
+    )]
+    pub locked_at: Option<CqlTimestamp>,
 }
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct FoundUserModel {
