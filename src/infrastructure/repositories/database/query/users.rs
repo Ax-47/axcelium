@@ -13,7 +13,7 @@ pub const INSERT_USER: &str = r#"
         username, email, hashed_password, locked_at,
         created_at, updated_at,
         is_active, is_verified, is_locked, mfa_enabled, last_login, deactivated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,? ) IF NOT EXISTS
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS
 "#;
 
 pub const QUERY_FIND_USER_BY_EMAIL: &str = r#"

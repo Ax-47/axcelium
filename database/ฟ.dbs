@@ -89,6 +89,24 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
+		<table name="user_count_by_app" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="user_count" type="COUNTER" jt="-5" />
+			<options><![CDATA[WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
 		<table name="users" spec="" >
 			<column name="user_id" type="UUID" jt="102" />
 			<column name="organization_id" type="UUID" jt="102" />
@@ -125,6 +143,7 @@
 		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="589" y="152" />
 		<entity schema="axcelium" name="organizations" color="BED3F4" x="342" y="266" />
 		<entity schema="axcelium" name="users" color="3986C1" x="1045" y="95" />
+		<entity schema="axcelium" name="user_count_by_app" color="3986C1" x="1254" y="114" />
 		<group name="applications" color="ECF0F7" >
 			<entity schema="axcelium" name="applications" />
 			<entity schema="axcelium" name="organizations" />
@@ -137,25 +156,18 @@ select email from axcelium.users_by_username;
 select user_email from axcelium.user_organizations;
 select user_email from axcelium.user_organizations_by_user;]]></string>
 		</script>
-		<script name="SQL_Editor_001" id="fe8aaab4-abcf-4c39-aa4d-9b4b8f78772c" language="SQL" >
-			<string><![CDATA[CREATE MATERIALIZED VIEW users_by_email AS
-SELECT *
-FROM axcelium.users
-WHERE organization_id IS NOT NULL
-  AND application_id IS NOT NULL
-  AND user_id IS NOT NULL
-  AND email IS NOT NULL PRIMARY KEY ((organization_id, application_id, email),user_id);]]></string>
-		</script>
 		<script name="SQL_Editor_002" id="ff903242-778d-4e5c-bc0c-abb12004307f" language="SQL" >
-			<string><![CDATA[CREATE MATERIALIZED VIEW users_by_app AS
-SELECT *
-FROM axcelium.users
-WHERE organization_id IS NOT NULL
-  AND application_id IS NOT NULL
-AND user_id IS NOT NULL
-  AND created_at IS NOT NULL PRIMARY KEY ((organization_id, application_id), created_at,user_id) WITH CLUSTERING
-ORDER BY (created_at DESC);]]></string>
+			<string><![CDATA[CREATE TABLE axcelium.user_count_by_app (
+  organization_id UUID,
+  application_id UUID,
+  user_count COUNTER,
+  PRIMARY KEY ((organization_id, application_id))
+); ]]></string>
 		</script>
+		<script name="clear_user.sql" id="fe8aaab4-abcf-4c39-aa4d-9b4b8f78772c" language="SQL" file="file:/C:/Users/Komputra%20Akhsakova/Desktop/viacks/axcelium/database/clear_user.sql" />
+		<browser id="751bb9ea-aa7e-4efc-9ff1-30a0c8ea10b7" name="user_count_by_app" confirm_updates="y" >
+			<browse_table schema="axcelium" entity="user_count_by_app" fk_out="n" x="20" y="20" width="270" height="239" />
+		</browser>
 		<browser id="e09c74d7-595e-4804-90b7-ed9ecf36f45d" name="users" confirm_updates="y" >
 			<browse_table schema="axcelium" entity="users" fk_out="n" x="20" y="20" width="270" height="239" />
 		</browser>

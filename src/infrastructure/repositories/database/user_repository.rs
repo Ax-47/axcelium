@@ -15,9 +15,9 @@ use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 
 use super::query::users::{
-    DECREASE_USER, DELETE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER,
-    QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME, UPDATE_USER_EMAIL,
-    UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME,
+    DECREASE_USER, DELETE_USER, INCREASE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED,
+    QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
+    UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME,
     UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
@@ -93,7 +93,7 @@ impl UserDatabaseRepositoryImpl {
 
         let mut delete_user = database.prepare(DELETE_USER).await.unwrap();
         delete_user.set_consistency(Consistency::One);
-        let mut increase_user = database.prepare(INSERT_USER).await.unwrap();
+        let mut increase_user = database.prepare(INCREASE_USER).await.unwrap();
         increase_user.set_consistency(Consistency::Quorum);
 
         let mut decrease_user = database.prepare(DECREASE_USER).await.unwrap();
@@ -174,16 +174,13 @@ pub trait UserDatabaseRepository: Send + Sync {
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     async fn create_user(&self, user: UserModel) -> RepositoryResult<()> {
-        let mut batch: Batch = Default::default();
-        batch.append_statement(self.insert_user.clone());
-        batch.append_statement(self.increase_user.clone());
         self.database
-            .batch(
-                &batch,
-                (
-                    (user.organization_id.clone(), user.application_id.clone()),
-                    &user,
-                ),
+            .execute_unpaged(&self.insert_user, &user)
+            .await?;
+        self.database
+            .execute_unpaged(
+                &self.increase_user,
+                (user.organization_id, user.application_id),
             )
             .await?;
         Ok(())
