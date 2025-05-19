@@ -35,6 +35,12 @@ FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
   AND email IS NOT NULL PRIMARY KEY ((organization_id, application_id, email));
+CREATE TABLE axcelium.user_count_by_app (
+  organization_id UUID,
+  application_id UUID,
+  user_count COUNTER,
+  PRIMARY KEY ((organization_id, application_id))
+);
 CREATE TABLE axcelium.applications (
   application_id UUID,
   organization_id UUID,
