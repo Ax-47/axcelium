@@ -30,8 +30,6 @@ config = "0.15.11"
 regex = "1.11.1"
 email_address = "0.2.9"
 mockall = "0.13.1"
-scylla_macro = { path = "../scylla_macro" }
-scylla_macro_derive = { path = "../scylla_macro/scylla_macro_derive" }
 [dependencies.uuid]
 version = "1.11.0"
 features = [
