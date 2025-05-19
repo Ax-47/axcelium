@@ -3,12 +3,16 @@ use crate::{
     application::{
         dto::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
-            response::user::{
-                BanUserResponse, CreateUserResponse, DisableMFAUserResponse, GetUserCountResponse, GetUserResponse, GetUsersResponse, UnbanUserResponse, UpdateUsersResponse
-            },
+            response::{hello::HelloResponse, user::{
+                BanUserResponse, CreateUserResponse, DisableMFAUserResponse, GetUserCountResponse,
+                GetUserResponse, GetUsersResponse, UnbanUserResponse, UpdateUsersResponse,
+            }},
         },
         services::users::{
-            ban_user::BanUserService, delete::DeleteUserService, disable_mfa_user::DisableMFAUserService, get_user::GetUserService, get_user_count::GetUserCountService, get_users::GetUsersService, unban_user::UnbanUserService, update_user::UpdateUserService
+            ban_user::BanUserService, delete::DeleteUserService,
+            disable_mfa_user::DisableMFAUserService, get_user::GetUserService,
+            get_user_count::GetUserCountService, get_users::GetUsersService,
+            unban_user::UnbanUserService, update_user::UpdateUserService,
         },
     },
     domain::{
@@ -127,6 +131,7 @@ pub async fn get_user_count_handle(
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
+
     let created_user = user_service
         .execute(apporg.organization_id, apporg.application_id)
         .await?;
@@ -158,7 +163,7 @@ pub async fn unban_user_handle(
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(path.user_id,apporg.organization_id, apporg.application_id)
+        .execute(path.user_id, apporg.organization_id, apporg.application_id)
         .await?;
     Ok(web::Json(created_user))
 }
@@ -174,7 +179,7 @@ pub async fn disable_mfa_user_handle(
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(path.user_id,apporg.organization_id, apporg.application_id)
+        .execute(path.user_id, apporg.organization_id, apporg.application_id)
         .await?;
     Ok(web::Json(created_user))
 }

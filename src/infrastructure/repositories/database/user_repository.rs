@@ -8,8 +8,8 @@ use async_trait::async_trait;
 use scylla::{
     client::session::Session,
     response::PagingState,
-    statement::{Consistency, SerialConsistency, prepared::PreparedStatement},
-    value::CqlValue,
+    statement::{prepared::PreparedStatement, Consistency, SerialConsistency},
+    value::{self, CqlValue},
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
@@ -474,10 +474,9 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .execute_unpaged(&self.select_user_count, (organization_id, application_id))
             .await?
             .into_rows_result()?
-            .maybe_first_row::<(i64,)>()?
-            .unwrap_or((0,));
-
-        Ok(result.0)
+            .maybe_first_row::<(value::Counter,)>()?
+            .unwrap_or((value::Counter(0),));
+        Ok(result.0.0)
     }
 
     async fn ban_user(

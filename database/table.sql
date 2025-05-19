@@ -21,14 +21,21 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id), created_at,user_id) WITH CLUSTERING
+  AND username IS NOT NULL PRIMARY KEY (
+    (organization_id, application_id),
+    created_at,
+    user_id
+  ) WITH CLUSTERING
 ORDER BY (created_at DESC);
 CREATE MATERIALIZED VIEW users_by_username AS
 SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND username IS NOT NULL PRIMARY KEY ((organization_id, application_id, username),user_id);
+  AND username IS NOT NULL PRIMARY KEY (
+    (organization_id, application_id, username),
+    user_id
+  );
 CREATE MATERIALIZED VIEW users_by_email_app_org AS
 SELECT *
 FROM axcelium.users
@@ -77,9 +84,10 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   is_active BOOLEAN,
   created_at TIMESTAMP,
   updated_at TIMESTAMP
-); application_description TEXT,
-  contact_email TEXT,
-  is_active BOOLEAN,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
+);
+application_description TEXT,
+contact_email TEXT,
+is_active BOOLEAN,
+created_at TIMESTAMP,
+updated_at TIMESTAMP
 );
