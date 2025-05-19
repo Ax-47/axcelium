@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use scylla::{
     client::session::Session,
     response::PagingState,
-    statement::{Consistency, SerialConsistency, batch::Batch, prepared::PreparedStatement},
+    statement::{Consistency, SerialConsistency, prepared::PreparedStatement},
     value::CqlValue,
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
@@ -408,12 +408,13 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
         del_user_bind.insert("user_id", CqlValue::Uuid(user_id));
         del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id.clone()));
         del_user_bind.insert("application_id", CqlValue::Uuid(application_id.clone()));
-        let mut batch: Batch = Default::default();
-        batch.append_statement(self.decrease_user.clone());
-        batch.append_statement(self.delete_user.clone());
         self.database
-            .batch(&batch, ((organization_id, application_id), &del_user_bind))
+            .execute_unpaged(&self.delete_user, &del_user_bind)
             .await?;
+        self.database
+            .execute_unpaged(&self.decrease_user, (organization_id, application_id))
+            .await?;
+
         Ok(())
     }
 }
