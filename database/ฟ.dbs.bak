@@ -164,7 +164,6 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND username IS NOT NULL
   AND created_at IS NOT NULL
   AND user_id IS NOT NULL
   PRIMARY KEY (
