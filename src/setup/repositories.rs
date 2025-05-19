@@ -55,7 +55,7 @@ pub async fn create_all(
     let app_db_repo = Arc::new(ApplicationDatabaseRepositoryImpl::new(database.clone()));
     let apporg_db_repo =
         Arc::new(ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()));
-    let update_user_repo = Arc::new(UpdateUserRepositoryImpl::new(user_db.clone()));
+    let update_user_repo = Arc::new(UpdateUserRepositoryImpl::new(user_db.clone(),password_hasher.clone()));
     let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
         cache, cache_ttl,
     ));

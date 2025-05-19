@@ -84,7 +84,7 @@ pub async fn update_user_handle(
     user_service: web::Data<dyn UpdateUserService>,
 ) -> Result<web::Json<UpdateUsersResponse>, ApiError> {
     let user: UpdateUserPayload = post_data.into_inner().into();
-    if user.email.is_some() && user.password.is_some() && user.username.is_some() {
+    if user.email.is_none() && user.password.is_none() && user.username.is_none() {
         return Err(ApiError::new("empty input".to_string(), 400));
     }
     let apporg = req

@@ -3,7 +3,7 @@ use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::{
         models::user::{UpdateUserModel, UserModel},
-        repositories::database::user_repository::UserDatabaseRepository,
+        repositories::{database::user_repository::UserDatabaseRepository, security::argon2_repository::PasswordHasherRepository},
     },
 };
 use async_trait::async_trait;
@@ -11,11 +11,19 @@ use std::sync::Arc;
 use uuid::Uuid;
 pub struct UpdateUserRepositoryImpl {
     database_repo: Arc<dyn UserDatabaseRepository>,
+
+    hasher_repo: Arc<dyn PasswordHasherRepository>,
 }
 
 impl UpdateUserRepositoryImpl {
-    pub fn new(database_repo: Arc<dyn UserDatabaseRepository>) -> Self {
-        Self { database_repo }
+    pub fn new(
+        database_repo: Arc<dyn UserDatabaseRepository>,
+        hasher_repo: Arc<dyn PasswordHasherRepository>,
+    ) -> Self {
+        Self {
+            database_repo,
+            hasher_repo,
+        }
     }
 }
 #[cfg_attr(test, mockall::automock)]
@@ -35,6 +43,7 @@ pub trait UpdateUserRepository: Send + Sync {
         application_id: Uuid,
         user_id: Uuid,
     ) -> RepositoryResult<Option<UserModel>>;
+    fn hash_password(&self, password: String) -> RepositoryResult<String>;
 }
 
 #[async_trait]
@@ -61,5 +70,9 @@ impl UpdateUserRepository for UpdateUserRepositoryImpl {
         self.database_repo
             .update_user(update_user, user, organization_id, application_id, user_id)
             .await
+    }
+
+    fn hash_password(&self, password: String) -> RepositoryResult<String> {
+        self.hasher_repo.hash(password.as_str())
     }
 }
