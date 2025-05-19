@@ -3,3 +3,7 @@ pub mod delete;
 pub mod get_user;
 pub mod get_users;
 pub mod update_user;
+pub mod get_user_count;
+pub mod ban_user;
+pub mod unban_user;
+pub mod disable_mfa_user;

@@ -55,3 +55,24 @@ pub struct GetUserResponse {
 pub struct UpdateUsersResponse {
     pub massage: String,
 }
+
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GetUserCountResponse {
+    pub user_count: i64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct BanUserResponse {
+    pub massage: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UnbanUserResponse {
+    pub massage: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DisableMFAUserResponse {
+    pub massage: String,
+}
