@@ -8,17 +8,17 @@ use async_trait::async_trait;
 use scylla::{
     client::session::Session,
     response::PagingState,
-    statement::{Consistency, SerialConsistency, prepared::PreparedStatement},
+    statement::{Consistency, SerialConsistency, batch::Batch, prepared::PreparedStatement},
     value::CqlValue,
 };
 use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 
 use super::query::users::{
-    DELETE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER,
-    QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME, UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD,
-    UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME, UPDATE_USER_USERNAME_EMAIL,
-    UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
+    DECREASE_USER, DELETE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER,
+    QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME, UPDATE_USER_EMAIL,
+    UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME,
+    UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
     database: Arc<Session>,
@@ -36,6 +36,8 @@ pub struct UserDatabaseRepositoryImpl {
     update_user_password_email: PreparedStatement,
     update_user_username_password_email: PreparedStatement,
     delete_user: PreparedStatement,
+    increase_user: PreparedStatement,
+    decrease_user: PreparedStatement,
 }
 
 impl UserDatabaseRepositoryImpl {
@@ -91,6 +93,12 @@ impl UserDatabaseRepositoryImpl {
 
         let mut delete_user = database.prepare(DELETE_USER).await.unwrap();
         delete_user.set_consistency(Consistency::One);
+        let mut increase_user = database.prepare(INSERT_USER).await.unwrap();
+        increase_user.set_consistency(Consistency::Quorum);
+
+        let mut decrease_user = database.prepare(DECREASE_USER).await.unwrap();
+        decrease_user.set_consistency(Consistency::Quorum);
+
         Self {
             database,
             insert_user,
@@ -107,6 +115,8 @@ impl UserDatabaseRepositoryImpl {
             update_user_username_password_email,
             find_raw_user,
             delete_user,
+            increase_user,
+            decrease_user,
         }
     }
 }
@@ -164,8 +174,17 @@ pub trait UserDatabaseRepository: Send + Sync {
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     async fn create_user(&self, user: UserModel) -> RepositoryResult<()> {
+        let mut batch: Batch = Default::default();
+        batch.append_statement(self.insert_user.clone());
+        batch.append_statement(self.increase_user.clone());
         self.database
-            .execute_unpaged(&self.insert_user, user)
+            .batch(
+                &batch,
+                (
+                    (user.organization_id.clone(), user.application_id.clone()),
+                    &user,
+                ),
+            )
             .await?;
         Ok(())
     }
@@ -390,10 +409,13 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut del_user_bind: HashMap<&str, CqlValue> = HashMap::new();
         del_user_bind.insert("user_id", CqlValue::Uuid(user_id));
-        del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id));
-        del_user_bind.insert("application_id", CqlValue::Uuid(application_id));
+        del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id.clone()));
+        del_user_bind.insert("application_id", CqlValue::Uuid(application_id.clone()));
+        let mut batch: Batch = Default::default();
+        batch.append_statement(self.decrease_user.clone());
+        batch.append_statement(self.delete_user.clone());
         self.database
-            .execute_unpaged(&self.delete_user, &del_user_bind)
+            .batch(&batch, ((organization_id, application_id), &del_user_bind))
             .await?;
         Ok(())
     }
