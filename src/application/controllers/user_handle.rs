@@ -148,7 +148,7 @@ pub async fn ban_user_handle(
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
     let created_user = user_service
-        .execute(apporg.organization_id, apporg.application_id, path.user_id)
+        .execute(path.user_id,apporg.organization_id, apporg.application_id)
         .await?;
     Ok(web::Json(created_user))
 }
