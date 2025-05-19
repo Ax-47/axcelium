@@ -7,6 +7,11 @@ pub const DECREASE_USER: &str = r#"
 UPDATE axcelium.user_count_by_app
 SET user_count = user_count - 1
 WHERE organization_id = ? AND application_id = ?"#;
+pub const SELECT_USER_COUNT: &str = r#"
+SELECT user_count
+FROM axcelium.user_count_by_app
+WHERE organization_id = ? AND application_id = ?;
+"#;
 pub const INSERT_USER: &str = r#"
     INSERT INTO axcelium.users (
         user_id, organization_id, application_id,

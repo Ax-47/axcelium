@@ -17,8 +17,9 @@ use uuid::Uuid;
 use super::query::users::{
     DECREASE_USER, DELETE_USER, INCREASE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED,
     QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
-    UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME,
-    UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
+    SELECT_USER_COUNT, UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL,
+    UPDATE_USER_USERNAME, UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD,
+    UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
     database: Arc<Session>,
@@ -38,6 +39,7 @@ pub struct UserDatabaseRepositoryImpl {
     delete_user: PreparedStatement,
     increase_user: PreparedStatement,
     decrease_user: PreparedStatement,
+    select_user_count: PreparedStatement,
 }
 
 impl UserDatabaseRepositoryImpl {
@@ -99,6 +101,8 @@ impl UserDatabaseRepositoryImpl {
         let mut decrease_user = database.prepare(DECREASE_USER).await.unwrap();
         decrease_user.set_consistency(Consistency::Quorum);
 
+        let mut select_user_count = database.prepare(SELECT_USER_COUNT).await.unwrap();
+        select_user_count.set_consistency(Consistency::Quorum);
         Self {
             database,
             insert_user,
@@ -117,6 +121,7 @@ impl UserDatabaseRepositoryImpl {
             delete_user,
             increase_user,
             decrease_user,
+            select_user_count,
         }
     }
 }
@@ -170,6 +175,12 @@ pub trait UserDatabaseRepository: Send + Sync {
         application_id: Uuid,
         user_id: Uuid,
     ) -> RepositoryResult<()>;
+
+    async fn get_user_count(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<i64>;
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
@@ -416,5 +427,19 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .await?;
 
         Ok(())
+    }
+    async fn get_user_count(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<i64> {
+        let result = self
+            .database
+            .execute_unpaged(&self.select_user_count, (organization_id, application_id))
+            .await?
+            .into_rows_result()?
+            .maybe_first_row::<(i64,)>()?.unwrap_or((0,));
+
+        Ok(result.0)
     }
 }
