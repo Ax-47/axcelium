@@ -4,12 +4,11 @@ use crate::{
         dto::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
             response::user::{
-                CreateUserResponse, GetUserResponse, GetUsersResponse, UpdateUsersResponse,
+                BanUserResponse, CreateUserResponse, DisableMFAUserResponse, GetUserCountResponse, GetUserResponse, GetUsersResponse, UnbanUserResponse, UpdateUsersResponse
             },
         },
         services::users::{
-            delete::DeleteUserService, get_user::GetUserService, get_users::GetUsersService,
-            update_user::UpdateUserService,
+            ban_user::BanUserService, delete::DeleteUserService, disable_mfa_user::DisableMFAUserService, get_user::GetUserService, get_user_count::GetUserCountService, get_users::GetUsersService, unban_user::UnbanUserService, update_user::UpdateUserService
         },
     },
     domain::{
@@ -115,6 +114,67 @@ pub async fn delate_user_handle(
         .cloned()?;
     let created_user = user_service
         .execute(apporg.organization_id, apporg.application_id, path.user_id)
+        .await?;
+    Ok(web::Json(created_user))
+}
+
+pub async fn get_user_count_handle(
+    req: actix_web::HttpRequest,
+    user_service: web::Data<dyn GetUserCountService>,
+) -> Result<web::Json<GetUserCountResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(apporg.organization_id, apporg.application_id)
+        .await?;
+    Ok(web::Json(created_user))
+}
+pub async fn ban_user_handle(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetUserQuery>,
+    user_service: web::Data<dyn BanUserService>,
+) -> Result<web::Json<BanUserResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(apporg.organization_id, apporg.application_id, path.user_id)
+        .await?;
+    Ok(web::Json(created_user))
+}
+pub async fn unban_user_handle(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetUserQuery>,
+    user_service: web::Data<dyn UnbanUserService>,
+) -> Result<web::Json<UnbanUserResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(path.user_id,apporg.organization_id, apporg.application_id)
+        .await?;
+    Ok(web::Json(created_user))
+}
+
+pub async fn disable_mfa_user_handle(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetUserQuery>,
+    user_service: web::Data<dyn DisableMFAUserService>,
+) -> Result<web::Json<DisableMFAUserResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let created_user = user_service
+        .execute(path.user_id,apporg.organization_id, apporg.application_id)
         .await?;
     Ok(web::Json(created_user))
 }
