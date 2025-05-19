@@ -89,37 +89,37 @@ pub fn update_users_query(set_clauses: &[&str]) -> String {
 }
 
 pub const UPDATE_USER_USERNAME: &str = r#"
-    UPDATE axcelium.users SET username = :username, updated_at = :updated_at \
+    UPDATE axcelium.users SET username = :username, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_PASSWORD: &str = r#"
-    UPDATE axcelium.users SET hashed_password = :hashed_password, updated_at = :updated_at \
+    UPDATE axcelium.users SET hashed_password = :hashed_password, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_EMAIL: &str = r#"
-    UPDATE axcelium.users SET email = :email, updated_at = :updated_at \
+    UPDATE axcelium.users SET email = :email, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_USERNAME_PASSWORD: &str = r#"
-    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, updated_at = :updated_at \
+    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_USERNAME_EMAIL: &str = r#"
-    UPDATE axcelium.users SET username = :username, email = :email, updated_at = :updated_at \
+    UPDATE axcelium.users SET username = :username, email = :email, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_PASSWORD_EMAIL: &str = r#"
-    UPDATE axcelium.users SET hashed_password = :hashed_password, email = :email, updated_at = :updated_at \
+    UPDATE axcelium.users SET hashed_password = :hashed_password, email = :email, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const UPDATE_USER_USERNAME_PASSWORD_EMAIL: &str = r#"
-    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, email = :email, updated_at = :updated_at \
+    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, email = :email, updated_at = :updated_at
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
