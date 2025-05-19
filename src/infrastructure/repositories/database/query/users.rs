@@ -101,11 +101,11 @@ pub const BAN_USER: &str = r#"
 "#;
 
 pub const UNBAN_USER: &str = r#"
-    UPDATE axcelium.users SET is_locked=false, locked_at= toTimestamp(now()), updated_at =  toTimestamp(now())
+    UPDATE axcelium.users SET is_locked=false, updated_at =  toTimestamp(now())
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;
 
 pub const DISABLE_MFA_USER: &str = r#"
-    UPDATE axcelium.users SET mfa_enabled=false, locked_at= toTimestamp(now()), updated_at =  toTimestamp(now())
+    UPDATE axcelium.users SET mfa_enabled=false, updated_at =  toTimestamp(now())
     WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
 "#;

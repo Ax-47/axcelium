@@ -36,7 +36,7 @@ impl UnbanUserRepository for UnbanUserRepositoryImpl {
         application_id: Uuid,
     ) -> RepositoryResult<()> {
         self.database_repo
-            .ban_user(user_id ,organization_id, application_id)
+            .unban_user(user_id ,organization_id, application_id)
             .await
     }
 }
