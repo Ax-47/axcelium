@@ -16,7 +16,9 @@ use uuid::Uuid;
 
 use super::query::users::{
     DELETE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER,
-    QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
+    QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME, UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD,
+    UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME, UPDATE_USER_USERNAME_EMAIL,
+    UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
     pub database: Arc<Session>,
@@ -25,6 +27,13 @@ pub struct UserDatabaseRepositoryImpl {
     find_email: PreparedStatement,
     find_clean_user: PreparedStatement,
     find_all_users: PreparedStatement,
+    update_user_username: PreparedStatement,
+    update_user_password: PreparedStatement,
+    update_user_email: PreparedStatement,
+    update_user_username_password: PreparedStatement,
+    update_user_username_email: PreparedStatement,
+    update_user_password_email: PreparedStatement,
+    update_user_username_password_email: PreparedStatement,
 }
 
 impl UserDatabaseRepositoryImpl {
@@ -41,17 +50,40 @@ impl UserDatabaseRepositoryImpl {
 
         let mut find_clean_user = database.prepare(QUERY_FIND_USER).await.unwrap();
         find_clean_user.set_consistency(Consistency::One);
-        let find_all_users = database
+        let mut find_all_users = database
             .prepare(QUERY_FIND_ALL_USERS_PAGINATED)
             .await
             .unwrap();
+        find_all_users.set_consistency(Consistency::One);
+        let mut update_user_username = database.prepare(UPDATE_USER_USERNAME).await.unwrap();
+        update_user_username.set_consistency(Consistency::Quorum);
 
-        // let update_user = database
-        //     .prepare(QUERY_FIND_ALL_USERS_PAGINATED)
-        //     .await
-        //     .unwrap();
+        let mut update_user_password = database.prepare(UPDATE_USER_PASSWORD).await.unwrap();
+        update_user_password.set_consistency(Consistency::Quorum);
 
-        find_clean_user.set_consistency(Consistency::One);
+        let mut update_user_email = database.prepare(UPDATE_USER_EMAIL).await.unwrap();
+        update_user_email.set_consistency(Consistency::Quorum);
+
+        let mut update_user_username_password = database
+            .prepare(UPDATE_USER_USERNAME_PASSWORD)
+            .await
+            .unwrap();
+        update_user_username_password.set_consistency(Consistency::Quorum);
+
+        let mut update_user_username_email =
+            database.prepare(UPDATE_USER_USERNAME_EMAIL).await.unwrap();
+        update_user_username_email.set_consistency(Consistency::Quorum);
+
+        let mut update_user_password_email =
+            database.prepare(UPDATE_USER_PASSWORD_EMAIL).await.unwrap();
+        update_user_password_email.set_consistency(Consistency::Quorum);
+
+        let mut update_user_username_password_email = database
+            .prepare(UPDATE_USER_USERNAME_PASSWORD_EMAIL)
+            .await
+            .unwrap();
+        update_user_username_password_email.set_consistency(Consistency::Quorum);
+
         Self {
             database,
             insert_user,
@@ -59,6 +91,13 @@ impl UserDatabaseRepositoryImpl {
             find_email,
             find_clean_user,
             find_all_users,
+            update_user_username,
+            update_user_password,
+            update_user_email,
+            update_user_username_password,
+            update_user_username_email,
+            update_user_password_email,
+            update_user_username_password_email,
         }
     }
 }
@@ -225,12 +264,115 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     }
     async fn update_user(
         &self,
-        _user: UpdateUserModel,
+        user: UpdateUserModel,
         _old_user: UserModel,
-        _organization_id: Uuid,
-        _application_id: Uuid,
-        _user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+        user_id: Uuid,
     ) -> RepositoryResult<()> {
+        if user.username.is_some() && user.email.is_none() && user.hashed_password.is_none() {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_username,
+                    (
+                        user.username,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_none() && user.email.is_some() && user.hashed_password.is_none()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_email,
+                    (
+                        user.email,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_none() && user.email.is_none() && user.hashed_password.is_some()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_password,
+                    (
+                        user.hashed_password,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_some() && user.email.is_some() && user.hashed_password.is_none()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_username_email,
+                    (
+                        user.username,
+                        user.email,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_some() && user.email.is_none() && user.hashed_password.is_some()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_username_password,
+                    (
+                        user.username,
+                        user.hashed_password,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_none() && user.email.is_some() && user.hashed_password.is_some()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_password_email,
+                    (
+                        user.hashed_password,
+                        user.email,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        } else if user.username.is_some() && user.email.is_some() && user.hashed_password.is_some()
+        {
+            self.database
+                .execute_unpaged(
+                    &self.update_user_username_password_email,
+                    (
+                        user.username,
+                        user.hashed_password,
+                        user.email,
+                        user.updated_at,
+                        organization_id,
+                        application_id,
+                        user_id,
+                    ),
+                )
+                .await?;
+        }
         Ok(())
     }
 
