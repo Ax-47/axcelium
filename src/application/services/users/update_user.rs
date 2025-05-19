@@ -39,24 +39,19 @@ impl UpdateUserService for UpdateUserServiceImpl {
         user_id: Uuid,
         mut update: UpdateUserPayload,
     ) -> RepositoryResult<UpdateUsersResponse> {
-        let Some(fetched_user) = self
+        if self
             .repository
             .find_user(organization_id, application_id, user_id)
             .await?
-        else {
+            .is_none()
+        {
             return Err(RepositoryError::new("not found user".to_string(), 400));
         };
-        if let Some(password) =update.password{
+        if let Some(password) = update.password {
             update.password = Some(self.repository.hash_password(password)?);
         }
-        self.repository // todo hashpassword
-            .update_user(
-                organization_id,
-                application_id,
-                user_id,
-                update,
-                fetched_user,
-            )
+        self.repository
+            .update_user(organization_id, application_id, user_id, update)
             .await?;
         Ok(UpdateUsersResponse {
             massage: "success".to_string(),

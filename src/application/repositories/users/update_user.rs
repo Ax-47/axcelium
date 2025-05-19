@@ -35,7 +35,6 @@ pub trait UpdateUserRepository: Send + Sync {
         application_id: Uuid,
         user_id: Uuid,
         update: UpdateUserPayload,
-        user: UserModel,
     ) -> RepositoryResult<()>;
     async fn find_user(
         &self,
@@ -64,11 +63,10 @@ impl UpdateUserRepository for UpdateUserRepositoryImpl {
         application_id: Uuid,
         user_id: Uuid,
         update: UpdateUserPayload,
-        user: UserModel,
     ) -> RepositoryResult<()> {
         let update_user = UpdateUserModel::new(update.username, update.email, update.password);
         self.database_repo
-            .update_user(update_user, user, organization_id, application_id, user_id)
+            .update_user(update_user,  organization_id, application_id, user_id)
             .await
     }
 

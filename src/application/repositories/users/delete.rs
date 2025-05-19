@@ -25,7 +25,6 @@ pub trait DeleteUserRepository: Send + Sync {
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
-        user: CleannedUserModel,
     ) -> RepositoryResult<()>;
     async fn find_user(
         &self,
@@ -42,10 +41,9 @@ impl DeleteUserRepository for DeleteUserRepositoryImpl {
         organization_id: Uuid,
         application_id: Uuid,
         user_id: Uuid,
-        user: CleannedUserModel,
     ) -> RepositoryResult<()> {
         self.database_repo
-            .delete_user(organization_id, application_id, user_id, user)
+            .delete_user(organization_id, application_id, user_id)
             .await
     }
     async fn find_user(
