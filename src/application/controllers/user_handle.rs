@@ -3,10 +3,10 @@ use crate::{
     application::{
         dto::{
             payload::user::{CreateUserPayload, GetUserQuery, PaginationQuery, UpdateUserPayload},
-            response::{hello::HelloResponse, user::{
+            response::user::{
                 BanUserResponse, CreateUserResponse, DisableMFAUserResponse, GetUserCountResponse,
                 GetUserResponse, GetUsersResponse, UnbanUserResponse, UpdateUsersResponse,
-            }},
+            },
         },
         services::users::{
             ban_user::BanUserService, delete::DeleteUserService,
