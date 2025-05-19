@@ -94,3 +94,18 @@ pub const DELETE_USER: &str = r#"
     DELETE FROM axcelium.users
     WHERE user_id = :user_id AND organization_id = :organization_id AND application_id = :application_id
 "#;
+
+pub const BAN_USER: &str = r#"
+    UPDATE axcelium.users SET is_locked=true, locked_at= toTimestamp(now()), updated_at =  toTimestamp(now())
+    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
+"#;
+
+pub const UNBAN_USER: &str = r#"
+    UPDATE axcelium.users SET is_locked=false, locked_at= toTimestamp(now()), updated_at =  toTimestamp(now())
+    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
+"#;
+
+pub const DISABLE_MFA_USER: &str = r#"
+    UPDATE axcelium.users SET mfa_enabled=false, locked_at= toTimestamp(now()), updated_at =  toTimestamp(now())
+    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
+"#;

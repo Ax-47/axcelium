@@ -15,11 +15,11 @@ use std::{collections::HashMap, ops::ControlFlow, sync::Arc};
 use uuid::Uuid;
 
 use super::query::users::{
-    DECREASE_USER, DELETE_USER, INCREASE_USER, INSERT_USER, QUERY_FIND_ALL_USERS_PAGINATED,
-    QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL, QUERY_FIND_USER_BY_USERNAME,
-    SELECT_USER_COUNT, UPDATE_USER_EMAIL, UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL,
-    UPDATE_USER_USERNAME, UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD,
-    UPDATE_USER_USERNAME_PASSWORD_EMAIL,
+    BAN_USER, DECREASE_USER, DELETE_USER, DISABLE_MFA_USER, INCREASE_USER, INSERT_USER,
+    QUERY_FIND_ALL_USERS_PAGINATED, QUERY_FIND_RAW_USER, QUERY_FIND_USER, QUERY_FIND_USER_BY_EMAIL,
+    QUERY_FIND_USER_BY_USERNAME, SELECT_USER_COUNT, UNBAN_USER, UPDATE_USER_EMAIL,
+    UPDATE_USER_PASSWORD, UPDATE_USER_PASSWORD_EMAIL, UPDATE_USER_USERNAME,
+    UPDATE_USER_USERNAME_EMAIL, UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
     database: Arc<Session>,
@@ -40,6 +40,9 @@ pub struct UserDatabaseRepositoryImpl {
     increase_user: PreparedStatement,
     decrease_user: PreparedStatement,
     select_user_count: PreparedStatement,
+    ban_user: PreparedStatement,
+    unban_user: PreparedStatement,
+    disable_mfa_user: PreparedStatement,
 }
 
 impl UserDatabaseRepositoryImpl {
@@ -103,6 +106,15 @@ impl UserDatabaseRepositoryImpl {
 
         let mut select_user_count = database.prepare(SELECT_USER_COUNT).await.unwrap();
         select_user_count.set_consistency(Consistency::Quorum);
+
+        let mut ban_user = database.prepare(BAN_USER).await.unwrap();
+        ban_user.set_consistency(Consistency::Quorum);
+
+        let mut unban_user = database.prepare(UNBAN_USER).await.unwrap();
+        unban_user.set_consistency(Consistency::Quorum);
+
+        let mut disable_mfa_user = database.prepare(DISABLE_MFA_USER).await.unwrap();
+        disable_mfa_user.set_consistency(Consistency::Quorum);
         Self {
             database,
             insert_user,
@@ -122,6 +134,9 @@ impl UserDatabaseRepositoryImpl {
             increase_user,
             decrease_user,
             select_user_count,
+            ban_user,
+            unban_user,
+            disable_mfa_user,
         }
     }
 }
@@ -181,6 +196,27 @@ pub trait UserDatabaseRepository: Send + Sync {
         organization_id: Uuid,
         application_id: Uuid,
     ) -> RepositoryResult<i64>;
+
+    async fn ban_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()>;
+
+    async fn unban_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()>;
+
+    async fn disable_mfa_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()>;
 }
 #[async_trait]
 impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
@@ -438,8 +474,48 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
             .execute_unpaged(&self.select_user_count, (organization_id, application_id))
             .await?
             .into_rows_result()?
-            .maybe_first_row::<(i64,)>()?.unwrap_or((0,));
+            .maybe_first_row::<(i64,)>()?
+            .unwrap_or((0,));
 
         Ok(result.0)
+    }
+
+    async fn ban_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()> {
+        self.database
+            .execute_unpaged(&self.ban_user, (organization_id, application_id, user_id))
+            .await?;
+
+        Ok(())
+    }
+
+    async fn unban_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()> {
+        self.database
+            .execute_unpaged(&self.unban_user, (organization_id, application_id, user_id))
+            .await?;
+        Ok(())
+    }
+    async fn disable_mfa_user(
+        &self,
+        user_id: Uuid,
+        organization_id: Uuid,
+        application_id: Uuid,
+    ) -> RepositoryResult<()> {
+        self.database
+            .execute_unpaged(
+                &self.disable_mfa_user,
+                (organization_id, application_id, user_id),
+            )
+            .await?;
+        Ok(())
     }
 }
