@@ -7,10 +7,14 @@ use crate::application::{
     repositories::{
         initial_core::InitialCoreImpl,
         users::{
+            ban_user::{BanUserRepository, BanUserRepositoryImpl},
             create::{CreateUserRepository, CreateUserRepositoryImpl},
             delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
+            disable_mfa_user::{DisableMFAUserRepository, DisableMFAUserRepositoryImpl},
             get_user::{GetUserRepository, GetUserRepositoryImpl},
+            get_user_count::{GetUserCountRepository, GetUserCountRepositoryImpl},
             get_users::{GetUsersRepository, GetUsersRepositoryImpl},
+            unban_user::{UnbanUserRepository, UnbanUserRepositoryImpl},
             update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
         },
         validate_bearer_auth_repository::{
@@ -39,6 +43,10 @@ pub struct Repositories {
     pub auth_repo: Arc<dyn ValidateBearerAuthMiddlewareRepository>,
     pub update_user_repo: Arc<dyn UpdateUserRepository>,
     pub del_user_repo: Arc<dyn DeleteUserRepository>,
+    pub get_user_count_repo: Arc<dyn GetUserCountRepository>,
+    pub ban_user_repo: Arc<dyn BanUserRepository>,
+    pub unban_user_repo: Arc<dyn UnbanUserRepository>,
+    pub disable_mfa_user_repo: Arc<dyn DisableMFAUserRepository>,
 }
 
 pub async fn create_all(
@@ -55,7 +63,10 @@ pub async fn create_all(
     let app_db_repo = Arc::new(ApplicationDatabaseRepositoryImpl::new(database.clone()));
     let apporg_db_repo =
         Arc::new(ApplicationsOrganizationByClientIdDatabaseRepositoryImpl::new(database.clone()));
-    let update_user_repo = Arc::new(UpdateUserRepositoryImpl::new(user_db.clone(),password_hasher.clone()));
+    let update_user_repo = Arc::new(UpdateUserRepositoryImpl::new(
+        user_db.clone(),
+        password_hasher.clone(),
+    ));
     let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
         cache, cache_ttl,
     ));
@@ -87,6 +98,11 @@ pub async fn create_all(
         apporg_cache_layer.clone(),
     ));
     let del_user_repo = Arc::new(DeleteUserRepositoryImpl::new(user_db.clone()));
+
+    let get_user_count_repo = Arc::new(GetUserCountRepositoryImpl::new(user_db.clone()));
+    let ban_user_repo = Arc::new(BanUserRepositoryImpl::new(user_db.clone()));
+    let unban_user_repo = Arc::new(UnbanUserRepositoryImpl::new(user_db.clone()));
+    let disable_mfa_user_repo = Arc::new(DisableMFAUserRepositoryImpl::new(user_db.clone()));
     let core_service = Arc::new(InitialCoreServiceImpl::new(core_repo));
 
     (
@@ -97,6 +113,10 @@ pub async fn create_all(
             get_user_repo,
             update_user_repo,
             del_user_repo,
+            get_user_count_repo,
+            ban_user_repo,
+            unban_user_repo,
+            disable_mfa_user_repo,
         },
         core_service,
     )

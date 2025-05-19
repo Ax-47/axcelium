@@ -4,8 +4,10 @@ use crate::{
         services::{
             hello_service::HelloService,
             users::{
-                create::CreateUserService, delete::DeleteUserService, get_user::GetUserService,
-                get_users::GetUsersService, update_user::UpdateUserService,
+                ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
+                disable_mfa_user::DisableMFAUserService, get_user::GetUserService,
+                get_user_count::GetUserCountService, get_users::GetUsersService,
+                unban_user::UnbanUserService, update_user::UpdateUserService,
             },
         },
     },
@@ -25,6 +27,10 @@ pub struct Container {
     pub update_user_service: Arc<dyn UpdateUserService>,
     pub del_user_service: Arc<dyn DeleteUserService>,
     pub validate_bearer_auth_middleware_service: Arc<ValidateBearerAuth>,
+    pub get_user_count_service: Arc<dyn GetUserCountService>,
+    pub ban_user_count_service: Arc<dyn BanUserService>,
+    pub unban_user_count_service: Arc<dyn UnbanUserService>,
+    pub disable_mfa_user_service: Arc<dyn DisableMFAUserService>,
 }
 
 impl Container {
@@ -42,7 +48,10 @@ impl Container {
         let get_user_service = services::create_get_user_service(&repos);
         let update_user_service = services::create_update_user_service(&repos);
         let del_user_service = services::create_delete_user_service(&repos);
-
+        let get_user_count_service = services::create_get_user_count_service(&repos);
+        let ban_user_count_service = services::create_ban_user_service(&repos);
+        let unban_user_count_service = services::create_unban_user_service(&repos);
+        let disable_mfa_user_service = services::create_disble_mfa_user_service(&repos);
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
@@ -54,6 +63,10 @@ impl Container {
             update_user_service,
             validate_bearer_auth_middleware_service,
             del_user_service,
+            get_user_count_service,
+            ban_user_count_service,
+            unban_user_count_service,
+            disable_mfa_user_service,
         }
     }
 }

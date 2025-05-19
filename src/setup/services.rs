@@ -3,11 +3,7 @@ use std::sync::Arc;
 use crate::application::services::{
     hello_service::{HelloService, HelloServiceImpl},
     users::{
-        create::{CreateUserService, CreateUserServiceImpl},
-        delete::{DeleteUserService, DeleteUserServiceImpl},
-        get_user::{GetUserService, GetUserServiceImpl},
-        get_users::{GetUsersService, GetUsersServiceImpl},
-        update_user::{UpdateUserService, UpdateUserServiceImpl},
+        ban_user::{BanUserService, BanUserServiceImpl}, create::{CreateUserService, CreateUserServiceImpl}, delete::{DeleteUserService, DeleteUserServiceImpl}, disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl}, get_user::{GetUserService, GetUserServiceImpl}, get_user_count::{GetUserCountService, GetUserCountServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}, unban_user::{UnbanUserService, UnbanUserServiceImpl}, update_user::{UpdateUserService, UpdateUserServiceImpl}
     },
 };
 
@@ -43,5 +39,29 @@ pub fn create_update_user_service(repos: &Repositories) -> Arc<dyn UpdateUserSer
 pub fn create_delete_user_service(repos: &Repositories) -> Arc<dyn DeleteUserService> {
     Arc::new(DeleteUserServiceImpl {
         repository: repos.del_user_repo.clone(),
+    })
+}
+
+pub fn create_get_user_count_service(repos: &Repositories) -> Arc<dyn GetUserCountService> {
+    Arc::new(GetUserCountServiceImpl {
+        repository: repos.get_user_count_repo.clone(),
+    })
+}
+
+pub fn create_ban_user_service(repos: &Repositories) -> Arc<dyn BanUserService> {
+    Arc::new(BanUserServiceImpl {
+        repository: repos.ban_user_repo.clone(),
+    })
+}
+
+pub fn create_unban_user_service(repos: &Repositories) -> Arc<dyn UnbanUserService> {
+    Arc::new(UnbanUserServiceImpl {
+        repository: repos.unban_user_repo.clone(),
+    })
+}
+
+pub fn create_disble_mfa_user_service(repos: &Repositories) -> Arc<dyn DisableMFAUserService> {
+    Arc::new(DisableMFAUserServiceImpl {
+        repository: repos.disable_mfa_user_repo.clone(),
     })
 }
