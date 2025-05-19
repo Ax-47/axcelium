@@ -21,7 +21,7 @@ use super::query::users::{
     UPDATE_USER_USERNAME_PASSWORD, UPDATE_USER_USERNAME_PASSWORD_EMAIL,
 };
 pub struct UserDatabaseRepositoryImpl {
-    pub database: Arc<Session>,
+    database: Arc<Session>,
     insert_user: PreparedStatement,
     find_username: PreparedStatement,
     find_email: PreparedStatement,
