@@ -1,17 +1,17 @@
 use crate::domain::errors::repositories_errors::RepositoryResult;
 use crate::infrastructure::models::refresh_token::RefreshTokenModel;
-use crate::infrastructure::repositories::cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheRepository;
+use crate::infrastructure::repositories::cache::refresh_token_repository::RefreshTokenCacheRepository;
 use crate::infrastructure::repositories::database::refresh_token::RefreshTokenDatabaseRepository;
 use async_trait::async_trait;
 use std::sync::Arc;
 pub struct RefreshTokenCacheLayerRepositoryImpl {
-    cache_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheRepository>,
+    cache_repo: Arc<dyn RefreshTokenCacheRepository>,
     database_repo: Arc<dyn RefreshTokenDatabaseRepository>,
 }
 
 impl RefreshTokenCacheLayerRepositoryImpl {
     pub fn new(
-        cache_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheRepository>,
+        cache_repo: Arc<dyn RefreshTokenCacheRepository>,
         database_repo: Arc<dyn RefreshTokenDatabaseRepository>,
     ) -> Self {
         Self {
