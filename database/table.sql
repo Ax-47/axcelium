@@ -85,9 +85,17 @@ CREATE TABLE axcelium.applications_organization_by_client_id (
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 );
-application_description TEXT,
-contact_email TEXT,
-is_active BOOLEAN,
-created_at TIMESTAMP,
-updated_at TIMESTAMP
-);
+CREATE TABLE refresh_tokens (
+  token_id UUID,
+  application_id UUID,
+  organization_id UUID,
+  user_id UUID,
+  encrypted_token_secret TEXT,
+  token_version TEXT,
+  parent_version TEXT,
+  issued_at TIMESTAMP,
+  expires_at TIMESTAMP,
+  revoked BOOLEAN,
+  PRIMARY KEY ((organization_id, application_id, token_id))
+) WITH default_time_to_live = 2592000;
+-- TODO LOOK UP refresh token
