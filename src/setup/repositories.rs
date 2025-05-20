@@ -6,6 +6,7 @@ use scylla::client::session::Session;
 use crate::application::{
     repositories::{
         initial_core::InitialCoreImpl,
+        refresh_tokens::create::{CreateRefreshTokenRepository, CreateRefreshTokenRepositoryImpl},
         users::{
             ban_user::{BanUserRepository, BanUserRepositoryImpl},
             create::{CreateUserRepository, CreateUserRepositoryImpl},
@@ -47,6 +48,7 @@ pub struct Repositories {
     pub ban_user_repo: Arc<dyn BanUserRepository>,
     pub unban_user_repo: Arc<dyn UnbanUserRepository>,
     pub disable_mfa_user_repo: Arc<dyn DisableMFAUserRepository>,
+    pub create_refresh_token_repo: Arc<dyn CreateRefreshTokenRepository>,
 }
 
 pub async fn create_all(
@@ -90,6 +92,11 @@ pub async fn create_all(
     ));
 
     let get_user_repo = Arc::new(GetUserRepositoryImpl::new(user_db.clone()));
+
+    let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
+        base64_repo.clone(),
+        aes_repo.clone(),
+    ));
     let core_repo = Arc::new(InitialCoreImpl::new(
         aes_repo,
         base64_repo,
@@ -117,6 +124,7 @@ pub async fn create_all(
             ban_user_repo,
             unban_user_repo,
             disable_mfa_user_repo,
+            create_refresh_token_repo,
         },
         core_service,
     )

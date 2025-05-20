@@ -7,18 +7,15 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 pub struct CreateRefreshTokenRepositoryImpl {
-    apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
     base64_repo: Arc<dyn Base64Repository>,
     aes_repo: Arc<dyn AesGcmCipherRepository>,
 }
 impl CreateRefreshTokenRepositoryImpl {
     pub fn new(
-        apporg_cachelayer_repo: Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
         base64_repo: Arc<dyn Base64Repository>,
         aes_repo: Arc<dyn AesGcmCipherRepository>,
     ) -> Self {
         Self {
-            apporg_cachelayer_repo,
             base64_repo,
             aes_repo,
         }

@@ -1,5 +1,6 @@
 pub mod hello;
 pub mod users;
+pub mod refresh_token;
 
 use crate::setup::Container;
 use actix_web::App;
@@ -12,6 +13,7 @@ use std::sync::Arc;
 pub fn configure_routes(cfg: &mut ServiceConfig, container: Arc<Container>) {
     hello::configure(cfg, container.clone());
     users::configure(cfg, container.clone());
+    refresh_token::configure(cfg, container.clone());
 }
 
 pub fn create_router(
