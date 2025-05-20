@@ -105,13 +105,20 @@ impl ResponseError for ApiError {
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
 // === Error Mappings ===
+
 impl From<uuid::Error> for RepositoryError {
     fn from(e: uuid::Error) -> Self {
         println!("{}", e);
         RepositoryError::new("invalid UUID for client_id".to_string(), 400)
     }
 }
-
+impl From<rand_core::OsError> for RepositoryError{
+    
+    fn from(e: rand_core::OsError) -> Self {
+        println!("{}", e);
+        RepositoryError::new("random error".to_string(), 400)
+    }
+}
 impl From<argon2::password_hash::Error> for RepositoryError {
     fn from(err: argon2::password_hash::Error) -> Self {
         RepositoryError::new(format!("failed to hash: {}", err), 500)
