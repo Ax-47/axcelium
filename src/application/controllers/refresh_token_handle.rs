@@ -15,6 +15,6 @@ pub async fn create_refresh_token_handle(
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    token_service.execute().await;
+    token_service.execute(apporg,path.user_id).await;
     Ok(web::Json(()))
 }
