@@ -1,5 +1,6 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use redis::RedisError;
+use rusty_paseto::prelude::{ GenericBuilderError, GenericParserError, PasetoClaimError};
 use scylla::errors::{
     DeserializationError, ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError,
     PrepareError, RowsError,
@@ -112,8 +113,31 @@ impl From<uuid::Error> for RepositoryError {
         RepositoryError::new("invalid UUID for client_id".to_string(), 400)
     }
 }
-impl From<rand_core::OsError> for RepositoryError{
-    
+
+
+impl From<GenericParserError> for RepositoryError {
+    fn from(e: GenericParserError) -> Self {
+        RepositoryError::new(format!("parser error: {}", e), 400)
+    }
+}
+impl From<GenericBuilderError> for RepositoryError {
+    fn from(e: GenericBuilderError) -> Self {
+        RepositoryError::new(format!("builder error: {}", e), 400)
+    }
+}
+impl From<PasetoClaimError> for RepositoryError {
+    fn from(e: PasetoClaimError) -> Self {
+        RepositoryError::new(format!("time error: {}", e), 400)
+    }
+}
+
+impl From<time::error::Format> for RepositoryError {
+    fn from(e: time::error::Format) -> Self {
+        RepositoryError::new(format!("time format error: {}", e), 500)
+    }
+}
+
+impl From<rand_core::OsError> for RepositoryError {
     fn from(e: rand_core::OsError) -> Self {
         println!("{}", e);
         RepositoryError::new("random error".to_string(), 400)
