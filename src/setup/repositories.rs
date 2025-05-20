@@ -3,27 +3,6 @@ use std::sync::Arc;
 use redis::Client;
 use scylla::client::session::Session;
 
-use crate::application::{
-    repositories::{
-        initial_core::InitialCoreImpl,
-        refresh_tokens::create::{CreateRefreshTokenRepository, CreateRefreshTokenRepositoryImpl},
-        users::{
-            ban_user::{BanUserRepository, BanUserRepositoryImpl},
-            create::{CreateUserRepository, CreateUserRepositoryImpl},
-            delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
-            disable_mfa_user::{DisableMFAUserRepository, DisableMFAUserRepositoryImpl},
-            get_user::{GetUserRepository, GetUserRepositoryImpl},
-            get_user_count::{GetUserCountRepository, GetUserCountRepositoryImpl},
-            get_users::{GetUsersRepository, GetUsersRepositoryImpl},
-            unban_user::{UnbanUserRepository, UnbanUserRepositoryImpl},
-            update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
-        },
-        validate_bearer_auth_repository::{
-            ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
-        },
-    },
-    services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
-};
 use crate::infrastructure::repositories::{
     cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
     cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
@@ -35,6 +14,36 @@ use crate::infrastructure::repositories::{
         user_repository::UserDatabaseRepositoryImpl,
     },
     security::argon2_repository::PasswordHasherImpl,
+};
+use crate::{
+    application::{
+        repositories::{
+            initial_core::InitialCoreImpl,
+            refresh_tokens::create::{
+                CreateRefreshTokenRepository, CreateRefreshTokenRepositoryImpl,
+            },
+            users::{
+                ban_user::{BanUserRepository, BanUserRepositoryImpl},
+                create::{CreateUserRepository, CreateUserRepositoryImpl},
+                delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
+                disable_mfa_user::{DisableMFAUserRepository, DisableMFAUserRepositoryImpl},
+                get_user::{GetUserRepository, GetUserRepositoryImpl},
+                get_user_count::{GetUserCountRepository, GetUserCountRepositoryImpl},
+                get_users::{GetUsersRepository, GetUsersRepositoryImpl},
+                unban_user::{UnbanUserRepository, UnbanUserRepositoryImpl},
+                update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
+            },
+            validate_bearer_auth_repository::{
+                ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
+            },
+        },
+        services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
+    },
+    infrastructure::repositories::{
+        cache::refresh_token_repository::RefreshTokenCacheImpl,
+        cache_layer::refresh_token_repository::RefreshTokenCacheLayerRepositoryImpl,
+        database::refresh_token::RefreshTokenDatabaseRepositoryImpl,
+    },
 };
 
 pub struct Repositories {
@@ -70,7 +79,7 @@ pub async fn create_all(
         password_hasher.clone(),
     ));
     let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
-        cache, cache_ttl,
+        cache.clone(), cache_ttl,
     ));
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,
@@ -92,8 +101,16 @@ pub async fn create_all(
     ));
 
     let get_user_repo = Arc::new(GetUserRepositoryImpl::new(user_db.clone()));
+    let refresh_token_database_repo =
+        Arc::new(RefreshTokenDatabaseRepositoryImpl::new(database.clone()).await);
 
+    let refresh_token_cache_repo = Arc::new(RefreshTokenCacheImpl::new(cache.clone(), 3600));
+    let refresh_token_cache_layer_repo = Arc::new(RefreshTokenCacheLayerRepositoryImpl::new(
+        refresh_token_cache_repo,
+        refresh_token_database_repo,
+    ));
     let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
+        refresh_token_cache_layer_repo.clone(),
         base64_repo.clone(),
         aes_repo.clone(),
     ));
