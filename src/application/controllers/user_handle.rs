@@ -97,8 +97,7 @@ pub async fn update_user_handle(
         .cloned()?;
     let created_user = user_service
         .execute(
-            apporg.organization_id,
-            apporg.application_id,
+            apporg,
             path.user_id,
             user,
         )

@@ -55,39 +55,13 @@ pub const QUERY_FIND_RAW_USER: &str = r#"
     WHERE organization_id = ? AND application_id = ? AND user_id = ?
 "#;
 
-pub const UPDATE_USER_USERNAME: &str = r#"
-    UPDATE axcelium.users SET username = :username, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_PASSWORD: &str = r#"
-    UPDATE axcelium.users SET hashed_password = :hashed_password, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_EMAIL: &str = r#"
-    UPDATE axcelium.users SET email = :email, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_USERNAME_PASSWORD: &str = r#"
-    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_USERNAME_EMAIL: &str = r#"
-    UPDATE axcelium.users SET username = :username, email = :email, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_PASSWORD_EMAIL: &str = r#"
-    UPDATE axcelium.users SET hashed_password = :hashed_password, email = :email, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
-"#;
-
-pub const UPDATE_USER_USERNAME_PASSWORD_EMAIL: &str = r#"
-    UPDATE axcelium.users SET username = :username, hashed_password = :hashed_password, email = :email, updated_at = :updated_at
-    WHERE organization_id = :organization_id AND application_id = :application_id AND user_id = :user_id;
+pub const UPDATE_USER: &str = r#"
+    UPDATE axcelium.users SET
+        username = :username, email = :email, hashed_password = :hashed_password,
+        locked_at = :locked_at, created_at = :created_at, updated_at = :updated_at,
+        is_active = :is_active, is_verified = :is_verified, is_locked = :is_locked,
+        mfa_enabled = :mfa_enabled, last_login = :last_login, deactivated_at = :deactivated_at
+    WHERE organization_id = ? AND application_id = ? AND user_id = ?
 "#;
 
 pub const DELETE_USER: &str = r#"

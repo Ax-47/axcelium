@@ -67,18 +67,16 @@ impl CreateUserService for CreateUserServiceImpl {
             }
         }
 
-        if !config.is_must_name_unique {
-            let found = self
-                .repository
-                .find_user_by_username(
-                    user.username.clone(),
-                    c_apporg.application_id,
-                    c_apporg.organization_id,
-                )
-                .await?;
-            if found.is_some() {
-                return Err(RepositoryError::new("username already used".into(), 400));
-            }
+        let found = self
+            .repository
+            .find_user_by_username(
+                user.username.clone(),
+                c_apporg.application_id,
+                c_apporg.organization_id,
+            )
+            .await?;
+        if found.is_some() {
+            return Err(RepositoryError::new("username already used".into(), 400));
         }
         let hashed_password = self.repository.hash_password(user.password.clone())?;
         let new_user = self
