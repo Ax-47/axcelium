@@ -5,3 +5,4 @@ pub mod query;
 pub mod scylla_serialize;
 pub mod scylladb;
 pub mod user_repository;
+pub mod refresh_token;
