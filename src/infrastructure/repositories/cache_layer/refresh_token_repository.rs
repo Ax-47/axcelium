@@ -31,6 +31,7 @@ impl RefreshTokenCacheLayerRepository
 {
 
     async fn create_refresh_token(&self, rt: RefreshTokenModel) -> RepositoryResult<()> {
-        self.database_repo.create_refresh_token(rt).await
+        self.database_repo.create_refresh_token(rt.clone()).await?;
+        self.cache_repo.cache_refresh_token(&rt).await
     }
 }
