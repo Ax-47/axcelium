@@ -36,7 +36,7 @@ pub async fn rotate_refresh_token_handle(
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    token_service
+    let res=    token_service
         .execute(
             apporg,
             post_data.refresh_token.clone(),
@@ -44,6 +44,5 @@ pub async fn rotate_refresh_token_handle(
             post_data.private_key.clone(),
         )
         .await?;
-    // Ok(web::Json(token))
-    todo!()
+    Ok(web::Json(res))
 }
