@@ -1,23 +1,29 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
-    infrastructure::models::refresh_token::RefreshTokenModel,
+    infrastructure::models::{
+        refresh_token::{FoundRefreshTokenModel, RefreshTokenModel},
+    },
 };
 use async_trait::async_trait;
 use scylla::{client::session::Session, statement::prepared::PreparedStatement};
 use std::sync::Arc;
+use uuid::Uuid;
 
-use super::query::refresh_token::INSERT_REFRESH_TOKEN;
+use super::query::refresh_token::{INSERT_REFRESH_TOKEN, QUERY_REFRESH_TOKEN};
 pub struct RefreshTokenDatabaseRepositoryImpl {
     pub database: Arc<Session>,
     insert_refresh_token: PreparedStatement,
+    query_refresh_token: PreparedStatement,
 }
 
 impl RefreshTokenDatabaseRepositoryImpl {
     pub async fn new(database: Arc<Session>) -> Self {
         let insert_refresh_token = database.prepare(INSERT_REFRESH_TOKEN).await.unwrap();
+        let query_refresh_token = database.prepare(QUERY_REFRESH_TOKEN).await.unwrap();
         Self {
             database,
             insert_refresh_token,
+            query_refresh_token,
         }
     }
 }
@@ -25,12 +31,35 @@ impl RefreshTokenDatabaseRepositoryImpl {
 #[async_trait]
 pub trait RefreshTokenDatabaseRepository: Send + Sync {
     async fn create_refresh_token(&self, rf: RefreshTokenModel) -> RepositoryResult<()>;
+
+    async fn find_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
 }
 
 #[async_trait]
 impl RefreshTokenDatabaseRepository for RefreshTokenDatabaseRepositoryImpl {
     async fn create_refresh_token(&self, rt: RefreshTokenModel) -> RepositoryResult<()> {
-        self.database.execute_unpaged(&self.insert_refresh_token, &rt).await?;
+        self.database
+            .execute_unpaged(&self.insert_refresh_token, &rt)
+            .await?;
         Ok(())
+    }
+    async fn find_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<Option<FoundRefreshTokenModel>> {
+        let result = self
+            .database
+            .execute_unpaged(&self.query_refresh_token, (org_id, app_id, token_id))
+            .await?
+            .into_rows_result()?;
+
+        Ok(result.maybe_first_row::<FoundRefreshTokenModel>()?)
     }
 }

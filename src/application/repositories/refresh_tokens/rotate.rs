@@ -1,5 +1,6 @@
 use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryResult;
+use crate::infrastructure::models::refresh_token::FoundRefreshTokenModel;
 use crate::infrastructure::models::token_claim::TokenClaims;
 use crate::infrastructure::repositories::cipher::{
     aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
@@ -72,6 +73,13 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
     fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
 
     async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()>;
+
+    async fn find_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
 }
 
 #[async_trait]
@@ -142,5 +150,16 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
     }
     async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()> {
         self.database_repo.create_refresh_token(rf.into()).await
+    }
+
+    async fn find_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<Option<FoundRefreshTokenModel>> {
+        self.database_repo
+            .find_refresh_token(org_id, app_id, token_id)
+            .await
     }
 }
