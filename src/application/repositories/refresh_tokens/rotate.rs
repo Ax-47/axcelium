@@ -65,7 +65,7 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
         notbefore: String,
     ) -> RepositoryResult<String>;
 
-    async fn encrypt_paseto(&self, rt: String, pk: String);
+    async fn decrypt_paseto(&self, rt: &str, pk: &Vec<u8>);
     fn encode_base64(&self, bytes: &Vec<u8>) -> String;
 
     fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
@@ -136,7 +136,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
             .encrypt(key, rt, secret, secret_key, issued_at, expire, notbefore)
             .await
     }
-    async fn encrypt_paseto(&self, rt: String, pk: String) {
+    async fn decrypt_paseto(&self, rt: &str, pk: &Vec<u8>) {
         self.paseto_repo.decrypt( &rt,&pk).await;
 
     }

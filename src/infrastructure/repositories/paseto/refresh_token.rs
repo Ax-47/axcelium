@@ -25,7 +25,7 @@ pub trait PasetoRepository: Send + Sync {
         expire: String,
         notbefore: String,
     ) -> RepositoryResult<String>;
-    async fn decrypt(&self, token: &str, public_key: &str) -> RepositoryResult<String>;
+    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<String>;
 }
 
 #[async_trait]
@@ -41,7 +41,7 @@ impl PasetoRepository for PasetoRepositoryImpl {
         notbefore: String,
     ) -> RepositoryResult<String> {
         let private_key = Key::<64>::try_from(private_key.as_slice())
-            .map_err(|e| RepositoryError::new(format!("invalid hex key: {e}"),500))?;
+            .map_err(|e| RepositoryError::new(format!("invalid hex key: {e}"), 500))?;
         let pk: &[u8] = private_key.as_slice();
         let private_key = PasetoAsymmetricPrivateKey::<V4, Public>::from(pk);
         let token_id = rt.token_id.clone().to_string();
@@ -58,9 +58,12 @@ impl PasetoRepository for PasetoRepositoryImpl {
         Ok(token)
     }
 
-    async fn decrypt(&self, token: &str, public_key: &str) -> RepositoryResult<String> {
-        // let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_bytes()));
-        // let payload = PasetoParser::<V4, Local>::default().parse(token, &paseto_key)?;
+    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<String> {
+        let public_key = Key::<32>::try_from(public_key.as_slice())
+            .map_err(|e| RepositoryError::new(format!("invalid hex key: {e}"), 500))?;
+        let public_key = PasetoAsymmetricPublicKey::<V4, Public>::from(&public_key);
+        let json = PasetoParser::<V4, Public>::default().parse(&token, &public_key)?;
+        println!("{:#?}",json);
         // Ok(payload.to_string())
         todo!()
     }
