@@ -56,12 +56,12 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
             .await?;
         let now = Utc::now().timestamp();
 
-        // if token.exp <= now {
-        //     return Err(RepositoryError::new("Token has expired".to_string(), 401));
-        // }
-        // if token.nbf > now {
-        //     return Err(RepositoryError::new("Token not valid yet".to_string(), 401));
-        // }
+        if token.exp <= now {
+            return Err(RepositoryError::new("Token has expired".to_string(), 401));
+        }
+        if token.nbf > now {
+            return Err(RepositoryError::new("Token not valid yet".to_string(), 401));
+        }
         let Some(fetched_token) = self
             .repository
             .find_refresh_token(
@@ -73,6 +73,9 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
         else {
             return Err(RepositoryError::new("not found".to_string(), 400));
         };
+        if fetched_token.revoked{
+            return Err(RepositoryError::new("the refresh token was revoked".to_string(), 400));
+        }
         println!("{:#?}",fetched_token);
         todo!()
     }
