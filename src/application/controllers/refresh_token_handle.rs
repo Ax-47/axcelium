@@ -1,4 +1,5 @@
 use crate::application::dto::payload::refresh_token::{CreateTokenPayload, GetUserIdQuery};
+use crate::application::dto::response::refresh_token::CreateTokenResponse;
 use crate::application::services::refresh_token::create::CreateRefreshTokenService;
 use crate::domain::{
     entities::apporg_client_id::CleanAppOrgByClientId, errors::repositories_errors::ApiError,
@@ -10,12 +11,12 @@ pub async fn create_refresh_token_handle(
     path: web::Path<GetUserIdQuery>,
     post_data: web::Json<CreateTokenPayload>,
     token_service: web::Data<dyn CreateRefreshTokenService>,
-) -> Result<web::Json<()>, ApiError> {
+) -> Result<web::Json<CreateTokenResponse>, ApiError> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    token_service.execute(apporg,path.user_id,post_data.paseto_key.clone()).await?;
-    Ok(web::Json(()))
+    let token =token_service.execute(apporg,path.user_id,post_data.paseto_key.clone()).await?;
+    Ok(web::Json(token))
 }

@@ -5,7 +5,10 @@ use time::format_description::well_known::Rfc3339;
 use uuid::Uuid;
 
 use crate::{
-    application::repositories::refresh_tokens::create::CreateRefreshTokenRepository,
+    application::{
+        dto::response::refresh_token::CreateTokenResponse,
+        repositories::refresh_tokens::create::CreateRefreshTokenRepository,
+    },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
         errors::repositories_errors::RepositoryResult,
@@ -27,7 +30,7 @@ pub trait CreateRefreshTokenService: 'static + Sync + Send {
         c_apporg: CleanAppOrgByClientId,
         user_id: Uuid,
         paseto_key: String,
-    ) -> RepositoryResult<String>;
+    ) -> RepositoryResult<CreateTokenResponse>;
 }
 #[async_trait]
 impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
@@ -36,7 +39,7 @@ impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
         c_apporg: CleanAppOrgByClientId,
         user_id: Uuid,
         paseto_key: String,
-    ) -> RepositoryResult<String> {
+    ) -> RepositoryResult<CreateTokenResponse> {
         let token_secret = self.repository.genarate_token_secret().await?;
         let (secret_key, encrypted_token_secret) = self
             .repository
@@ -68,6 +71,8 @@ impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
                 not_before.format(&Rfc3339)?,
             )
             .await?;
-        Ok(paseto_token)
+        Ok(CreateTokenResponse {
+            refresh_token: paseto_token,
+        })
     }
 }
