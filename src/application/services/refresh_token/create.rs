@@ -59,10 +59,12 @@ impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
             issued_at,
             expires_at,
         );
+        self.repository.store_refresh_token(refresh_token.clone()).await?;
+        let dnc_paseto_key = self.repository.decode_base64(&paseto_key)?;
         let paseto_token = self
             .repository
             .create_pesato_token(
-                paseto_key,
+                &dnc_paseto_key,
                 refresh_token,
                 self.repository.encode_base64(&token_secret).as_str(),
                 &secret_key,

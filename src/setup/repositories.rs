@@ -106,15 +106,11 @@ pub async fn create_all(
     let refresh_token_database_repo =
         Arc::new(RefreshTokenDatabaseRepositoryImpl::new(database.clone()).await);
 
-    let refresh_token_cache_repo = Arc::new(RefreshTokenCacheImpl::new(cache.clone(), 3600));
-    let refresh_token_cache_layer_repo = Arc::new(RefreshTokenCacheLayerRepositoryImpl::new(
-        refresh_token_cache_repo,
-        refresh_token_database_repo,
-    ));
+    // let refresh_token_cache_repo = Arc::new(RefreshTokenCacheImpl::new(cache.clone(), 3600));
     let refresh_token_paseto_repo = Arc::new(PasetoRepositoryImpl::new());
     let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
         refresh_token_paseto_repo.clone(),
-        refresh_token_cache_layer_repo.clone(),
+        refresh_token_database_repo.clone(),
         base64_repo.clone(),
         aes_repo.clone(),
     ));

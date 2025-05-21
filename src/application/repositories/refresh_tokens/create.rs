@@ -1,9 +1,9 @@
 use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryResult;
-use crate::infrastructure::repositories::cache_layer::refresh_token_repository::RefreshTokenCacheLayerRepository;
 use crate::infrastructure::repositories::cipher::{
     aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
 };
+use crate::infrastructure::repositories::database::refresh_token::RefreshTokenDatabaseRepository;
 use crate::infrastructure::repositories::paseto::refresh_token::PasetoRepository;
 use async_trait::async_trait;
 use rand_core::{OsRng, TryRngCore};
@@ -14,20 +14,20 @@ use uuid::Uuid;
 
 pub struct CreateRefreshTokenRepositoryImpl {
     paseto_repo: Arc<dyn PasetoRepository>,
-    cache_layer_repo: Arc<dyn RefreshTokenCacheLayerRepository>,
+    database_repo: Arc<dyn RefreshTokenDatabaseRepository>,
     base64_repo: Arc<dyn Base64Repository>,
     aes_repo: Arc<dyn AesGcmCipherRepository>,
 }
 impl CreateRefreshTokenRepositoryImpl {
     pub fn new(
         paseto_repo: Arc<dyn PasetoRepository>,
-        cache_layer_repo: Arc<dyn RefreshTokenCacheLayerRepository>,
+        database_repo: Arc<dyn RefreshTokenDatabaseRepository>,
         base64_repo: Arc<dyn Base64Repository>,
         aes_repo: Arc<dyn AesGcmCipherRepository>,
     ) -> Self {
         Self {
             paseto_repo,
-            cache_layer_repo,
+            database_repo,
             base64_repo,
             aes_repo,
         }
@@ -56,7 +56,7 @@ pub trait CreateRefreshTokenRepository: Send + Sync {
 
     async fn create_pesato_token(
         &self,
-        key: String,
+        key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
@@ -66,6 +66,10 @@ pub trait CreateRefreshTokenRepository: Send + Sync {
     ) -> RepositoryResult<String>;
 
     fn encode_base64(&self, bytes: &Vec<u8>) -> String;
+
+    fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
+
+    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()>;
 }
 
 #[async_trait]
@@ -86,8 +90,13 @@ impl CreateRefreshTokenRepository for CreateRefreshTokenRepositoryImpl {
     ) -> RepositoryResult<(String, String)> {
         self.aes_repo.encrypt(client_secret).await
     }
+
     fn encode_base64(&self, bytes: &Vec<u8>) -> String {
         self.base64_repo.encode(bytes)
+    }
+
+    fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>> {
+        Ok(self.base64_repo.decode(plaintext)?)
     }
     fn create_refresh_token(
         &self,
@@ -114,7 +123,7 @@ impl CreateRefreshTokenRepository for CreateRefreshTokenRepositoryImpl {
     }
     async fn create_pesato_token(
         &self,
-        key: String,
+        key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
@@ -125,5 +134,8 @@ impl CreateRefreshTokenRepository for CreateRefreshTokenRepositoryImpl {
         self.paseto_repo
             .encrypt(key, rt, secret, secret_key, issued_at, expire, notbefore)
             .await
+    }
+    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()> {
+        self.database_repo.create_refresh_token(rf.into()).await
     }
 }

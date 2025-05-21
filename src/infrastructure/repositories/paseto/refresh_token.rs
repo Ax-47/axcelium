@@ -17,7 +17,7 @@ impl PasetoRepositoryImpl {
 pub trait PasetoRepository: Send + Sync {
     async fn encrypt(
         &self,
-        key: String,
+        key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
@@ -33,7 +33,7 @@ pub trait PasetoRepository: Send + Sync {
 impl PasetoRepository for PasetoRepositoryImpl {
     async fn encrypt(
         &self,
-        key: String,
+        key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
@@ -48,7 +48,7 @@ impl PasetoRepository for PasetoRepositoryImpl {
             ));
         }
 
-        let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_bytes()));
+        let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_slice()));
         let token_id = rt.token_id.clone().to_string();
         let token = PasetoBuilder::<V4, Local>::default()
             .set_claim(TokenIdentifierClaim::from(token_id.as_str()))

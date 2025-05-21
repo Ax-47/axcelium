@@ -1,3 +1,4 @@
+use crate::domain::entities::refresh_token::RefreshToken;
 use crate::infrastructure::repositories::database::scylla_serialize::{
     deserialize_cql_timestamp, serialize_cql_timestamp,
 };
@@ -27,4 +28,37 @@ pub struct RefreshTokenModel {
     )]
     pub expires_at: CqlTimestamp,
     pub revoked: bool,
+}
+impl From<RefreshToken> for RefreshTokenModel {
+    fn from(token: RefreshToken) -> Self {
+        Self {
+            token_id: token.token_id,
+            application_id: token.application_id,
+            organization_id: token.organization_id,
+            user_id: token.user_id,
+            encrypted_token_secret: token.encrypted_token_secret,
+            token_version: token.token_version,
+            parent_version: token.parent_version,
+            issued_at: token.issued_at,
+            expires_at: token.expires_at,
+            revoked: token.revoked,
+        }
+    }
+}
+
+impl From<RefreshTokenModel> for RefreshToken {
+    fn from(model: RefreshTokenModel) -> Self {
+        Self {
+            token_id: model.token_id,
+            application_id: model.application_id,
+            organization_id: model.organization_id,
+            user_id: model.user_id,
+            encrypted_token_secret: model.encrypted_token_secret,
+            token_version: model.token_version,
+            parent_version: model.parent_version,
+            issued_at: model.issued_at,
+            expires_at: model.expires_at,
+            revoked: model.revoked,
+        }
+    }
 }

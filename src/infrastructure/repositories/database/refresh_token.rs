@@ -24,7 +24,7 @@ impl RefreshTokenDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait RefreshTokenDatabaseRepository: Send + Sync {
-    async fn create_refresh_token(&self, org: RefreshTokenModel) -> RepositoryResult<()>;
+    async fn create_refresh_token(&self, rf: RefreshTokenModel) -> RepositoryResult<()>;
 }
 
 #[async_trait]
