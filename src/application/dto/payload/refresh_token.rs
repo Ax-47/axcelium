@@ -1,7 +1,6 @@
 use serde::Deserialize;
 use uuid::Uuid;
 
-
 #[derive(Deserialize)]
 pub struct CreateTokenPayload {
     pub user_id: Uuid,
@@ -11,4 +10,5 @@ pub struct CreateTokenPayload {
 pub struct RotateTokenPayload {
     pub refresh_token: String,
     pub public_key: String,
+    pub private_key: String,
 }

@@ -52,6 +52,7 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
         user_id: Uuid,
         encrypted_token_secret: String,
         token_version: String,
+        parent_version: String,
         issued_at: OffsetDateTime,
         expires_at: OffsetDateTime,
     ) -> RefreshToken;
@@ -115,6 +116,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         user_id: Uuid,
         encrypted_token_secret: String,
         token_version: String,
+        parent_version: String,
         issued_at: OffsetDateTime,
         expires_at: OffsetDateTime,
     ) -> RefreshToken {
@@ -125,7 +127,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
             user_id,
             encrypted_token_secret,
             token_version,
-            parent_version: None,
+            parent_version: Some(parent_version),
             issued_at: CqlTimestamp(issued_at.unix_timestamp()),
             expires_at: CqlTimestamp(expires_at.unix_timestamp()),
             revoked: false,
