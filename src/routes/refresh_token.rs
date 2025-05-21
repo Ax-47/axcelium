@@ -9,6 +9,6 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
         web::scope("/tokens")
             .app_data(web::Data::from(container.create_refresh_token_service.clone()))
             .wrap(middleware)
-            .route("/{user_id}", web::post().to(create_refresh_token_handle)),
+            .route("/", web::post().to(create_refresh_token_handle)),
     );
 }
