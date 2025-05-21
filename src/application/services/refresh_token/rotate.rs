@@ -7,7 +7,9 @@ use uuid::Uuid;
 use crate::{
     application::{
         dto::response::refresh_token::CreateTokenResponse,
-        repositories::refresh_tokens::{create::CreateRefreshTokenRepository, rotate::RotateRefreshTokenRepository},
+        repositories::refresh_tokens::{
+            create::CreateRefreshTokenRepository, rotate::RotateRefreshTokenRepository,
+        },
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
@@ -29,6 +31,7 @@ pub trait RotateRefreshTokenService: 'static + Sync + Send {
         &self,
         c_apporg: CleanAppOrgByClientId,
         refresh_token: String,
+        public_key: String,
     ) -> RepositoryResult<CreateTokenResponse>;
 }
 #[async_trait]
@@ -37,6 +40,7 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
         &self,
         c_apporg: CleanAppOrgByClientId,
         refresh_token: String,
+        public_key: String,
     ) -> RepositoryResult<CreateTokenResponse> {
         todo!()
     }
