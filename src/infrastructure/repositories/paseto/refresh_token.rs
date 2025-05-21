@@ -25,7 +25,7 @@ pub trait PasetoRepository: Send + Sync {
         expire: String,
         notbefore: String,
     ) -> RepositoryResult<String>;
-    async fn decrypt(&self, key: String, token: &str) -> RepositoryResult<String>;
+    async fn decrypt(&self, token: &str, public_key: &str) -> RepositoryResult<String>;
 }
 
 #[async_trait]
@@ -58,16 +58,10 @@ impl PasetoRepository for PasetoRepositoryImpl {
         Ok(token)
     }
 
-    async fn decrypt(&self, key: String, token: &str) -> RepositoryResult<String> {
-        if key.len() != 32 {
-            return Err(RepositoryError::new(
-                "Paseto key must be 32 bytes".into(),
-                500,
-            ));
-        }
-        let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_bytes()));
-
-        let payload = PasetoParser::<V4, Local>::default().parse(token, &paseto_key)?;
-        Ok(payload.to_string())
+    async fn decrypt(&self, token: &str, public_key: &str) -> RepositoryResult<String> {
+        // let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_bytes()));
+        // let payload = PasetoParser::<V4, Local>::default().parse(token, &paseto_key)?;
+        // Ok(payload.to_string())
+        todo!()
     }
 }

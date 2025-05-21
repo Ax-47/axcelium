@@ -42,6 +42,13 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
         refresh_token: String,
         public_key: String,
     ) -> RepositoryResult<CreateTokenResponse> {
+        let dnc_public_key = self.repository.decode_base64(&public_key)?;
+        if dnc_public_key.len() != 32 {
+            return Err(RepositoryError::new(
+                "peseto_key must eq 32".to_string(),
+                400,
+            ));
+        }
         todo!()
     }
 }
