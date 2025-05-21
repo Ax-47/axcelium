@@ -1,4 +1,4 @@
-use crate::application::dto::payload::refresh_token::CreateTokenPayload;
+use crate::application::dto::payload::refresh_token::{CreateTokenPayload, RotateTokenPayload};
 use crate::application::dto::response::refresh_token::CreateTokenResponse;
 use crate::application::services::refresh_token::create::CreateRefreshTokenService;
 use crate::domain::{
@@ -24,4 +24,17 @@ pub async fn create_refresh_token_handle(
         )
         .await?;
     Ok(web::Json(token))
+}
+pub async fn rotate_refresh_token_handle(
+    req: actix_web::HttpRequest,
+    post_data: web::Json<RotateTokenPayload>,
+    token_service: web::Data<dyn CreateRefreshTokenService>,
+) -> Result<web::Json<CreateTokenResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    // Ok(web::Json(token))
+    todo!()
 }
