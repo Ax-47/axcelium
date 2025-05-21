@@ -1,4 +1,4 @@
-pub const INSERT_REFRESH_TOKEN :&str=r#"INSERT INTO refresh_tokens ( 
+pub const INSERT_REFRESH_TOKEN :&str=r#"INSERT INTO axcelium.refresh_tokens ( 
     token_id,
     application_id,
     organization_id,
