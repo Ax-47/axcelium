@@ -11,7 +11,7 @@ use crate::{
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
-        errors::repositories_errors::RepositoryResult,
+        errors::repositories_errors::{RepositoryError, RepositoryResult},
     },
 };
 #[derive(Clone)]
@@ -59,8 +59,13 @@ impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
             issued_at,
             expires_at,
         );
-        self.repository.store_refresh_token(refresh_token.clone()).await?;
+        self.repository
+            .store_refresh_token(refresh_token.clone())
+            .await?;
         let dnc_paseto_key = self.repository.decode_base64(&paseto_key)?;
+        if dnc_paseto_key.len() != 64 {
+            return Err(RepositoryError::new("peseto_key must eq 64".to_string(), 400));
+        }
         let paseto_token = self
             .repository
             .create_pesato_token(

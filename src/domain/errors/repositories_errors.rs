@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use redis::RedisError;
-use rusty_paseto::prelude::{ GenericBuilderError, GenericParserError, PasetoClaimError};
+use rusty_paseto::prelude::{GenericBuilderError, GenericParserError, PasetoClaimError};
 use scylla::errors::{
     DeserializationError, ExecutionError, FirstRowError, IntoRowsResultError, MaybeFirstRowError,
     PrepareError, RowsError,
@@ -115,6 +115,27 @@ impl From<uuid::Error> for RepositoryError {
 }
 
 
+impl From<std::str::Utf8Error> for RepositoryError {
+    fn from(e: std::str::Utf8Error) -> Self {
+        RepositoryError::new(format!("key error: {e:#?}"), 400)
+    }
+}
+impl From<std::convert::Infallible> for RepositoryError {
+    fn from(e: std::convert::Infallible) -> Self {
+        RepositoryError::new(format!("key error: {e:#?}"), 400)
+    }
+}
+impl From<rusty_paseto::core::Key<32>> for RepositoryError {
+    fn from(e: rusty_paseto::core::Key<32>) -> Self {
+        RepositoryError::new(format!("key error: {e:#?}"), 400)
+    }
+}
+
+impl From<rusty_paseto::core::Key<64>> for RepositoryError {
+    fn from(e: rusty_paseto::core::Key<64>) -> Self {
+        RepositoryError::new(format!("key error: {e:#?}"), 400)
+    }
+}
 impl From<GenericParserError> for RepositoryError {
     fn from(e: GenericParserError) -> Self {
         RepositoryError::new(format!("parser error: {}", e), 400)

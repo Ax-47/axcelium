@@ -17,14 +17,13 @@ impl PasetoRepositoryImpl {
 pub trait PasetoRepository: Send + Sync {
     async fn encrypt(
         &self,
-        key: &Vec<u8>,
+        private_key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
-        issued_at:String,
-        expire:String,
-        notbefore:String,
-
+        issued_at: String,
+        expire: String,
+        notbefore: String,
     ) -> RepositoryResult<String>;
     async fn decrypt(&self, key: String, token: &str) -> RepositoryResult<String>;
 }
@@ -33,24 +32,20 @@ pub trait PasetoRepository: Send + Sync {
 impl PasetoRepository for PasetoRepositoryImpl {
     async fn encrypt(
         &self,
-        key: &Vec<u8>,
+        private_key: &Vec<u8>,
         rt: RefreshToken,
         secret: &str,
         secret_key: &str,
-        issued_at:String,
-        expire:String,
-        notbefore:String,
+        issued_at: String,
+        expire: String,
+        notbefore: String,
     ) -> RepositoryResult<String> {
-        if key.len() != 32 {
-            return Err(RepositoryError::new(
-                "Paseto key must be 32 bytes".into(),
-                500,
-            ));
-        }
-
-        let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_slice()));
+        let private_key = Key::<64>::try_from(private_key.as_slice())
+            .map_err(|e| RepositoryError::new(format!("invalid hex key: {e}"),500))?;
+        let pk: &[u8] = private_key.as_slice();
+        let private_key = PasetoAsymmetricPrivateKey::<V4, Public>::from(pk);
         let token_id = rt.token_id.clone().to_string();
-        let token = PasetoBuilder::<V4, Local>::default()
+        let token = PasetoBuilder::<V4, Public>::default()
             .set_claim(TokenIdentifierClaim::from(token_id.as_str()))
             .set_claim(CustomClaim::try_from(("secret", secret))?)
             .set_claim(CustomClaim::try_from(("secret_key", secret_key))?)
@@ -58,7 +53,7 @@ impl PasetoRepository for PasetoRepositoryImpl {
             .set_claim(IssuedAtClaim::try_from(issued_at)?)
             .set_claim(ExpirationClaim::try_from(expire)?)
             .set_claim(NotBeforeClaim::try_from(notbefore)?)
-            .build(&paseto_key)?;
+            .build(&private_key)?;
 
         Ok(token)
     }
