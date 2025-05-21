@@ -1,6 +1,7 @@
 use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryError;
 use crate::domain::errors::repositories_errors::RepositoryResult;
+use crate::infrastructure::models::token_claim::TokenClaims;
 use async_trait::async_trait;
 use rusty_paseto::core::*;
 use rusty_paseto::prelude::*;
@@ -10,6 +11,10 @@ pub struct PasetoRepositoryImpl {}
 impl PasetoRepositoryImpl {
     pub fn new() -> Self {
         Self {}
+    }
+    fn parse_json_to_model(value: serde_json::Value) -> RepositoryResult<TokenClaims> {
+        serde_json::from_value::<TokenClaims>(value)
+            .map_err(|e| RepositoryError::new(e.to_string(), 400))
     }
 }
 
@@ -25,7 +30,7 @@ pub trait PasetoRepository: Send + Sync {
         expire: String,
         notbefore: String,
     ) -> RepositoryResult<String>;
-    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<String>;
+    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<TokenClaims>;
 }
 
 #[async_trait]
@@ -58,13 +63,13 @@ impl PasetoRepository for PasetoRepositoryImpl {
         Ok(token)
     }
 
-    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<String> {
+    async fn decrypt(&self, token: &str, public_key: &Vec<u8>) -> RepositoryResult<TokenClaims> {
         let public_key = Key::<32>::try_from(public_key.as_slice())
             .map_err(|e| RepositoryError::new(format!("invalid hex key: {e}"), 500))?;
         let public_key = PasetoAsymmetricPublicKey::<V4, Public>::from(&public_key);
-        let json = PasetoParser::<V4, Public>::default().parse(&token, &public_key)?;
-        println!("{:#?}",json);
-        // Ok(payload.to_string())
-        todo!()
+        let json: serde_json::Value =
+            PasetoParser::<V4, Public>::default().parse(&token, &public_key)?;
+        let model = Self::parse_json_to_model(json)?;
+        Ok(model)
     }
 }

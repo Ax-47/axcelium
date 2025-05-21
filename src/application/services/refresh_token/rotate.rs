@@ -49,7 +49,7 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 400,
             ));
         }
-        self.repository.decrypt_paseto(refresh_token.as_str(), &dnc_public_key).await;
+        let token=self.repository.decrypt_paseto(refresh_token.as_str(), &dnc_public_key).await?;
 
         todo!()
     }
