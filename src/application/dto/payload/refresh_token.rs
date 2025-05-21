@@ -5,3 +5,8 @@ use uuid::Uuid;
 pub struct GetUserIdQuery {
     pub user_id: Uuid,
 }
+
+#[derive(Deserialize)]
+pub struct CreateTokenPayload {
+    pub paseto_key: String,
+}

@@ -13,6 +13,7 @@ use crate::infrastructure::repositories::{
         organization_repository::OrganizationDatabaseRepositoryImpl,
         user_repository::UserDatabaseRepositoryImpl,
     },
+    paseto::refresh_token::PasetoRepositoryImpl,
     security::argon2_repository::PasswordHasherImpl,
 };
 use crate::{
@@ -79,7 +80,8 @@ pub async fn create_all(
         password_hasher.clone(),
     ));
     let apporg_cache_repo = Arc::new(ApplicationsOrganizationByClientIdCacheImpl::new(
-        cache.clone(), cache_ttl,
+        cache.clone(),
+        cache_ttl,
     ));
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,
@@ -109,7 +111,9 @@ pub async fn create_all(
         refresh_token_cache_repo,
         refresh_token_database_repo,
     ));
+    let refresh_token_paseto_repo = Arc::new(PasetoRepositoryImpl::new());
     let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
+        refresh_token_paseto_repo.clone(),
         refresh_token_cache_layer_repo.clone(),
         base64_repo.clone(),
         aes_repo.clone(),

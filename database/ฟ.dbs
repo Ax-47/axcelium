@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="ScyllaDB" database="ScyllaDB" id="539bb9fa-07de-4594-a48e-c7ca628405d0" >
 	<schema name="axcelium" options="axcelium WITH replication = {&#039;class&#039;: &#039;org.apache.cassandra.locator.SimpleStrategy&#039;, &#039;replication_factor&#039;: &#039;1&#039;} AND durable_writes = true AND tablets = {&#039;enabled&#039;: false}" >
-		<table name="applications" spec="" >
+		<table name="applications" generator_rows="100" spec="" >
 			<column name="organization_id" type="UUID" jt="102" />
 			<column name="application_id" type="UUID" jt="102" />
 			<column name="client_id" type="UUID" jt="102" />
@@ -33,7 +33,7 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
-		<table name="applications_organization_by_client_id" spec="" >
+		<table name="applications_organization_by_client_id" generator_rows="100" spec="" >
 			<column name="client_id" type="UUID" jt="102" />
 			<column name="application_config" type="TEXT" jt="12" />
 			<column name="application_description" type="TEXT" jt="12" />
@@ -64,7 +64,7 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
-		<table name="organizations" spec="" >
+		<table name="organizations" generator_rows="100" spec="" >
 			<column name="organization_id" type="UUID" jt="102" />
 			<column name="contact_email" type="TEXT" jt="12" />
 			<column name="created_at" type="TIMESTAMP" jt="93" />
@@ -89,7 +89,32 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
-		<table name="user_count_by_app" spec="" >
+		<table name="refresh_tokens" generator_rows="100" spec="" >
+			<column name="organization_id" type="UUID" jt="102" />
+			<column name="application_id" type="UUID" jt="102" />
+			<column name="token_id" type="UUID" jt="102" />
+			<column name="encrypted_token_secret" type="TEXT" jt="12" />
+			<column name="expires_at" type="TIMESTAMP" jt="93" />
+			<column name="issued_at" type="TIMESTAMP" jt="93" />
+			<column name="parent_version" type="TEXT" jt="12" />
+			<column name="revoked" type="BOOLEAN" jt="16" />
+			<column name="token_version" type="TEXT" jt="12" />
+			<column name="user_id" type="UUID" jt="102" />
+			<options><![CDATA[WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
+    AND
+    AND compaction = {'class': 'IncrementalCompactionStrategy'}
+    AND compression = {'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1
+    AND default_time_to_live = 2592000
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND speculative_retry = '99.0PERCENTILE'
+    AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
+		</table>
+		<table name="user_count_by_app" generator_rows="100" spec="" >
 			<column name="organization_id" type="UUID" jt="102" />
 			<column name="application_id" type="UUID" jt="102" />
 			<column name="user_count" type="COUNTER" jt="-5" />
@@ -107,9 +132,7 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
-		<table name="users" spec="" >
-			<column name="user_id" type="UUID" jt="102" />
-			<column name="organization_id" type="UUID" jt="102" />
+		<table name="users" generator_rows="100" spec="" >
 			<column name="application_id" type="UUID" jt="102" />
 			<column name="created_at" type="TIMESTAMP" jt="93" />
 			<column name="deactivated_at" type="TIMESTAMP" jt="93" />
@@ -121,7 +144,9 @@
 			<column name="last_login" type="TIMESTAMP" jt="93" />
 			<column name="locked_at" type="TIMESTAMP" jt="93" />
 			<column name="mfa_enabled" type="BOOLEAN" jt="16" />
+			<column name="organization_id" type="UUID" jt="102" />
 			<column name="updated_at" type="TIMESTAMP" jt="93" />
+			<column name="user_id" type="UUID" jt="102" />
 			<column name="username" type="TEXT" jt="12" />
 			<options><![CDATA[WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'}
@@ -142,8 +167,9 @@
 		<entity schema="axcelium" name="applications" color="BED3F4" x="57" y="266" />
 		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="589" y="152" />
 		<entity schema="axcelium" name="organizations" color="BED3F4" x="342" y="266" />
-		<entity schema="axcelium" name="users" color="3986C1" x="1045" y="95" />
 		<entity schema="axcelium" name="user_count_by_app" color="3986C1" x="1254" y="114" />
+		<entity schema="axcelium" name="refresh_tokens" color="3986C1" x="1539" y="171" />
+		<entity schema="axcelium" name="users" color="3986C1" x="1045" y="95" />
 		<group name="applications" color="ECF0F7" >
 			<entity schema="axcelium" name="applications" />
 			<entity schema="axcelium" name="organizations" />

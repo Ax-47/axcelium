@@ -1,10 +1,9 @@
+use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryError;
 use crate::domain::errors::repositories_errors::RepositoryResult;
 use async_trait::async_trait;
 use rusty_paseto::core::*;
 use rusty_paseto::prelude::*;
-use time;
-use time::format_description::well_known::Rfc3339;
 
 pub struct PasetoRepositoryImpl {}
 
@@ -19,8 +18,13 @@ pub trait PasetoRepository: Send + Sync {
     async fn encrypt(
         &self,
         key: String,
-        token_secret: &str,
-        version: &str,
+        rt: RefreshToken,
+        secret: &str,
+        secret_key: &str,
+        issued_at:String,
+        expire:String,
+        notbefore:String,
+
     ) -> RepositoryResult<String>;
     async fn decrypt(&self, key: String, token: &str) -> RepositoryResult<String>;
 }
@@ -30,8 +34,12 @@ impl PasetoRepository for PasetoRepositoryImpl {
     async fn encrypt(
         &self,
         key: String,
-        token_secret: &str,
-        version: &str,
+        rt: RefreshToken,
+        secret: &str,
+        secret_key: &str,
+        issued_at:String,
+        expire:String,
+        notbefore:String,
     ) -> RepositoryResult<String> {
         if key.len() != 32 {
             return Err(RepositoryError::new(
@@ -41,16 +49,15 @@ impl PasetoRepository for PasetoRepositoryImpl {
         }
 
         let paseto_key = PasetoSymmetricKey::<V4, Local>::from(Key::from(key.as_bytes()));
-        let in_30_days =
-            (time::OffsetDateTime::now_utc() + time::Duration::days(30)).format(&Rfc3339)?;
-
-        let in_40_mins =
-            (time::OffsetDateTime::now_utc() + time::Duration::minutes(40)).format(&Rfc3339)?;
+        let token_id = rt.token_id.clone().to_string();
         let token = PasetoBuilder::<V4, Local>::default()
-            .set_claim(TokenIdentifierClaim::from(token_secret))
-            .set_claim(CustomClaim::try_from(("version", version))?)
-            .set_claim(ExpirationClaim::try_from(in_30_days)?)
-            .set_claim(NotBeforeClaim::try_from(in_40_mins)?)
+            .set_claim(TokenIdentifierClaim::from(token_id.as_str()))
+            .set_claim(CustomClaim::try_from(("secret", secret))?)
+            .set_claim(CustomClaim::try_from(("secret_key", secret_key))?)
+            .set_claim(CustomClaim::try_from(("version", rt.token_version))?)
+            .set_claim(IssuedAtClaim::try_from(issued_at)?)
+            .set_claim(ExpirationClaim::try_from(expire)?)
+            .set_claim(NotBeforeClaim::try_from(notbefore)?)
             .build(&paseto_key)?;
 
         Ok(token)
