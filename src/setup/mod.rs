@@ -3,7 +3,7 @@ use crate::{
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
             hello_service::HelloService,
-            refresh_token::create::CreateRefreshTokenService,
+            refresh_token::{create::CreateRefreshTokenService, rotate::RotateRefreshTokenService},
             users::{
                 ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
                 disable_mfa_user::DisableMFAUserService, get_user::GetUserService,
@@ -33,6 +33,7 @@ pub struct Container {
     pub unban_user_count_service: Arc<dyn UnbanUserService>,
     pub disable_mfa_user_service: Arc<dyn DisableMFAUserService>,
     pub create_refresh_token_service: Arc<dyn CreateRefreshTokenService>,
+    pub rotate_refresh_token_service: Arc<dyn RotateRefreshTokenService>,
 }
 
 impl Container {
@@ -55,6 +56,7 @@ impl Container {
         let unban_user_count_service = services::create_unban_user_service(&repos);
         let disable_mfa_user_service = services::create_disble_mfa_user_service(&repos);
         let create_refresh_token_service = services::create_create_refresh_token_service(&repos);
+        let rotate_refresh_token_service = services::create_rotate_refresh_token_service(&repos);
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
@@ -72,6 +74,7 @@ impl Container {
             unban_user_count_service,
             disable_mfa_user_service,
             create_refresh_token_service,
+            rotate_refresh_token_service,
         }
     }
 }

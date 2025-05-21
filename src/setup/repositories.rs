@@ -3,18 +3,23 @@ use std::sync::Arc;
 use redis::Client;
 use scylla::client::session::Session;
 
-use crate::infrastructure::repositories::{
-    cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
-    cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
-    cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
-    database::{
-        application_repository::ApplicationDatabaseRepositoryImpl,
-        applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepositoryImpl,
-        organization_repository::OrganizationDatabaseRepositoryImpl,
-        user_repository::UserDatabaseRepositoryImpl,
+use crate::{
+    application::repositories::refresh_tokens::rotate::{
+        RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl,
     },
-    paseto::refresh_token::PasetoRepositoryImpl,
-    security::argon2_repository::PasswordHasherImpl,
+    infrastructure::repositories::{
+        cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
+        cache_layer::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheLayerImpl,
+        cipher::{aes_gcm_repository::AesGcmCipherImpl, base64_repository::Base64RepositoryImpl},
+        database::{
+            application_repository::ApplicationDatabaseRepositoryImpl,
+            applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdDatabaseRepositoryImpl,
+            organization_repository::OrganizationDatabaseRepositoryImpl,
+            user_repository::UserDatabaseRepositoryImpl,
+        },
+        paseto::refresh_token::PasetoRepositoryImpl,
+        security::argon2_repository::PasswordHasherImpl,
+    },
 };
 use crate::{
     application::{
@@ -55,6 +60,7 @@ pub struct Repositories {
     pub unban_user_repo: Arc<dyn UnbanUserRepository>,
     pub disable_mfa_user_repo: Arc<dyn DisableMFAUserRepository>,
     pub create_refresh_token_repo: Arc<dyn CreateRefreshTokenRepository>,
+    pub rotate_refresh_token_repo: Arc<dyn RotateRefreshTokenRepository>,
 }
 
 pub async fn create_all(
@@ -110,6 +116,13 @@ pub async fn create_all(
         base64_repo.clone(),
         aes_repo.clone(),
     ));
+
+    let rotate_refresh_token_repo = Arc::new(RotateRefreshTokenRepositoryImpl::new(
+        refresh_token_paseto_repo.clone(),
+        refresh_token_database_repo.clone(),
+        base64_repo.clone(),
+        aes_repo.clone(),
+    ));
     let core_repo = Arc::new(InitialCoreImpl::new(
         aes_repo,
         base64_repo,
@@ -138,6 +151,7 @@ pub async fn create_all(
             unban_user_repo,
             disable_mfa_user_repo,
             create_refresh_token_repo,
+            rotate_refresh_token_repo,
         },
         core_service,
     )

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::application::services::{
-    hello_service::{HelloService, HelloServiceImpl}, refresh_token::create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl}, users::{
+    hello_service::{HelloService, HelloServiceImpl}, refresh_token::{create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl}, rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl}}, users::{
         ban_user::{BanUserService, BanUserServiceImpl}, create::{CreateUserService, CreateUserServiceImpl}, delete::{DeleteUserService, DeleteUserServiceImpl}, disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl}, get_user::{GetUserService, GetUserServiceImpl}, get_user_count::{GetUserCountService, GetUserCountServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}, unban_user::{UnbanUserService, UnbanUserServiceImpl}, update_user::{UpdateUserService, UpdateUserServiceImpl}
     }
 };
@@ -68,5 +68,11 @@ pub fn create_disble_mfa_user_service(repos: &Repositories) -> Arc<dyn DisableMF
 pub fn create_create_refresh_token_service(repos: &Repositories) -> Arc<dyn CreateRefreshTokenService> {
     Arc::new(CreateRefreshTokenServiceImpl {
         repository: repos.create_refresh_token_repo.clone(),
+    })
+}
+
+pub fn create_rotate_refresh_token_service(repos: &Repositories) -> Arc<dyn RotateRefreshTokenService> {
+    Arc::new(RotateRefreshTokenServiceImpl {
+        repository: repos.rotate_refresh_token_repo.clone(),
     })
 }

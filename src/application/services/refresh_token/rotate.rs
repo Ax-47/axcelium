@@ -15,16 +15,16 @@ use crate::{
     },
 };
 #[derive(Clone)]
-pub struct CreateRefreshTokenServiceImpl {
+pub struct RotateRefreshTokenServiceImpl {
     pub repository: Arc<dyn RotateRefreshTokenRepository>,
 }
-impl CreateRefreshTokenServiceImpl {
+impl RotateRefreshTokenServiceImpl {
     pub fn new(repository: Arc<dyn RotateRefreshTokenRepository>) -> Self {
         Self { repository }
     }
 }
 #[async_trait]
-pub trait CreateRefreshTokenService: 'static + Sync + Send {
+pub trait RotateRefreshTokenService: 'static + Sync + Send {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
@@ -32,7 +32,7 @@ pub trait CreateRefreshTokenService: 'static + Sync + Send {
     ) -> RepositoryResult<CreateTokenResponse>;
 }
 #[async_trait]
-impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
+impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
