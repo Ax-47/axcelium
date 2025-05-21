@@ -40,11 +40,7 @@ use crate::{
         },
         services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
     },
-    infrastructure::repositories::{
-        cache::refresh_token_repository::RefreshTokenCacheImpl,
-        cache_layer::refresh_token_repository::RefreshTokenCacheLayerRepositoryImpl,
-        database::refresh_token::RefreshTokenDatabaseRepositoryImpl,
-    },
+    infrastructure::repositories::database::refresh_token::RefreshTokenDatabaseRepositoryImpl,
 };
 
 pub struct Repositories {
