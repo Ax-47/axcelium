@@ -4,8 +4,9 @@ use redis::Client;
 use scylla::client::session::Session;
 
 use crate::{
-    application::repositories::refresh_tokens::rotate::{
-        RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl,
+    application::repositories::refresh_tokens::{
+        revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
+        rotate::{RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl},
     },
     infrastructure::repositories::{
         cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
@@ -61,6 +62,7 @@ pub struct Repositories {
     pub disable_mfa_user_repo: Arc<dyn DisableMFAUserRepository>,
     pub create_refresh_token_repo: Arc<dyn CreateRefreshTokenRepository>,
     pub rotate_refresh_token_repo: Arc<dyn RotateRefreshTokenRepository>,
+    pub revoke_refresh_token_repo: Arc<dyn RevokeRefreshTokenRepository>,
 }
 
 pub async fn create_all(
@@ -123,6 +125,10 @@ pub async fn create_all(
         base64_repo.clone(),
         aes_repo.clone(),
     ));
+    let revoke_refresh_token_repo = Arc::new(RevokeRefreshTokenRepositoryImpl::new(
+        refresh_token_database_repo.clone(),
+    ));
+
     let core_repo = Arc::new(InitialCoreImpl::new(
         aes_repo,
         base64_repo,
@@ -152,6 +158,7 @@ pub async fn create_all(
             disable_mfa_user_repo,
             create_refresh_token_repo,
             rotate_refresh_token_repo,
+            revoke_refresh_token_repo,
         },
         core_service,
     )
