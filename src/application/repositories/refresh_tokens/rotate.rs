@@ -74,12 +74,13 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
     fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
 
     async fn store_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>;
-
+    async fn update_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>;
     async fn find_refresh_token(
         &self,
         org_id: Uuid,
         app_id: Uuid,
         token_id: Uuid,
+        token_version:&String
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
 
     async fn revoke_refresh_token(
@@ -162,14 +163,20 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         self.database_repo.create_refresh_token(&model).await
     }
 
+    async fn update_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>{
+        let model: RefreshTokenModel = rf.into();
+        self.database_repo.update_refresh_token(&model).await
+    }
+
     async fn find_refresh_token(
         &self,
         org_id: Uuid,
         app_id: Uuid,
         token_id: Uuid,
+        token_version:&String
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>> {
         self.database_repo
-            .find_refresh_token(org_id, app_id, token_id)
+            .find_refresh_token(org_id, app_id, token_id,token_version)
             .await
     }
 

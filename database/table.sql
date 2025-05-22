@@ -98,4 +98,28 @@ CREATE TABLE refresh_tokens (
   revoked BOOLEAN,
   PRIMARY KEY ((organization_id, application_id, token_id))
 ) WITH default_time_to_live = 2592000;
--- TODO LOOK UP refresh token
+CREATE MATERIALIZED VIEW refresh_tokens_with_token_version AS
+SELECT *
+FROM axcelium.refresh_tokens
+WHERE organization_id IS NOT NULL
+  AND application_id IS NOT NULL
+  AND token_version IS NOT NULL
+  AND token_id IS NOT NULL PRIMARY KEY (
+    (
+      organization_id,
+      application_id,
+      token_id,
+      token_version
+    )
+  );
+CREATE MATERIALIZED VIEW refresh_tokens_by_user AS
+SELECT *
+FROM axcelium.refresh_tokens
+WHERE organization_id IS NOT NULL
+  AND application_id IS NOT NULL
+  AND user_id IS NOT NULL
+  AND token_id IS NOT NULL
+PRIMARY KEY (
+  (organization_id, application_id, user_id),
+  token_id
+);

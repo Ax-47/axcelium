@@ -13,7 +13,8 @@ use crate::{
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
         errors::repositories_errors::{RepositoryError, RepositoryResult},
-    }, infrastructure::repositories::paseto::PASETO_V4_LOCAL_KEY_LEN,
+    },
+    infrastructure::repositories::paseto::PASETO_V4_LOCAL_KEY_LEN,
 };
 #[derive(Clone)]
 pub struct RotateRefreshTokenServiceImpl {
@@ -69,10 +70,15 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 c_apporg.organization_id,
                 c_apporg.application_id,
                 old_token_id,
+                &token.version,
             )
             .await?
         else {
-            return Err(RepositoryError::new("not found".to_string(), 400));
+            return Err(RepositoryError::new(
+                "Refresh token not found for the given organization_id and application_id"
+                    .to_string(),
+                400,
+            ));
         };
         if fetched_token.revoked {
             return Err(RepositoryError::new(
@@ -113,13 +119,6 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 400,
             ));
         }
-        self.repository
-            .revoke_refresh_token(
-                c_apporg.organization_id,
-                c_apporg.application_id,
-                old_token_id,
-            )
-            .await?;
         let paseto_token = self
             .repository
             .create_pesato_token(
