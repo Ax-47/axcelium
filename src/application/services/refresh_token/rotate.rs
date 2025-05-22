@@ -62,12 +62,13 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
         if token.nbf > now {
             return Err(RepositoryError::new("Token not valid yet".to_string(), 401));
         }
+        let old_token_id = Uuid::parse_str(token.jti.as_str())?;
         let Some(fetched_token) = self
             .repository
             .find_refresh_token(
                 c_apporg.organization_id,
                 c_apporg.application_id,
-                Uuid::parse_str(token.jti.as_str())?,
+                old_token_id,
             )
             .await?
         else {
@@ -110,6 +111,13 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 400,
             ));
         }
+        self.repository
+            .revoke_refresh_token(
+                c_apporg.organization_id,
+                c_apporg.application_id,
+                old_token_id,
+            )
+            .await?;
         let paseto_token = self
             .repository
             .create_pesato_token(

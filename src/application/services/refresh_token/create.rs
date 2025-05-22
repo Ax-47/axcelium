@@ -75,7 +75,7 @@ impl CreateRefreshTokenService for CreateRefreshTokenServiceImpl {
                 &secret_key,
                 issued_at.format(&Rfc3339)?,
                 expires_at.format(&Rfc3339)?,
-                not_before.format(&Rfc3339)?,
+                not_before.format(&Rfc3339)?, //not before
             )
             .await?;
         Ok(CreateTokenResponse {

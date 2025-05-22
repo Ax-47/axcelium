@@ -81,6 +81,13 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
         app_id: Uuid,
         token_id: Uuid,
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
+
+    async fn revoke_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<()>;
 }
 
 #[async_trait]
@@ -162,6 +169,17 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>> {
         self.database_repo
             .find_refresh_token(org_id, app_id, token_id)
+            .await
+    }
+
+    async fn revoke_refresh_token(
+        &self,
+        org_id: Uuid,
+        app_id: Uuid,
+        token_id: Uuid,
+    ) -> RepositoryResult<()> {
+        self.database_repo
+            .revoke_refresh_token(org_id, app_id, token_id)
             .await
     }
 }
