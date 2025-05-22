@@ -99,6 +99,28 @@ pub struct FoundRefreshTokenModel {
     pub expires_at: CqlTimestamp,
     pub revoked: bool,
 }
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct FoundRefreshTokenModelByUser {
+    pub application_id: Uuid,
+    pub organization_id: Uuid,
+    pub token_id: Uuid,
+    pub encrypted_token_secret: String,
+    pub parent_version: Option<String>,
+
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub issued_at: CqlTimestamp,
+
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub expires_at: CqlTimestamp,
+    pub revoked: bool,
+}
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct UpdateRefreshTokenQuery {
     pub token_id: Uuid,
@@ -130,4 +152,8 @@ impl From<&RefreshTokenModel> for UpdateRefreshTokenQuery {
             expires_at: token.expires_at,
         }
     }
+}
+pub struct PaginatedRefreshTokensByUserModel{
+    pub refresh_tokens: Vec<FoundRefreshTokenModelByUser>,
+    pub paging_state: Option<Vec<u8>>,
 }

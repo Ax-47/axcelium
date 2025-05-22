@@ -63,3 +63,15 @@ pub async fn revoke_refresh_token_handle(
     let res = token_service.execute(apporg, path.token_id).await?;
     Ok(web::Json(res))
 }
+
+pub async fn get_refresh_token_handle(
+    req: actix_web::HttpRequest,
+    token_service: web::Data<dyn RevokeRefreshTokenService>,
+) -> Result<web::Json<SimpleResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    todo!()
+}

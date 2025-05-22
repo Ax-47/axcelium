@@ -30,3 +30,11 @@ pub const REVOKE_REFRESH_TOKEN: &str = r#"
     UPDATE axcelium.refresh_tokens SET revoked=true
     WHERE organization_id = ? AND application_id = ? AND token_id = ?;
 "#;
+
+pub const FIND_REFRESH_TOKEN_BY_USER_PAGINATED: &str = r#"
+SELECT
+    application_id, organization_id, token_id, encrypted_token_secret,
+    parent_version, issued_at, expires_at, revoked
+FROM axcelium.refresh_tokens_by_user
+WHERE organization_id = ? AND application_id = ?AND user_id = ? ;
+"#;
