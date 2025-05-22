@@ -46,3 +46,25 @@ pub async fn rotate_refresh_token_handle(
         .await?;
     Ok(web::Json(res))
 }
+
+
+pub async fn revoke_refresh_token_handle(
+    req: actix_web::HttpRequest,
+    post_data: web::Json<RotateTokenPayload>,
+    token_service: web::Data<dyn RotateRefreshTokenService>,
+) -> Result<web::Json<CreateTokenResponse>, ApiError> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let res=    token_service
+        .execute(
+            apporg,
+            post_data.refresh_token.clone(),
+            post_data.public_key.clone(),
+            post_data.private_key.clone(),
+        )
+        .await?;
+    Ok(web::Json(res))
+}
