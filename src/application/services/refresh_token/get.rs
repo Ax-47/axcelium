@@ -7,7 +7,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct GetRefreshTokenServiceImpl {
-    repository: Arc<dyn GetRefreshTokenRepository>,
+    pub repository: Arc<dyn GetRefreshTokenRepository>,
 }
 impl GetRefreshTokenServiceImpl {
     pub fn new(repository: Arc<dyn GetRefreshTokenRepository>) -> Self {

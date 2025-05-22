@@ -4,8 +4,8 @@ use crate::{
         services::{
             hello_service::HelloService,
             refresh_token::{
-                create::CreateRefreshTokenService, revoke::RevokeRefreshTokenService,
-                rotate::RotateRefreshTokenService,
+                create::CreateRefreshTokenService, get::GetRefreshTokenService,
+                revoke::RevokeRefreshTokenService, rotate::RotateRefreshTokenService,
             },
             users::{
                 ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
@@ -38,6 +38,7 @@ pub struct Container {
     pub create_refresh_token_service: Arc<dyn CreateRefreshTokenService>,
     pub rotate_refresh_token_service: Arc<dyn RotateRefreshTokenService>,
     pub revoke_refresh_token_service: Arc<dyn RevokeRefreshTokenService>,
+    pub get_refresh_tokens_by_user_service: Arc<dyn GetRefreshTokenService>,
 }
 
 impl Container {
@@ -62,6 +63,8 @@ impl Container {
         let create_refresh_token_service = services::create_create_refresh_token_service(&repos);
         let rotate_refresh_token_service = services::create_rotate_refresh_token_service(&repos);
         let revoke_refresh_token_service = services::create_revoke_refresh_token_service(&repos);
+        let get_refresh_tokens_by_user_service =
+            services::create_get_refresh_tokens_by_user_service(&repos);
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
@@ -81,6 +84,7 @@ impl Container {
             create_refresh_token_service,
             rotate_refresh_token_service,
             revoke_refresh_token_service,
+            get_refresh_tokens_by_user_service,
         }
     }
 }

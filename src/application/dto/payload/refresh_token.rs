@@ -19,8 +19,12 @@ pub struct GetTokenQuery {
 }
 
 #[derive(Deserialize)]
-pub struct PaginationRefreshTokensByUserQuery {
+pub struct GetUserQuery {
     pub user_id: Uuid,
+}
+
+#[derive(Deserialize)]
+pub struct PaginationRefreshTokensByUserQuery {
     pub page_size: Option<i32>,
     pub paging_state: Option<String>,
 }

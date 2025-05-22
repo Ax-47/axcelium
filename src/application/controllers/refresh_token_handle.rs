@@ -1,5 +1,5 @@
 use crate::application::dto::payload::refresh_token::{
-    CreateTokenPayload, GetTokenQuery, PaginationRefreshTokensByUserQuery, RotateTokenPayload,
+    CreateTokenPayload, GetTokenQuery, GetUserQuery, PaginationRefreshTokensByUserQuery, RotateTokenPayload
 };
 use crate::application::dto::response::refresh_token::{CreateTokenResponse, GetRefreshTokensResponse, SimpleResponse};
 use crate::application::services::refresh_token::create::CreateRefreshTokenService;
@@ -67,6 +67,8 @@ pub async fn revoke_refresh_token_handle(
 
 pub async fn get_refresh_token_handle(
     req: actix_web::HttpRequest,
+
+    path: web::Path<GetUserQuery>,
     query: web::Query<PaginationRefreshTokensByUserQuery>,
     token_service: web::Data<dyn GetRefreshTokenService>,
 ) -> Result<web::Json<GetRefreshTokensResponse>, ApiError> {
@@ -78,7 +80,7 @@ pub async fn get_refresh_token_handle(
 
     let page_size = query.page_size.unwrap_or(20);
     let paging_state = query.paging_state.clone();
-    let user_id = query.user_id.clone();
+    let user_id = path.user_id.clone();
     let res =token_service.execute(apporg, user_id, page_size, paging_state).await?;
     Ok(web::Json(res))
 }

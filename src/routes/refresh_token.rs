@@ -10,6 +10,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .app_data(web::Data::from(container.create_refresh_token_service.clone()))
             .app_data(web::Data::from(container.rotate_refresh_token_service.clone()))
             .app_data(web::Data::from(container.revoke_refresh_token_service.clone()))
+            .app_data(web::Data::from(container.get_refresh_tokens_by_user_service.clone()))
             .wrap(middleware)
             .route("/", web::post().to(create_refresh_token_handle))
             .route("/rotate", web::post().to(rotate_refresh_token_handle))

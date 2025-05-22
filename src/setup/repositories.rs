@@ -5,6 +5,7 @@ use scylla::client::session::Session;
 
 use crate::{
     application::repositories::refresh_tokens::{
+        get::{GetRefreshTokenRepository, GetRefreshTokenRepositoryImpl},
         revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
         rotate::{RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl},
     },
@@ -63,6 +64,7 @@ pub struct Repositories {
     pub create_refresh_token_repo: Arc<dyn CreateRefreshTokenRepository>,
     pub rotate_refresh_token_repo: Arc<dyn RotateRefreshTokenRepository>,
     pub revoke_refresh_token_repo: Arc<dyn RevokeRefreshTokenRepository>,
+    pub get_refresh_tokens_by_user: Arc<dyn GetRefreshTokenRepository>
 }
 
 pub async fn create_all(
@@ -118,7 +120,10 @@ pub async fn create_all(
         base64_repo.clone(),
         aes_repo.clone(),
     ));
-
+    let get_refresh_tokens_by_user = Arc::new(GetRefreshTokenRepositoryImpl::new(
+        refresh_token_database_repo.clone(),
+        base64_repo.clone(),
+    ));
     let rotate_refresh_token_repo = Arc::new(RotateRefreshTokenRepositoryImpl::new(
         refresh_token_paseto_repo.clone(),
         refresh_token_database_repo.clone(),
@@ -159,6 +164,7 @@ pub async fn create_all(
             create_refresh_token_repo,
             rotate_refresh_token_repo,
             revoke_refresh_token_repo,
+get_refresh_tokens_by_user,
         },
         core_service,
     )
