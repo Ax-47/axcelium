@@ -87,27 +87,21 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
             ));
         }
         //issue new token
-        let token_secret = self.repository.genarate_token_secret().await?;
-        let (secret_key, encrypted_token_secret) = self
-            .repository
-            .encode_refresh_token_secret(&token_secret)
-            .await?;
         let token_version = self.repository.genarate_token_version_base64().await?;
-
         let issued_at = time::OffsetDateTime::now_utc();
         let expires_at = issued_at + time::Duration::days(30);
         let not_before = issued_at + time::Duration::minutes(40);
         let refresh_token = self.repository.create_refresh_token(
+            old_token_id,
             c_apporg.application_id,
             c_apporg.organization_id,
             fetched_token.user_id,
-            encrypted_token_secret,
+            fetched_token.encrypted_token_secret,
             token_version,
             token.version,
             issued_at,
             expires_at,
         );
-        self.repository.store_refresh_token(&refresh_token).await?;
         let dnc_private_key = self.repository.decode_base64(&private_key)?;
         if dnc_private_key.len() != PASETO_V4_LOCAL_KEY_LEN {
             return Err(RepositoryError::new(
@@ -119,13 +113,14 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 400,
             ));
         }
+        self.repository.update_refresh_token(&refresh_token).await?;
         let paseto_token = self
             .repository
             .create_pesato_token(
                 &dnc_private_key,
                 refresh_token,
-                self.repository.encode_base64(&token_secret).as_str(),
-                &secret_key,
+                &token.secret,
+                &token.secret_key,
                 issued_at.format(&Rfc3339)?,
                 expires_at.format(&Rfc3339)?,
                 not_before.format(&Rfc3339)?,

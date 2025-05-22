@@ -47,6 +47,7 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
     async fn genarate_token_version_base64(&self) -> RepositoryResult<String>;
     fn create_refresh_token(
         &self,
+        token_id: Uuid,
         application_id: Uuid,
         organization_id: Uuid,
         user_id: Uuid,
@@ -119,6 +120,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
     }
     fn create_refresh_token(
         &self,
+        token_id: Uuid,
         application_id: Uuid,
         organization_id: Uuid,
         user_id: Uuid,
@@ -129,7 +131,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         expires_at: OffsetDateTime,
     ) -> RefreshToken {
         RefreshToken {
-            token_id: Uuid::new_v4(),
+            token_id ,
             application_id,
             organization_id,
             user_id,
