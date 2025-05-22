@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     application::{
-        dto::response::refresh_token::CreateTokenResponse,
+        dto::response::refresh_token::SimpleResponse,
         repositories::refresh_tokens::revoke::RevokeRefreshTokenRepository,
     },
     domain::{
@@ -28,7 +28,7 @@ pub trait RevokeRefreshTokenService: 'static + Sync + Send {
         &self,
         c_apporg: CleanAppOrgByClientId,
         token_id: Uuid,
-    ) -> RepositoryResult<CreateTokenResponse>;
+    ) -> RepositoryResult<SimpleResponse>;
 }
 #[async_trait]
 impl RevokeRefreshTokenService for RevokeRefreshTokenServiceImpl {
@@ -36,10 +36,12 @@ impl RevokeRefreshTokenService for RevokeRefreshTokenServiceImpl {
         &self,
         c_apporg: CleanAppOrgByClientId,
         token_id: Uuid,
-    ) -> RepositoryResult<CreateTokenResponse> {
+    ) -> RepositoryResult<SimpleResponse> {
         self.repository
             .revoke_refresh_token(c_apporg.organization_id, c_apporg.application_id, token_id)
             .await?;
-        todo!()
+        Ok(SimpleResponse {
+            message: "success".to_string(),
+        })
     }
 }
