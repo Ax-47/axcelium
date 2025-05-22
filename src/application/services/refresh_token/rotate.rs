@@ -13,7 +13,7 @@ use crate::{
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
         errors::repositories_errors::{RepositoryError, RepositoryResult},
-    },
+    }, infrastructure::repositories::paseto::PASETO_V4_LOCAL_KEY_LEN,
 };
 #[derive(Clone)]
 pub struct RotateRefreshTokenServiceImpl {
@@ -89,8 +89,8 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
         let token_version = self.repository.genarate_token_version_base64().await?;
 
         let issued_at = time::OffsetDateTime::now_utc();
-        let expires_at = time::OffsetDateTime::now_utc() + time::Duration::days(30);
-        let not_before = time::OffsetDateTime::now_utc() + time::Duration::minutes(40);
+        let expires_at = issued_at + time::Duration::days(30);
+        let not_before = issued_at + time::Duration::minutes(40);
         let refresh_token = self.repository.create_refresh_token(
             c_apporg.application_id,
             c_apporg.organization_id,
@@ -101,13 +101,15 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
             issued_at,
             expires_at,
         );
-        self.repository
-            .store_refresh_token(refresh_token.clone())
-            .await?;
+        self.repository.store_refresh_token(&refresh_token).await?;
         let dnc_private_key = self.repository.decode_base64(&private_key)?;
-        if dnc_private_key.len() != 64 {
+        if dnc_private_key.len() != PASETO_V4_LOCAL_KEY_LEN {
             return Err(RepositoryError::new(
-                "peseto_key must eq 64".to_string(),
+                format!(
+                    "Invalid private_key length: expected {}, got {}",
+                    PASETO_V4_LOCAL_KEY_LEN,
+                    dnc_private_key.len()
+                ),
                 400,
             ));
         }

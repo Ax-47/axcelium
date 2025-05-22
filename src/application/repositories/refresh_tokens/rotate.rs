@@ -1,6 +1,6 @@
 use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryResult;
-use crate::infrastructure::models::refresh_token::FoundRefreshTokenModel;
+use crate::infrastructure::models::refresh_token::{FoundRefreshTokenModel, RefreshTokenModel};
 use crate::infrastructure::models::token_claim::TokenClaims;
 use crate::infrastructure::repositories::cipher::{
     aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
@@ -73,7 +73,7 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
 
     fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
 
-    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()>;
+    async fn store_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>;
 
     async fn find_refresh_token(
         &self,
@@ -157,8 +157,9 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
     async fn decrypt_paseto(&self, rt: &str, pk: &Vec<u8>) -> RepositoryResult<TokenClaims> {
         self.paseto_repo.decrypt(&rt, &pk).await
     }
-    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()> {
-        self.database_repo.create_refresh_token(rf.into()).await
+    async fn store_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()> {
+        let model: RefreshTokenModel = rf.into();
+        self.database_repo.create_refresh_token(&model).await
     }
 
     async fn find_refresh_token(

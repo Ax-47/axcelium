@@ -33,7 +33,7 @@ impl RefreshTokenDatabaseRepositoryImpl {
 
 #[async_trait]
 pub trait RefreshTokenDatabaseRepository: Send + Sync {
-    async fn create_refresh_token(&self, rf: RefreshTokenModel) -> RepositoryResult<()>;
+    async fn create_refresh_token(&self, rf: &RefreshTokenModel) -> RepositoryResult<()>;
 
     async fn find_refresh_token(
         &self,
@@ -52,9 +52,9 @@ pub trait RefreshTokenDatabaseRepository: Send + Sync {
 
 #[async_trait]
 impl RefreshTokenDatabaseRepository for RefreshTokenDatabaseRepositoryImpl {
-    async fn create_refresh_token(&self, rt: RefreshTokenModel) -> RepositoryResult<()> {
+    async fn create_refresh_token(&self, rt: &RefreshTokenModel) -> RepositoryResult<()> {
         self.database
-            .execute_unpaged(&self.insert_refresh_token, &rt)
+            .execute_unpaged(&self.insert_refresh_token, rt)
             .await?;
         Ok(())
     }

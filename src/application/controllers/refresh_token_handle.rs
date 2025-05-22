@@ -21,7 +21,7 @@ pub async fn create_refresh_token_handle(
         .execute(
             apporg,
             post_data.user_id.clone(),
-            post_data.paseto_key.clone(),
+            post_data.private_key.clone(),
         )
         .await?;
     Ok(web::Json(token))

@@ -1,5 +1,6 @@
 use crate::domain::entities::refresh_token::RefreshToken;
 use crate::domain::errors::repositories_errors::RepositoryResult;
+use crate::infrastructure::models::refresh_token::RefreshTokenModel;
 use crate::infrastructure::repositories::cipher::{
     aes_gcm_repository::AesGcmCipherRepository, base64_repository::Base64Repository,
 };
@@ -41,8 +42,8 @@ pub trait CreateRefreshTokenRepository: Send + Sync {
         encrypt_client_secret: &Vec<u8>,
     ) -> RepositoryResult<(String, String)>;
 
-    async fn genarate_token_secret(&self) -> RepositoryResult<Vec<u8>>;
-    async fn genarate_token_version_base64(&self) -> RepositoryResult<String>;
+    async fn generate_token_secret(&self) -> RepositoryResult<Vec<u8>>;
+    async fn generate_token_version_base64(&self) -> RepositoryResult<String>;
     fn create_refresh_token(
         &self,
         application_id: Uuid,
@@ -69,17 +70,17 @@ pub trait CreateRefreshTokenRepository: Send + Sync {
 
     fn decode_base64(&self, plaintext: &str) -> RepositoryResult<Vec<u8>>;
 
-    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()>;
+    async fn store_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>;
 }
 
 #[async_trait]
 impl CreateRefreshTokenRepository for CreateRefreshTokenRepositoryImpl {
-    async fn genarate_token_secret(&self) -> RepositoryResult<Vec<u8>> {
+    async fn generate_token_secret(&self) -> RepositoryResult<Vec<u8>> {
         let mut secret = vec![0u8; 32];
         OsRng.try_fill_bytes(&mut secret)?;
         Ok(secret)
     }
-    async fn genarate_token_version_base64(&self) -> RepositoryResult<String> {
+    async fn generate_token_version_base64(&self) -> RepositoryResult<String> {
         let mut version = vec![0u8; 24];
         OsRng.try_fill_bytes(&mut version)?;
         Ok(self.base64_repo.encode(&version))
@@ -135,7 +136,8 @@ impl CreateRefreshTokenRepository for CreateRefreshTokenRepositoryImpl {
             .encrypt(key, rt, secret, secret_key, issued_at, expire, notbefore)
             .await
     }
-    async fn store_refresh_token(&self, rf: RefreshToken) -> RepositoryResult<()> {
-        self.database_repo.create_refresh_token(rf.into()).await
+    async fn store_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()> {
+        let model: RefreshTokenModel = rf.into();
+        self.database_repo.create_refresh_token(&model).await
     }
 }

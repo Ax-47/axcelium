@@ -62,7 +62,23 @@ impl From<RefreshTokenModel> for RefreshToken {
         }
     }
 }
+impl From<&RefreshToken> for RefreshTokenModel {
+    fn from(token: &RefreshToken) -> Self {
+        Self {
+            token_id: token.token_id,
+            application_id: token.application_id,
+            organization_id: token.organization_id,
+            user_id: token.user_id,
+            encrypted_token_secret: token.encrypted_token_secret.clone(),
+            token_version: token.token_version.clone(),
+            parent_version: token.parent_version.clone(),
+            issued_at: token.issued_at,
+            expires_at: token.expires_at,
+            revoked: token.revoked,
+        }
+    }
 
+}
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct FoundRefreshTokenModel {
     pub application_id: Uuid,
