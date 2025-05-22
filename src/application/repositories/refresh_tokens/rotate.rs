@@ -81,7 +81,7 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
         org_id: Uuid,
         app_id: Uuid,
         token_id: Uuid,
-        token_version:&String
+        token_version: &String,
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
 
     async fn revoke_refresh_token(
@@ -90,6 +90,12 @@ pub trait RotateRefreshTokenRepository: Send + Sync {
         app_id: Uuid,
         token_id: Uuid,
     ) -> RepositoryResult<()>;
+
+    async fn decrypt_client_secret(
+        &self,
+        client_key: &str,
+        encrypted_client_secret: &str,
+    ) -> RepositoryResult<String>;
 }
 
 #[async_trait]
@@ -131,7 +137,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         expires_at: OffsetDateTime,
     ) -> RefreshToken {
         RefreshToken {
-            token_id ,
+            token_id,
             application_id,
             organization_id,
             user_id,
@@ -165,7 +171,7 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         self.database_repo.create_refresh_token(&model).await
     }
 
-    async fn update_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()>{
+    async fn update_refresh_token(&self, rf: &RefreshToken) -> RepositoryResult<()> {
         let model: RefreshTokenModel = rf.into();
         self.database_repo.update_refresh_token(&model).await
     }
@@ -175,10 +181,10 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
         org_id: Uuid,
         app_id: Uuid,
         token_id: Uuid,
-        token_version:&String
+        token_version: &String,
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>> {
         self.database_repo
-            .find_refresh_token(org_id, app_id, token_id,token_version)
+            .find_refresh_token(org_id, app_id, token_id, token_version)
             .await
     }
 
@@ -190,6 +196,15 @@ impl RotateRefreshTokenRepository for RotateRefreshTokenRepositoryImpl {
     ) -> RepositoryResult<()> {
         self.database_repo
             .revoke_refresh_token(org_id, app_id, token_id)
+            .await
+    }
+    async fn decrypt_client_secret(
+        &self,
+        client_key: &str,
+        encrypted_client_secret: &str,
+    ) -> RepositoryResult<String> {
+        self.aes_repo
+            .decrypt(&client_key, &encrypted_client_secret)
             .await
     }
 }

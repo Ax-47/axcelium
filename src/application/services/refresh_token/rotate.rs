@@ -86,6 +86,18 @@ impl RotateRefreshTokenService for RotateRefreshTokenServiceImpl {
                 400,
             ));
         }
+        let decrypted = self
+            .repository
+            .decrypt_client_secret(&token.secret_key, &fetched_token.encrypted_token_secret)
+            .await?;
+        let dnc_token_secret = self.repository.decode_base64(token.secret.as_str())?;
+        let token_secret = String::from_utf8_lossy(&dnc_token_secret).into_owned();
+        if decrypted != token_secret {
+            return Err(RepositoryError {
+                message: "unauth".to_string(),
+                code: 401,
+            });
+        }
         //issue new token
         let token_version = self.repository.genarate_token_version_base64().await?;
         let issued_at = time::OffsetDateTime::now_utc();

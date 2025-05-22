@@ -10,12 +10,10 @@ INSERT INTO axcelium.refresh_tokens (
 ) USING TTL 2592000;"#;
 pub const UPDATE_REFRESH_TOKEN: &str = r#"
 UPDATE axcelium.refresh_tokens USING TTL 2592000 SET
-    encrypted_token_secret = :encrypted_token_secret,
     token_version = :token_version,
     parent_version = :parent_version,
     issued_at = :issued_at,
-    expires_at = :expires_at,
-    revoked = :revoked
+    expires_at = :expires_at
 WHERE
     token_id = :token_id AND
     application_id = :application_id AND

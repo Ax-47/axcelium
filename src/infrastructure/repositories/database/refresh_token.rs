@@ -1,6 +1,8 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
-    infrastructure::models::refresh_token::{FoundRefreshTokenModel, RefreshTokenModel},
+    infrastructure::models::refresh_token::{
+        FoundRefreshTokenModel, RefreshTokenModel, UpdateRefreshTokenQuery,
+    },
 };
 use async_trait::async_trait;
 use scylla::{client::session::Session, statement::prepared::PreparedStatement};
@@ -67,7 +69,10 @@ impl RefreshTokenDatabaseRepository for RefreshTokenDatabaseRepositoryImpl {
 
     async fn update_refresh_token(&self, rt: &RefreshTokenModel) -> RepositoryResult<()> {
         self.database
-            .execute_unpaged(&self.prepared_update_refresh_token, rt)
+            .execute_unpaged(
+                &self.prepared_update_refresh_token,
+                UpdateRefreshTokenQuery::from(rt),
+            )
             .await?;
         Ok(())
     }

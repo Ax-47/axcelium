@@ -77,7 +77,6 @@ impl From<&RefreshToken> for RefreshTokenModel {
             revoked: token.revoked,
         }
     }
-
 }
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct FoundRefreshTokenModel {
@@ -85,7 +84,6 @@ pub struct FoundRefreshTokenModel {
     pub organization_id: Uuid,
     pub user_id: Uuid,
     pub encrypted_token_secret: String,
-    pub token_version: String,
     pub parent_version: Option<String>,
 
     #[serde(
@@ -100,4 +98,36 @@ pub struct FoundRefreshTokenModel {
     )]
     pub expires_at: CqlTimestamp,
     pub revoked: bool,
+}
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct UpdateRefreshTokenQuery {
+    pub token_id: Uuid,
+    pub application_id: Uuid,
+    pub organization_id: Uuid,
+    pub token_version: String,
+    pub parent_version: Option<String>,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub issued_at: CqlTimestamp,
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub expires_at: CqlTimestamp,
+}
+
+impl From<&RefreshTokenModel> for UpdateRefreshTokenQuery {
+    fn from(token: &RefreshTokenModel) -> Self {
+        Self {
+            token_id: token.token_id,
+            application_id: token.application_id,
+            organization_id: token.organization_id,
+            token_version: token.token_version.clone(),
+            parent_version: token.parent_version.clone(),
+            issued_at: token.issued_at,
+            expires_at: token.expires_at,
+        }
+    }
 }
