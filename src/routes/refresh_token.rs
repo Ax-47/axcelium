@@ -1,4 +1,4 @@
-use crate::{application::controllers::refresh_token_handle::{create_refresh_token_handle, revoke_refresh_token_handle, rotate_refresh_token_handle}, setup::Container};
+use crate::{application::controllers::refresh_token_handle::{create_refresh_token_handle, get_refresh_token_handle, revoke_refresh_token_handle, rotate_refresh_token_handle}, setup::Container};
 use actix_web::web::{self, ServiceConfig};
 use std::sync::Arc;
 
@@ -13,6 +13,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .wrap(middleware)
             .route("/", web::post().to(create_refresh_token_handle))
             .route("/rotate", web::post().to(rotate_refresh_token_handle))
+            .route("/{user_id}", web::get().to(get_refresh_token_handle))
             .route("/{token_id}/revoke", web::post().to(revoke_refresh_token_handle))
     );
 }

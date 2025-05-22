@@ -1,8 +1,9 @@
 use crate::application::dto::payload::refresh_token::{
-    CreateTokenPayload, GetTokenQuery, RotateTokenPayload,
+    CreateTokenPayload, GetTokenQuery, PaginationRefreshTokensByUserQuery, RotateTokenPayload,
 };
-use crate::application::dto::response::refresh_token::{CreateTokenResponse, SimpleResponse};
+use crate::application::dto::response::refresh_token::{CreateTokenResponse, GetRefreshTokensResponse, SimpleResponse};
 use crate::application::services::refresh_token::create::CreateRefreshTokenService;
+use crate::application::services::refresh_token::get::GetRefreshTokenService;
 use crate::application::services::refresh_token::revoke::RevokeRefreshTokenService;
 use crate::application::services::refresh_token::rotate::RotateRefreshTokenService;
 use crate::domain::{
@@ -66,12 +67,18 @@ pub async fn revoke_refresh_token_handle(
 
 pub async fn get_refresh_token_handle(
     req: actix_web::HttpRequest,
-    token_service: web::Data<dyn RevokeRefreshTokenService>,
-) -> Result<web::Json<SimpleResponse>, ApiError> {
+    query: web::Query<PaginationRefreshTokensByUserQuery>,
+    token_service: web::Data<dyn GetRefreshTokenService>,
+) -> Result<web::Json<GetRefreshTokensResponse>, ApiError> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    todo!()
+
+    let page_size = query.page_size.unwrap_or(20);
+    let paging_state = query.paging_state.clone();
+    let user_id = query.user_id.clone();
+    let res =token_service.execute(apporg, user_id, page_size, paging_state).await?;
+    Ok(web::Json(res))
 }

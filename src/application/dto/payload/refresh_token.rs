@@ -17,3 +17,10 @@ pub struct RotateTokenPayload {
 pub struct GetTokenQuery {
     pub token_id: Uuid,
 }
+
+#[derive(Deserialize)]
+pub struct PaginationRefreshTokensByUserQuery {
+    pub user_id: Uuid,
+    pub page_size: Option<i32>,
+    pub paging_state: Option<String>,
+}
