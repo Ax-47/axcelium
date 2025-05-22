@@ -12,3 +12,8 @@ pub struct RotateTokenPayload {
     pub public_key: String,
     pub private_key: String,
 }
+
+#[derive(Deserialize)]
+pub struct GetTokenQuery {
+    pub token_id: Uuid,
+}
