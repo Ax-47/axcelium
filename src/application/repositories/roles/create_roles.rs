@@ -1,7 +1,7 @@
 use crate::{
     domain::{entities::role_by_app::RoleByApp, errors::repositories_errors::RepositoryResult},
     infrastructure::{
-        models::role::RoleModel, repositories::database::roles::RoleDatabaseRepository,
+        models::role::{RoleModel, SelectedRoleByIdModel}, repositories::database::roles::RoleDatabaseRepository,
     },
 };
 use async_trait::async_trait;
@@ -21,8 +21,6 @@ impl CreateRoleRepositoryImpl {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait CreateRoleRepository: Send + Sync {
-    async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()>;
-
     fn new_role(
         &self,
         organization_id: Uuid,
@@ -31,6 +29,13 @@ pub trait CreateRoleRepository: Send + Sync {
         description: Option<String>,
         permissions: HashSet<String>,
     ) -> RoleByApp;
+    async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()>;
+    async fn get_role(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        role_id: Uuid,
+    ) -> RepositoryResult<Option<SelectedRoleByIdModel>>;
 }
 
 #[async_trait]
@@ -57,5 +62,15 @@ impl CreateRoleRepository for CreateRoleRepositoryImpl {
     }
     async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()> {
         self.database_repo.create_role(role).await
+    }
+
+    async fn get_role(
+        &self,
+        organization_id: Uuid,
+        application_id: Uuid,
+        role_id: Uuid,
+    ) -> RepositoryResult<Option<SelectedRoleByIdModel>> {
+        self.database_repo
+            .get_role(organization_id, application_id, role_id).await
     }
 }
