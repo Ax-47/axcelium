@@ -8,7 +8,7 @@ use crate::application::services::{
         revoke::{RevokeRefreshTokenService, RevokeRefreshTokenServiceImpl},
         rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
     },
-    roles::create_roles::{CreateRoleService, CreateRoleServiceImpl},
+    roles::{create_roles::{CreateRoleService, CreateRoleServiceImpl}, get::{GetRoleService, GetRoleServiceImpl}},
     users::{
         ban_user::{BanUserService, BanUserServiceImpl},
         create::{CreateUserService, CreateUserServiceImpl},
@@ -115,5 +115,11 @@ pub fn create_get_refresh_tokens_by_user_service(
 pub fn create_create_role_service(repos: &Repositories) -> Arc<dyn CreateRoleService> {
     Arc::new(CreateRoleServiceImpl {
         repository: repos.create_role_repo.clone(),
+    })
+}
+
+pub fn create_get_role_by_role_id_service(repos: &Repositories) -> Arc<dyn GetRoleService> {
+    Arc::new(GetRoleServiceImpl {
+        repository: repos.get_role_by_role_id_repo.clone(),
     })
 }

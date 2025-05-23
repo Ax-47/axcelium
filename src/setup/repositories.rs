@@ -10,7 +10,7 @@ use crate::{
             revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
             rotate::{RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl},
         },
-        roles::create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl},
+        roles::{create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl}, get::{GetRoleRepository, GetRoleRepositoryImpl}},
     },
     infrastructure::repositories::{
         cache::applications_organization_by_client_id_repository::ApplicationsOrganizationByClientIdCacheImpl,
@@ -69,6 +69,7 @@ pub struct Repositories {
     pub revoke_refresh_token_repo: Arc<dyn RevokeRefreshTokenRepository>,
     pub get_refresh_tokens_by_user: Arc<dyn GetRefreshTokenRepository>,
     pub create_role_repo: Arc<dyn CreateRoleRepository>,
+    pub get_role_by_role_id_repo: Arc<dyn GetRoleRepository>,
 }
 
 pub async fn create_all(
@@ -117,6 +118,11 @@ pub async fn create_all(
         Arc::new(RefreshTokenDatabaseRepositoryImpl::new(database.clone()).await);
     let role_date_repo = Arc::new(RoleDatabaseRepositoryImpl::new(database.clone()).await);
     let create_role_repo = Arc::new(CreateRoleRepositoryImpl::new(role_date_repo.clone()));
+    
+    let get_role_by_role_id_repo = Arc::new(GetRoleRepositoryImpl::new(
+        role_date_repo.clone()
+
+    ));
     // let refresh_token_cache_repo = Arc::new(RefreshTokenCacheImpl::new(cache.clone(), 3600));
     let refresh_token_paseto_repo = Arc::new(PasetoRepositoryImpl::new());
     let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
@@ -171,6 +177,7 @@ pub async fn create_all(
             revoke_refresh_token_repo,
             get_refresh_tokens_by_user,
             create_role_repo,
+get_role_by_role_id_repo,
         },
         core_service,
     )

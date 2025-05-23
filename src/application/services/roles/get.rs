@@ -1,7 +1,6 @@
 use crate::{
     application::{
-        dto::response::role::GetRoleResponse,
-        repositories::roles::create_roles::CreateRoleRepository,
+        dto::response::role::GetRoleResponse, repositories::roles::get::GetRoleRepository,
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
@@ -13,10 +12,10 @@ use std::sync::Arc;
 use uuid::Uuid;
 #[derive(Clone)]
 pub struct GetRoleServiceImpl {
-    pub repository: Arc<dyn CreateRoleRepository>,
+    pub repository: Arc<dyn GetRoleRepository>,
 }
 impl GetRoleServiceImpl {
-    pub fn new(repository: Arc<dyn CreateRoleRepository>) -> Self {
+    pub fn new(repository: Arc<dyn GetRoleRepository>) -> Self {
         Self { repository }
     }
 }
