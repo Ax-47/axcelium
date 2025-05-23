@@ -1,7 +1,6 @@
 use crate::{
     application::{
-        dto::response::refresh_token::SimpleResponse,
-        repositories::roles::create_roles::CreateRoleRepository,
+        dto::{payload::role::CreateRolePayload, response::refresh_token::SimpleResponse}, mappers::model::ModelMapper, repositories::roles::create_roles::CreateRoleRepository
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
@@ -10,7 +9,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use std::sync::Arc;
-use uuid::Uuid;
 #[derive(Clone)]
 pub struct CreateRoleServiceImpl {
     pub repository: Arc<dyn CreateRoleRepository>,
@@ -25,7 +23,7 @@ pub trait CreateRoleService: 'static + Sync + Send {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
-        token_id: Uuid,
+        payload: CreateRolePayload,
     ) -> RepositoryResult<SimpleResponse>;
 }
 #[async_trait]
@@ -33,8 +31,16 @@ impl CreateRoleService for CreateRoleServiceImpl {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
-        token_id: Uuid,
+        payload: CreateRolePayload,
     ) -> RepositoryResult<SimpleResponse> {
+        let role = self.repository.new_role(
+            c_apporg.organization_id,
+            c_apporg.application_id,
+            payload.name,
+            payload.description,
+            payload.permissions,
+        );
+        self.repository.create_role(&role.to_entity()).await?;
         Ok(SimpleResponse {
             message: "success".to_string(),
         })

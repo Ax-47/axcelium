@@ -1,9 +1,25 @@
 use std::sync::Arc;
 
 use crate::application::services::{
-    hello_service::{HelloService, HelloServiceImpl}, refresh_token::{create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl}, get::{GetRefreshTokenService, GetRefreshTokenServiceImpl}, revoke::{RevokeRefreshTokenService, RevokeRefreshTokenServiceImpl}, rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl}}, users::{
-        ban_user::{BanUserService, BanUserServiceImpl}, create::{CreateUserService, CreateUserServiceImpl}, delete::{DeleteUserService, DeleteUserServiceImpl}, disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl}, get_user::{GetUserService, GetUserServiceImpl}, get_user_count::{GetUserCountService, GetUserCountServiceImpl}, get_users::{GetUsersService, GetUsersServiceImpl}, unban_user::{UnbanUserService, UnbanUserServiceImpl}, update_user::{UpdateUserService, UpdateUserServiceImpl}
-    }
+    hello_service::{HelloService, HelloServiceImpl},
+    refresh_token::{
+        create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl},
+        get::{GetRefreshTokenService, GetRefreshTokenServiceImpl},
+        revoke::{RevokeRefreshTokenService, RevokeRefreshTokenServiceImpl},
+        rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
+    },
+    roles::create_roles::{CreateRoleService, CreateRoleServiceImpl},
+    users::{
+        ban_user::{BanUserService, BanUserServiceImpl},
+        create::{CreateUserService, CreateUserServiceImpl},
+        delete::{DeleteUserService, DeleteUserServiceImpl},
+        disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl},
+        get_user::{GetUserService, GetUserServiceImpl},
+        get_user_count::{GetUserCountService, GetUserCountServiceImpl},
+        get_users::{GetUsersService, GetUsersServiceImpl},
+        unban_user::{UnbanUserService, UnbanUserServiceImpl},
+        update_user::{UpdateUserService, UpdateUserServiceImpl},
+    },
 };
 
 use super::repositories::Repositories;
@@ -65,26 +81,39 @@ pub fn create_disble_mfa_user_service(repos: &Repositories) -> Arc<dyn DisableMF
     })
 }
 
-pub fn create_create_refresh_token_service(repos: &Repositories) -> Arc<dyn CreateRefreshTokenService> {
+pub fn create_create_refresh_token_service(
+    repos: &Repositories,
+) -> Arc<dyn CreateRefreshTokenService> {
     Arc::new(CreateRefreshTokenServiceImpl {
         repository: repos.create_refresh_token_repo.clone(),
     })
 }
 
-pub fn create_rotate_refresh_token_service(repos: &Repositories) -> Arc<dyn RotateRefreshTokenService> {
+pub fn create_rotate_refresh_token_service(
+    repos: &Repositories,
+) -> Arc<dyn RotateRefreshTokenService> {
     Arc::new(RotateRefreshTokenServiceImpl {
         repository: repos.rotate_refresh_token_repo.clone(),
     })
 }
 
-pub fn create_revoke_refresh_token_service(repos: &Repositories) -> Arc<dyn RevokeRefreshTokenService> {
+pub fn create_revoke_refresh_token_service(
+    repos: &Repositories,
+) -> Arc<dyn RevokeRefreshTokenService> {
     Arc::new(RevokeRefreshTokenServiceImpl {
         repository: repos.revoke_refresh_token_repo.clone(),
     })
 }
 
-pub fn create_get_refresh_tokens_by_user_service(repos: &Repositories) -> Arc<dyn GetRefreshTokenService> {
+pub fn create_get_refresh_tokens_by_user_service(
+    repos: &Repositories,
+) -> Arc<dyn GetRefreshTokenService> {
     Arc::new(GetRefreshTokenServiceImpl {
         repository: repos.get_refresh_tokens_by_user.clone(),
+    })
+}
+pub fn create_create_role_service(repos: &Repositories) -> Arc<dyn CreateRoleService> {
+    Arc::new(CreateRoleServiceImpl {
+        repository: repos.create_role_repo.clone(),
     })
 }
