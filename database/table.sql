@@ -123,3 +123,30 @@ PRIMARY KEY (
   (organization_id, application_id, user_id),
   token_id
 );
+CREATE TABLE axcelium.roles_by_app (
+  organization_id UUID,
+  application_id UUID,
+  role_id UUID,
+  name TEXT,
+  description TEXT,
+  permissions SET<TEXT>,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  PRIMARY KEY ((organization_id, application_id), role_id)
+);
+CREATE TABLE axcelium.user_roles_by_user (
+  organization_id UUID,
+  application_id UUID,
+  user_id UUID,
+  role_id UUID,
+  assigned_at TIMESTAMP,
+  PRIMARY KEY ((organization_id, application_id, user_id), role_id)
+);
+CREATE TABLE axcelium.role_users_by_role (
+  organization_id UUID,
+  application_id UUID,
+  role_id UUID,
+  user_id UUID,
+  assigned_at TIMESTAMP,
+  PRIMARY KEY ((organization_id, application_id, role_id), user_id)
+);
