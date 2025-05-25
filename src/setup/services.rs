@@ -10,7 +10,7 @@ use crate::application::services::{
     },
     roles::{
         create_roles::{CreateRoleService, CreateRoleServiceImpl},
-        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl}, get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl},
+        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl}, get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl}, get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl},
     },
     users::{
         ban_user::{BanUserService, BanUserServiceImpl},
@@ -130,5 +130,11 @@ pub fn create_get_role_by_app_service(repos: &Repositories) -> Arc<dyn GetRoleBy
 pub fn create_get_roles_by_app_service(repos: &Repositories) -> Arc<dyn GetRolesByAppService> {
     Arc::new(GetRolesByAppServiceImpl {
         repository: repos.get_roles_by_app_repo.clone(),
+    })
+}
+
+pub fn create_get_users_by_role_service(repos: &Repositories) -> Arc<dyn GetUsersByRoleService> {
+    Arc::new(GetUsersByRoleServiceImpl {
+        repository: repos.get_users_by_role_repo.clone(),
     })
 }
