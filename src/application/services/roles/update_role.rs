@@ -1,7 +1,6 @@
 use crate::{
     application::{
         dto::{payload::role::UpdateRolePayload, response::refresh_token::SimpleResponse},
-        mappers::model::ModelMapper,
         repositories::roles::update_role::UpdateRoleRepository,
     },
     domain::{
@@ -63,6 +62,7 @@ impl UpdateRoleService for UpdateRoleServiceImpl {
         if let Some(permissions) = payload.permissions {
             update_model.permissions = permissions;
         }
+        self.repository.update_role(&update_model).await?;
         Ok(SimpleResponse {
             message: "success".to_string(),
         })
