@@ -9,8 +9,7 @@ use uuid::Uuid;
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::models::role::{
-        RoleAssignmentModel, RoleModel, RoleUserModel, SelectedRoleByIdModel, UpdateRoleModel,
-        UserRoleModel,
+        RoleAssignmentModel, RoleModel, RoleUserModel, SelectedRoleByAppModel, SelectedRoleByIdModel, UpdateRoleModel, UserRoleModel
     },
 };
 
@@ -79,7 +78,7 @@ pub trait RoleDatabaseRepository: Send + Sync {
         &self,
         org_id: Uuid,
         app_id: Uuid,
-    ) -> RepositoryResult<Vec<SelectedRoleByIdModel>>;
+    ) -> RepositoryResult<Vec<SelectedRoleByAppModel>>;
     async fn get_roles_by_user(
         &self,
         org_id: Uuid,
@@ -139,14 +138,14 @@ impl RoleDatabaseRepository for RoleDatabaseRepositoryImpl {
         &self,
         org_id: Uuid,
         app_id: Uuid,
-    ) -> RepositoryResult<Vec<SelectedRoleByIdModel>> {
+    ) -> RepositoryResult<Vec<SelectedRoleByAppModel>> {
         let res = self
             .database
             .execute_unpaged(&self.get_roles_stmt, (org_id, app_id))
             .await?;
         Ok(res
             .into_rows_result()?
-            .rows::<SelectedRoleByIdModel>()?
+            .rows::<SelectedRoleByAppModel>()?
             .collect::<Result<_, _>>()?)
     }
     async fn get_roles_by_user(

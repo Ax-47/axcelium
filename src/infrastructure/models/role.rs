@@ -83,3 +83,23 @@ pub struct SelectedRoleByIdModel {
     )]
     pub updated_at: CqlTimestamp,
 }
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct SelectedRoleByAppModel {
+    pub role_id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub permissions: HashSet<String>,
+
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub created_at: CqlTimestamp,
+
+    #[serde(
+        serialize_with = "serialize_cql_timestamp",
+        deserialize_with = "deserialize_cql_timestamp"
+    )]
+    pub updated_at: CqlTimestamp,
+}

@@ -29,7 +29,7 @@ WHERE organization_id = ? AND application_id = ? AND role_id = ?;
 
 pub const SELECT_ROLES_BY_ID: &str = r#"
 SELECT
-    name, description, permissions,
+    role_id, name, description, permissions,
     created_at, updated_at
 FROM axcelium.roles_by_app
 WHERE organization_id = ? AND application_id = ? ;
