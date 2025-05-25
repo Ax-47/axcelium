@@ -4,12 +4,12 @@ use crate::{
             payload::role::{CreateRolePayload, GetRoleIdQuery, GetRolesByUserPayload},
             response::{
                 refresh_token::SimpleResponse,
-                role::{GetRoleResponse, GetRolesByAppResponse, GetRolesByUserResponse},
+                role::{GetRoleResponse, GetRolesByAppResponse, GetRolesByUserResponse, GetUsersByRoleResponse},
             },
         },
         services::roles::{
             create_roles::CreateRoleService, get_role_by_app::GetRoleByAppService,
-            get_roles_by_app::GetRolesByAppService, get_roles_by_user::GetRolesByUserService,
+            get_roles_by_app::GetRolesByAppService, get_roles_by_user::GetRolesByUserService, get_users_by_role::GetUsersByRoleService,
         },
     },
     domain::{
@@ -75,13 +75,13 @@ pub async fn get_roles_by_user_handler(
 pub async fn get_users_by_role_handler(
     req: actix_web::HttpRequest,
     path: web::Path<GetRoleIdQuery>,
-    role_service: web::Data<dyn GetRolesByAppService>,
-) -> Result<web::Json<GetRolesByAppResponse>> {
+    role_service: web::Data<dyn GetUsersByRoleService>,
+) -> Result<web::Json<GetUsersByRoleResponse>> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
         .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
         .cloned()?;
-    let res = role_service.execute(apporg).await?;
+    let res = role_service.execute(apporg,path.role_id).await?;
     Ok(web::Json(res))
 }
