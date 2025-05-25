@@ -11,6 +11,13 @@ pub struct CreateRolePayload {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct UpdateRolePayload {
+    pub name: String,
+    pub description: Option<String>,
+    pub permissions: HashSet<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct GetRoleIdQuery{
     pub role_id: Uuid,
 }

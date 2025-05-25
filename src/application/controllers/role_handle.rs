@@ -1,7 +1,7 @@
 use crate::{
     application::{
         dto::{
-            payload::role::{CreateRolePayload, GetRoleIdQuery, GetRolesByUserPayload},
+            payload::role::{CreateRolePayload, GetRoleIdQuery, GetRolesByUserPayload, UpdateRolePayload},
             response::{
                 refresh_token::SimpleResponse,
                 role::{GetRoleResponse, GetRolesByAppResponse, GetRolesByUserResponse, GetUsersByRoleResponse},
@@ -46,6 +46,20 @@ pub async fn get_role_by_app_handler(
     Ok(web::Json(res))
 }
 
+pub async fn update_role_handler(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetRoleIdQuery>,
+    post_data: web::Json<UpdateRolePayload>,
+    role_service: web::Data<dyn GetRoleByAppService>,
+) -> Result<web::Json<GetRoleResponse>> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let res = role_service.execute(apporg, path.role_id).await?;
+    Ok(web::Json(res))
+}
 pub async fn get_roles_by_app_handler(
     req: actix_web::HttpRequest,
     role_service: web::Data<dyn GetRolesByAppService>,
