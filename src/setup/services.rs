@@ -10,7 +10,7 @@ use crate::application::services::{
     },
     roles::{
         create_roles::{CreateRoleService, CreateRoleServiceImpl},
-        get_roles_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl},
+        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl},
     },
     users::{
         ban_user::{BanUserService, BanUserServiceImpl},

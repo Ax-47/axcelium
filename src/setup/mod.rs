@@ -7,7 +7,7 @@ use crate::{
                 create::CreateRefreshTokenService, get::GetRefreshTokenService,
                 revoke::RevokeRefreshTokenService, rotate::RotateRefreshTokenService,
             },
-            roles::{create_roles::CreateRoleService, get_roles_by_app::GetRoleByAppService},
+            roles::{create_roles::CreateRoleService, get_role_by_app::GetRoleByAppService},
             users::{
                 ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
                 disable_mfa_user::DisableMFAUserService, get_user::GetUserService,

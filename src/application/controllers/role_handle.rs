@@ -8,7 +8,7 @@ use crate::{
             },
         },
         services::roles::{
-            create_roles::CreateRoleService, get_roles_by_app::GetRoleByAppService,
+            create_roles::CreateRoleService, get_role_by_app::GetRoleByAppService,
             get_roles_by_user::GetRolesByUserService,
         },
     },
