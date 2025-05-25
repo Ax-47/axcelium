@@ -56,9 +56,6 @@ pub struct UpdateRoleModel {
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct UserRoleModel {
     pub role_id: Uuid,
-    pub role_name: String,
-    pub role_description: String,
-    pub role_permissions: HashSet<String>,
     #[serde(
         serialize_with = "serialize_cql_timestamp",
         deserialize_with = "deserialize_cql_timestamp"
@@ -69,8 +66,6 @@ pub struct UserRoleModel {
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct RoleUserModel {
     pub user_id: Uuid,
-    pub user_name: String,
-    pub user_email: String,
     #[serde(
         serialize_with = "serialize_cql_timestamp",
         deserialize_with = "deserialize_cql_timestamp"
