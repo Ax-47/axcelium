@@ -14,7 +14,7 @@ UPDATE axcelium.roles_by_app SET
     name = :name,
     description = :description,
     permissions = :permissions,
-    updated_at = :updated_at
+    updated_at = toTimestamp(now())
 WHERE organization_id = :organization_id
   AND application_id = :application_id
   AND role_id = :role_id;"#;

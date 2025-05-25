@@ -43,6 +43,16 @@ pub struct RoleAssignmentModel {
     pub assigned_at: CqlTimestamp,
 }
 
+
+#[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
+pub struct UpdateRoleModel {
+    pub organization_id: Uuid,
+    pub application_id: Uuid,
+    pub role_id: Uuid,
+    pub name: String,
+    pub description: String,
+    pub permissions: HashSet<String>,
+}
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct UserRoleModel {
     pub role_id: Uuid,

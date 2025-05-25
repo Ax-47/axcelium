@@ -9,13 +9,14 @@ use uuid::Uuid;
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::models::role::{
-        RoleAssignmentModel, RoleModel, RoleUserModel, SelectedRoleByIdModel, UserRoleModel,
+        RoleAssignmentModel, RoleModel, RoleUserModel, SelectedRoleByIdModel, UpdateRoleModel,
+        UserRoleModel,
     },
 };
 
 use super::query::{
     role_users_by_role::{ASSIGN_USER_TO_ROLE, LIST_USERS_IN_ROLE},
-    roles_by_app::{INSERT_ROLE_BY_APP, SELECT_ROLES_BY_ID, SELECT_ROLE_BY_ID},
+    roles_by_app::{INSERT_ROLE_BY_APP, SELECT_ROLE_BY_ID, SELECT_ROLES_BY_ID, UPDATE_ROLE_BY_APP},
     user_roles_by_user::{ASSIGN_ROLE_TO_USER, LIST_ROLES_OF_USER},
 };
 
@@ -27,6 +28,7 @@ pub struct RoleDatabaseRepositoryImpl {
     get_users_by_role_stmt: PreparedStatement,
     get_role_stmt: PreparedStatement,
     get_roles_stmt: PreparedStatement,
+    update_role_stmt: PreparedStatement,
 }
 
 impl RoleDatabaseRepositoryImpl {
@@ -36,10 +38,12 @@ impl RoleDatabaseRepositoryImpl {
         let get_roles_stmt = database.prepare(SELECT_ROLES_BY_ID).await.unwrap();
         let get_roles_by_user_stmt = database.prepare(LIST_ROLES_OF_USER).await.unwrap();
         let get_users_by_role_stmt = database.prepare(LIST_USERS_IN_ROLE).await.unwrap();
-        let mut batch: Batch = Default::default();
-        batch.append_statement(ASSIGN_ROLE_TO_USER);
-        batch.append_statement(ASSIGN_USER_TO_ROLE);
-        let assign_user_to_role_stmt: Batch = database.prepare_batch(&batch).await.unwrap();
+        let mut assign_batch: Batch = Default::default();
+        assign_batch.append_statement(ASSIGN_ROLE_TO_USER);
+        assign_batch.append_statement(ASSIGN_USER_TO_ROLE);
+        let assign_user_to_role_stmt: Batch = database.prepare_batch(&assign_batch).await.unwrap();
+
+        let update_role_stmt=database.prepare(UPDATE_ROLE_BY_APP).await.unwrap();
 
         Self {
             database,
@@ -49,12 +53,14 @@ impl RoleDatabaseRepositoryImpl {
             get_roles_by_user_stmt,
             get_users_by_role_stmt,
             get_role_stmt,
+            update_role_stmt,
         }
     }
 }
 #[async_trait]
 pub trait RoleDatabaseRepository: Send + Sync {
     async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()>;
+    async fn upate_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>;
     async fn assign_user_to_role(&self, assignment: &RoleAssignmentModel) -> RepositoryResult<()>;
     async fn get_role(
         &self,
@@ -90,6 +96,13 @@ impl RoleDatabaseRepository for RoleDatabaseRepositoryImpl {
         Ok(())
     }
 
+    async fn upate_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>{
+
+        self.database
+            .execute_unpaged(&self.update_role_stmt, update)
+            .await?;
+        Ok(())
+    }
     async fn assign_user_to_role(&self, assignment: &RoleAssignmentModel) -> RepositoryResult<()> {
         let user_tuple = (
             assignment.organization_id,
