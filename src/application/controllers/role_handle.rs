@@ -38,6 +38,20 @@ pub async fn create_role_handler(
     Ok(web::Json(res))
 }
 
+pub async fn delete_role_handler(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetRoleIdQuery>,
+    role_service: web::Data<dyn GetRoleByAppService>,
+) -> Result<web::Json<GetRoleResponse>> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let res = role_service.execute(apporg, path.role_id).await?;
+    Ok(web::Json(res))
+}
+
 pub async fn get_role_by_app_handler(
     req: actix_web::HttpRequest,
     path: web::Path<GetRoleIdQuery>,
@@ -51,6 +65,7 @@ pub async fn get_role_by_app_handler(
     let res = role_service.execute(apporg, path.role_id).await?;
     Ok(web::Json(res))
 }
+
 
 pub async fn update_role_handler(
     req: actix_web::HttpRequest,
