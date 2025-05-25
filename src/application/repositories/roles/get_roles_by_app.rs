@@ -1,7 +1,7 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::{
-        models::role::UserRoleModel, repositories::database::roles::RoleDatabaseRepository,
+        models::role::SelectedRoleByIdModel, repositories::database::roles::RoleDatabaseRepository,
     },
 };
 use async_trait::async_trait;
@@ -23,8 +23,7 @@ pub trait GetRolesByAppRepository: Send + Sync {
         &self,
         org_id: Uuid,
         app_id: Uuid,
-        user_id: Uuid,
-    ) -> RepositoryResult<Vec<UserRoleModel>>;
+    ) -> RepositoryResult<Vec<SelectedRoleByIdModel>>;
 }
 
 #[async_trait]
@@ -33,10 +32,7 @@ impl GetRolesByAppRepository for GetRolesByAppRepositoryImpl {
         &self,
         org_id: Uuid,
         app_id: Uuid,
-        user_id: Uuid,
-    ) -> RepositoryResult<Vec<UserRoleModel>> {
-        self.database_repo
-            .get_roles_by_user(org_id, app_id, user_id)
-            .await
+    ) -> RepositoryResult<Vec<SelectedRoleByIdModel>> {
+        self.database_repo.get_roles(org_id, app_id).await
     }
 }
