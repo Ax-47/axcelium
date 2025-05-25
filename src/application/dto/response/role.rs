@@ -1,4 +1,4 @@
-use crate::infrastructure::{models::role::UserRoleModel, repositories::database::scylla_serialize::serialize_cql_timestamp};
+use crate::infrastructure::{models::role::{SelectedRoleByIdModel, UserRoleModel}, repositories::database::scylla_serialize::serialize_cql_timestamp};
 use scylla::value::CqlTimestamp;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -16,4 +16,9 @@ pub struct GetRoleResponse {
 #[derive(Debug, Clone, Serialize)]
 pub struct GetRolesByUserResponse {
     pub roles: Vec<UserRoleModel>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GetRolesByAppResponse {
+    pub roles: Vec<SelectedRoleByIdModel>,
 }
