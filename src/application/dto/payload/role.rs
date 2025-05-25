@@ -25,9 +25,3 @@ pub struct GetRoleIdQuery {
 pub struct GetRolesByUserPayload {
     pub user_id: Uuid,
 }
-
-
-#[derive(Debug, Deserialize)]
-pub struct AssignPayload {
-    pub name: Uuid,
-}
