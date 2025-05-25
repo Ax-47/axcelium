@@ -20,6 +20,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .wrap(middleware)
             .route("/", web::post().to(create_role_handler))
             .route("/", web::get().to(get_roles_by_app_handler))
+            .route("/user", web::get().to(get_roles_by_app_handler))
             .route("/{role_id}", web::get().to(get_role_by_app_handler)),
     );
 }

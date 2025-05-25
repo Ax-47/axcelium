@@ -71,3 +71,17 @@ pub async fn get_roles_by_user_handler(
     let res = role_service.execute(apporg, post_data.user_id).await?;
     Ok(web::Json(res))
 }
+
+pub async fn get_users_by_role_handler(
+    req: actix_web::HttpRequest,
+    path: web::Path<GetRoleIdQuery>,
+    role_service: web::Data<dyn GetRolesByAppService>,
+) -> Result<web::Json<GetRolesByAppResponse>> {
+    let apporg = req
+        .extensions()
+        .get::<CleanAppOrgByClientId>()
+        .ok_or_else(|| ApiError::new("Missing AppOrg data".to_string(), 500))
+        .cloned()?;
+    let res = role_service.execute(apporg).await?;
+    Ok(web::Json(res))
+}
