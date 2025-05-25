@@ -9,7 +9,7 @@ use crate::{
             },
             roles::{
                 create_roles::CreateRoleService, get_role_by_app::GetRoleByAppService,
-                get_roles_by_app::GetRolesByAppService, get_users_by_role::GetUsersByRoleService,
+                get_roles_by_app::GetRolesByAppService, get_users_by_role::GetUsersByRoleService, update_role::UpdateRoleService,
             },
             users::{
                 ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
@@ -47,6 +47,7 @@ pub struct Container {
     pub get_role_by_app_service: Arc<dyn GetRoleByAppService>,
     pub get_roles_by_app_service: Arc<dyn GetRolesByAppService>,
     pub get_users_by_role_service: Arc<dyn GetUsersByRoleService>,
+    pub update_role_service: Arc<dyn UpdateRoleService>,
 }
 
 impl Container {
@@ -77,6 +78,7 @@ impl Container {
         let get_role_by_app_service = services::create_get_role_by_app_service(&repos);
         let get_roles_by_app_service = services::create_get_roles_by_app_service(&repos);
         let get_users_by_role_service = services::create_get_users_by_role_service(&repos);
+        let update_role_service = services::create_update_role_service(&repos);
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
@@ -101,6 +103,7 @@ impl Container {
             get_role_by_app_service,
             get_roles_by_app_service,
             get_users_by_role_service,
+            update_role_service,
         }
     }
 }
