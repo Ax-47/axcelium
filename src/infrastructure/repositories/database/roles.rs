@@ -16,7 +16,10 @@ use crate::{
 
 use super::query::{
     role_users_by_role::{ASSIGN_USER_TO_ROLE, LIST_USERS_IN_ROLE},
-    roles_by_app::{INSERT_ROLE_BY_APP, SELECT_ROLE_BY_ID, SELECT_ROLES_BY_ID, UPDATE_ROLE_BY_APP},
+    roles_by_app::{
+        DELETE_ROLE_BY_ID, INSERT_ROLE_BY_APP, SELECT_ROLE_BY_ID, SELECT_ROLES_BY_ID,
+        UPDATE_ROLE_BY_APP,
+    },
     user_roles_by_user::{ASSIGN_ROLE_TO_USER, LIST_ROLES_OF_USER},
 };
 
@@ -28,6 +31,7 @@ pub struct RoleDatabaseRepositoryImpl {
     get_users_by_role_stmt: PreparedStatement,
     get_role_stmt: PreparedStatement,
     get_roles_stmt: PreparedStatement,
+    delete_role_stmt: PreparedStatement,
     update_role_stmt: PreparedStatement,
 }
 
@@ -42,8 +46,8 @@ impl RoleDatabaseRepositoryImpl {
         assign_batch.append_statement(ASSIGN_ROLE_TO_USER);
         assign_batch.append_statement(ASSIGN_USER_TO_ROLE);
         let assign_user_to_role_stmt: Batch = database.prepare_batch(&assign_batch).await.unwrap();
-
-        let update_role_stmt=database.prepare(UPDATE_ROLE_BY_APP).await.unwrap();
+        let update_role_stmt = database.prepare(UPDATE_ROLE_BY_APP).await.unwrap();
+        let delete_role_stmt = database.prepare(DELETE_ROLE_BY_ID).await.unwrap();
 
         Self {
             database,
@@ -54,6 +58,7 @@ impl RoleDatabaseRepositoryImpl {
             get_users_by_role_stmt,
             get_role_stmt,
             update_role_stmt,
+            delete_role_stmt,
         }
     }
 }
@@ -61,6 +66,7 @@ impl RoleDatabaseRepositoryImpl {
 pub trait RoleDatabaseRepository: Send + Sync {
     async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()>;
     async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>;
+    async fn delete_role(&self, org_id: Uuid, app_id: Uuid, role: Uuid) -> RepositoryResult<()>;
     async fn assign_user_to_role(&self, assignment: &RoleAssignmentModel) -> RepositoryResult<()>;
     async fn get_role(
         &self,
@@ -96,10 +102,16 @@ impl RoleDatabaseRepository for RoleDatabaseRepositoryImpl {
         Ok(())
     }
 
-    async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>{
-
+    async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()> {
         self.database
             .execute_unpaged(&self.update_role_stmt, update)
+            .await?;
+        Ok(())
+    }
+
+    async fn delete_role(&self, org_id: Uuid, app_id: Uuid, role: Uuid) -> RepositoryResult<()> {
+        self.database
+            .execute_unpaged(&self.delete_role_stmt, (org_id,app_id,role))
             .await?;
         Ok(())
     }
