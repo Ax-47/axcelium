@@ -11,6 +11,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .app_data(web::Data::from(container.get_role_by_role_id_service.clone()))
             .wrap(middleware)
             .route("/", web::post().to(create_role_handler))
+            .route("/", web::get().to(get_role_handler))
             .route("/{role_id}", web::get().to(get_role_handler)),
     );
 }

@@ -118,35 +118,47 @@ FROM axcelium.refresh_tokens
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
   AND user_id IS NOT NULL
-  AND token_id IS NOT NULL
-PRIMARY KEY (
-  (organization_id, application_id, user_id),
-  token_id
-);
+  AND token_id IS NOT NULL PRIMARY KEY (
+    (organization_id, application_id, user_id),
+    token_id
+  );
 CREATE TABLE axcelium.roles_by_app (
   organization_id UUID,
   application_id UUID,
   role_id UUID,
   name TEXT,
   description TEXT,
-  permissions SET<TEXT>,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP,
-  PRIMARY KEY ((organization_id, application_id), role_id)
+  permissions
+  SET < TEXT >,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    PRIMARY KEY ((organization_id, application_id), role_id)
 );
 CREATE TABLE axcelium.user_roles_by_user (
   organization_id UUID,
   application_id UUID,
   user_id UUID,
   role_id UUID,
-  assigned_at TIMESTAMP,
-  PRIMARY KEY ((organization_id, application_id, user_id), role_id)
+  role_name TEXT,
+  role_description TEXT,
+  role_permissions
+  SET < TEXT >,
+    assigned_at TIMESTAMP,
+    PRIMARY KEY (
+      (organization_id, application_id, user_id),
+      role_id
+    )
 );
 CREATE TABLE axcelium.role_users_by_role (
   organization_id UUID,
   application_id UUID,
   role_id UUID,
   user_id UUID,
+  user_name TEXT,
+  user_email TEXT,
   assigned_at TIMESTAMP,
-  PRIMARY KEY ((organization_id, application_id, role_id), user_id)
+  PRIMARY KEY (
+    (organization_id, application_id, role_id),
+    user_id
+  )
 );

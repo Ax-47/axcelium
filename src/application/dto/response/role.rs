@@ -1,4 +1,4 @@
-use crate::infrastructure::repositories::database::scylla_serialize::serialize_cql_timestamp;
+use crate::infrastructure::{models::role::UserRoleModel, repositories::database::scylla_serialize::serialize_cql_timestamp};
 use scylla::value::CqlTimestamp;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -11,4 +11,9 @@ pub struct GetRoleResponse {
     pub created_at: CqlTimestamp,
     #[serde(serialize_with = "serialize_cql_timestamp")]
     pub updated_at: CqlTimestamp,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GetRolesByUserResponse {
+    pub roles: Vec<UserRoleModel>,
 }

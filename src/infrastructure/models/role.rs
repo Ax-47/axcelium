@@ -46,7 +46,9 @@ pub struct RoleAssignmentModel {
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct UserRoleModel {
     pub role_id: Uuid,
-
+    pub role_name: String,
+    pub role_description: String,
+    pub role_permissions: HashSet<String>,
     #[serde(
         serialize_with = "serialize_cql_timestamp",
         deserialize_with = "deserialize_cql_timestamp"

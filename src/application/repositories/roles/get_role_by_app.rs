@@ -7,18 +7,18 @@ use crate::{
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-pub struct GetRoleRepositoryImpl {
+pub struct GetRoleByAppRepositoryImpl {
     database_repo: Arc<dyn RoleDatabaseRepository>,
 }
 
-impl GetRoleRepositoryImpl {
+impl GetRoleByAppRepositoryImpl {
     pub fn new(database_repo: Arc<dyn RoleDatabaseRepository>) -> Self {
         Self { database_repo }
     }
 }
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait GetRoleRepository: Send + Sync {
+pub trait GetRoleByAppRepository: Send + Sync {
     async fn get_role(
         &self,
         org_id: Uuid,
@@ -28,9 +28,8 @@ pub trait GetRoleRepository: Send + Sync {
 }
 
 #[async_trait]
-impl GetRoleRepository for GetRoleRepositoryImpl {
-    async fn get_role(
-        &self,
+impl GetRoleByAppRepository for GetRoleByAppRepositoryImpl {
+    async fn get_role( &self,
         org_id: Uuid,
         app_id: Uuid,
         role_id: Uuid,

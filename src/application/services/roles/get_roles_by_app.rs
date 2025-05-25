@@ -1,6 +1,7 @@
 use crate::{
     application::{
-        dto::response::role::GetRoleResponse, repositories::roles::get::GetRoleRepository,
+        dto::response::role::GetRoleResponse,
+        repositories::roles::get_role_by_app::GetRoleByAppRepository,
     },
     domain::{
         entities::apporg_client_id::CleanAppOrgByClientId,
@@ -11,16 +12,16 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
 #[derive(Clone)]
-pub struct GetRoleServiceImpl {
-    pub repository: Arc<dyn GetRoleRepository>,
+pub struct GetRoleByAppServiceImpl {
+    pub repository: Arc<dyn GetRoleByAppRepository>,
 }
-impl GetRoleServiceImpl {
-    pub fn new(repository: Arc<dyn GetRoleRepository>) -> Self {
+impl GetRoleByAppServiceImpl {
+    pub fn new(repository: Arc<dyn GetRoleByAppRepository>) -> Self {
         Self { repository }
     }
 }
 #[async_trait]
-pub trait GetRoleService: 'static + Sync + Send {
+pub trait GetRoleByAppService: 'static + Sync + Send {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
@@ -28,7 +29,7 @@ pub trait GetRoleService: 'static + Sync + Send {
     ) -> RepositoryResult<GetRoleResponse>;
 }
 #[async_trait]
-impl GetRoleService for GetRoleServiceImpl {
+impl GetRoleByAppService for GetRoleByAppServiceImpl {
     async fn execute(
         &self,
         c_apporg: CleanAppOrgByClientId,
