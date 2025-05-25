@@ -13,9 +13,7 @@ use crate::{
             },
         },
         services::roles::{
-            create_roles::CreateRoleService, get_role_by_app::GetRoleByAppService,
-            get_roles_by_app::GetRolesByAppService, get_roles_by_user::GetRolesByUserService,
-            get_users_by_role::GetUsersByRoleService, update_role::UpdateRoleService,
+            create_roles::CreateRoleService, delete_role::DeleteRoleService, get_role_by_app::GetRoleByAppService, get_roles_by_app::GetRolesByAppService, get_roles_by_user::GetRolesByUserService, get_users_by_role::GetUsersByRoleService, update_role::UpdateRoleService
         },
     },
     domain::{
@@ -41,8 +39,8 @@ pub async fn create_role_handler(
 pub async fn delete_role_handler(
     req: actix_web::HttpRequest,
     path: web::Path<GetRoleIdQuery>,
-    role_service: web::Data<dyn GetRoleByAppService>,
-) -> Result<web::Json<GetRoleResponse>> {
+    role_service: web::Data<dyn DeleteRoleService>,
+) -> Result<web::Json<SimpleResponse>> {
     let apporg = req
         .extensions()
         .get::<CleanAppOrgByClientId>()
