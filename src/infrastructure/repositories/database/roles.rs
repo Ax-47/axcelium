@@ -116,22 +116,8 @@ impl RoleDatabaseRepository for RoleDatabaseRepositoryImpl {
         Ok(())
     }
     async fn assign_user_to_role(&self, assignment: &RoleAssignmentModel) -> RepositoryResult<()> {
-        let user_tuple = (
-            assignment.organization_id,
-            assignment.application_id,
-            assignment.user_id,
-            assignment.role_id,
-            assignment.assigned_at,
-        );
-        let role_tuple = (
-            assignment.organization_id,
-            assignment.application_id,
-            assignment.role_id,
-            assignment.user_id,
-            assignment.assigned_at,
-        );
         self.database
-            .batch(&self.assign_user_to_role_stmt, (user_tuple, role_tuple))
+            .batch(&self.assign_user_to_role_stmt, (assignment, assignment))
             .await?;
         Ok(())
     }

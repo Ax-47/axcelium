@@ -4,7 +4,7 @@ INSERT INTO axcelium.role_users_by_role (
     user_id, assigned_at
 ) VALUES (
     :organization_id, :application_id, :role_id,
-    :user_id, :assigned_at
+    :user_id, toTimestamp(now())
 );"#;
 
 

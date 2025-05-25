@@ -35,14 +35,7 @@ pub struct RoleAssignmentModel {
     pub application_id: Uuid,
     pub role_id: Uuid,
     pub user_id: Uuid,
-
-    #[serde(
-        serialize_with = "serialize_cql_timestamp",
-        deserialize_with = "deserialize_cql_timestamp"
-    )]
-    pub assigned_at: CqlTimestamp,
 }
-
 
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct UpdateRoleModel {
