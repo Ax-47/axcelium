@@ -8,9 +8,10 @@ use crate::{
                 revoke::RevokeRefreshTokenService, rotate::RotateRefreshTokenService,
             },
             roles::{
-                create_roles::CreateRoleService, delete_role::DeleteRoleService,
-                get_role_by_app::GetRoleByAppService, get_roles_by_app::GetRolesByAppService,
-                get_users_by_role::GetUsersByRoleService, update_role::UpdateRoleService,
+                assign::AssignService, create_roles::CreateRoleService,
+                delete_role::DeleteRoleService, get_role_by_app::GetRoleByAppService,
+                get_roles_by_app::GetRolesByAppService, get_users_by_role::GetUsersByRoleService,
+                update_role::UpdateRoleService,
             },
             users::{
                 ban_user::BanUserService, create::CreateUserService, delete::DeleteUserService,
@@ -50,6 +51,7 @@ pub struct Container {
     pub get_users_by_role_service: Arc<dyn GetUsersByRoleService>,
     pub update_role_service: Arc<dyn UpdateRoleService>,
     pub delete_role_service: Arc<dyn DeleteRoleService>,
+    pub assign_service: Arc<dyn AssignService>,
 }
 
 impl Container {
@@ -82,6 +84,7 @@ impl Container {
         let get_users_by_role_service = services::create_get_users_by_role_service(&repos);
         let update_role_service = services::create_update_role_service(&repos);
         let delete_role_service = services::create_delete_role_service(&repos);
+        let assign_service = services::create_assign_service(&repos);
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
@@ -108,6 +111,7 @@ impl Container {
             get_users_by_role_service,
             update_role_service,
             delete_role_service,
+            assign_service,
         }
     }
 }

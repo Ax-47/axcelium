@@ -11,7 +11,7 @@ use crate::{
             rotate::{RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl},
         },
         roles::{
-            create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl}, delete_role::{DeleteRoleRepository, DeleteRoleRepositoryImpl}, get_role_by_app::{GetRoleByAppRepository, GetRoleByAppRepositoryImpl}, get_roles_by_app::{GetRolesByAppRepository, GetRolesByAppRepositoryImpl}, get_users_by_role::{GetUsersByRoleRepository, GetUsersByRoleRepositoryImpl}, update_role::{UpdateRoleRepository, UpdateRoleRepositoryImpl}
+            assign::{AssignRepository, AssignRepositoryImpl}, create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl}, delete_role::{DeleteRoleRepository, DeleteRoleRepositoryImpl}, get_role_by_app::{GetRoleByAppRepository, GetRoleByAppRepositoryImpl}, get_roles_by_app::{GetRolesByAppRepository, GetRolesByAppRepositoryImpl}, get_users_by_role::{GetUsersByRoleRepository, GetUsersByRoleRepositoryImpl}, update_role::{UpdateRoleRepository, UpdateRoleRepositoryImpl}
         },
     },
     infrastructure::repositories::{
@@ -76,6 +76,7 @@ pub struct Repositories {
     pub get_users_by_role_repo: Arc<dyn GetUsersByRoleRepository>,
     pub update_role_repo: Arc<dyn UpdateRoleRepository>,
     pub delete_role_repo: Arc<dyn DeleteRoleRepository>,
+    pub assign_repo: Arc<dyn AssignRepository>
 }
 
 pub async fn create_all(
@@ -131,6 +132,7 @@ pub async fn create_all(
         Arc::new(GetUsersByRoleRepositoryImpl::new(role_date_repo.clone()));
     let update_role_repo = Arc::new(UpdateRoleRepositoryImpl::new(role_date_repo.clone()));
     let delete_role_repo = Arc::new(DeleteRoleRepositoryImpl::new(role_date_repo.clone()));
+    let assign_repo = Arc::new(AssignRepositoryImpl::new(role_date_repo.clone()));
     // let refresh_token_cache_repo = Arc::new(RefreshTokenCacheImpl::new(cache.clone(), 3600));
     let refresh_token_paseto_repo = Arc::new(PasetoRepositoryImpl::new());
     let create_refresh_token_repo = Arc::new(CreateRefreshTokenRepositoryImpl::new(
@@ -190,6 +192,7 @@ pub async fn create_all(
             get_users_by_role_repo,
             update_role_repo,
             delete_role_repo,
+assign_repo,
         },
         core_service,
     )
