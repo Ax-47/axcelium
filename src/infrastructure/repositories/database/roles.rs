@@ -60,7 +60,7 @@ impl RoleDatabaseRepositoryImpl {
 #[async_trait]
 pub trait RoleDatabaseRepository: Send + Sync {
     async fn create_role(&self, role: &RoleModel) -> RepositoryResult<()>;
-    async fn upate_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>;
+    async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>;
     async fn assign_user_to_role(&self, assignment: &RoleAssignmentModel) -> RepositoryResult<()>;
     async fn get_role(
         &self,
@@ -96,7 +96,7 @@ impl RoleDatabaseRepository for RoleDatabaseRepositoryImpl {
         Ok(())
     }
 
-    async fn upate_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>{
+    async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>{
 
         self.database
             .execute_unpaged(&self.update_role_stmt, update)
