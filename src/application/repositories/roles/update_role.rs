@@ -1,24 +1,25 @@
 use crate::{
     domain::errors::repositories_errors::RepositoryResult,
     infrastructure::{
-        models::role::{SelectedRoleByIdModel, UpdateRoleModel}, repositories::database::roles::RoleDatabaseRepository,
+        models::role::{SelectedRoleByIdModel, UpdateRoleModel},
+        repositories::database::roles::RoleDatabaseRepository,
     },
 };
 use async_trait::async_trait;
 use std::{collections::HashSet, sync::Arc};
 use uuid::Uuid;
-pub struct UpdateUsersByRoleRepositoryImpl {
+pub struct UpdateRoleRepositoryImpl {
     database_repo: Arc<dyn RoleDatabaseRepository>,
 }
 
-impl UpdateUsersByRoleRepositoryImpl {
+impl UpdateRoleRepositoryImpl {
     pub fn new(database_repo: Arc<dyn RoleDatabaseRepository>) -> Self {
         Self { database_repo }
     }
 }
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait UpdateUsersByRoleRepository: Send + Sync {
+pub trait UpdateRoleRepository: Send + Sync {
     async fn get_role(
         &self,
         org_id: Uuid,
@@ -26,24 +27,26 @@ pub trait UpdateUsersByRoleRepository: Send + Sync {
         role_id: Uuid,
     ) -> RepositoryResult<Option<SelectedRoleByIdModel>>;
     fn new_model(
+        &self,
         organization_id: Uuid,
         application_id: Uuid,
         role_id: Uuid,
         name: String,
-        description: String,
+        description: Option<String>,
         permissions: HashSet<String>,
     ) -> UpdateRoleModel;
     async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()>;
 }
 
 #[async_trait]
-impl UpdateUsersByRoleRepository for UpdateUsersByRoleRepositoryImpl {
+impl UpdateRoleRepository for UpdateRoleRepositoryImpl {
     fn new_model(
+        &self,
         organization_id: Uuid,
         application_id: Uuid,
         role_id: Uuid,
         name: String,
-        description: String,
+        description: Option<String>,
         permissions: HashSet<String>,
     ) -> UpdateRoleModel {
         UpdateRoleModel {
@@ -63,7 +66,8 @@ impl UpdateUsersByRoleRepository for UpdateUsersByRoleRepositoryImpl {
         role_id: Uuid,
     ) -> RepositoryResult<Option<SelectedRoleByIdModel>> {
         self.database_repo
-            .get_role(organization_id, application_id, role_id).await
+            .get_role(organization_id, application_id, role_id)
+            .await
     }
     async fn update_role(&self, update: &UpdateRoleModel) -> RepositoryResult<()> {
         self.database_repo.update_role(update).await

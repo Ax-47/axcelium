@@ -50,7 +50,7 @@ pub struct UpdateRoleModel {
     pub application_id: Uuid,
     pub role_id: Uuid,
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub permissions: HashSet<String>,
 }
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
@@ -80,7 +80,7 @@ pub struct RoleUserModel {
 #[derive(Debug, Clone, SerializeRow, DeserializeRow, Serialize, Deserialize)]
 pub struct SelectedRoleByIdModel {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub permissions: HashSet<String>,
 
     #[serde(

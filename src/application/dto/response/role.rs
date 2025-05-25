@@ -5,7 +5,7 @@ use std::collections::HashSet;
 #[derive(Debug, Clone, Serialize)]
 pub struct GetRoleResponse {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub permissions: HashSet<String>,
     #[serde(serialize_with = "serialize_cql_timestamp")]
     pub created_at: CqlTimestamp,
