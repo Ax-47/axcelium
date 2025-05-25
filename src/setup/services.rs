@@ -9,8 +9,7 @@ use crate::application::services::{
         rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
     },
     roles::{
-        create_roles::{CreateRoleService, CreateRoleServiceImpl},
-        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl}, get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl}, get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl}, update_role::{UpdateRoleService, UpdateRoleServiceImpl},
+        create_roles::{CreateRoleService, CreateRoleServiceImpl}, delete_role::{DeleteRoleService, DeleteRoleServiceImpl}, get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl}, get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl}, get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl}, update_role::{UpdateRoleService, UpdateRoleServiceImpl}
     },
     users::{
         ban_user::{BanUserService, BanUserServiceImpl},
@@ -142,5 +141,11 @@ pub fn create_get_users_by_role_service(repos: &Repositories) -> Arc<dyn GetUser
 pub fn create_update_role_service(repos: &Repositories) -> Arc<dyn UpdateRoleService> {
     Arc::new(UpdateRoleServiceImpl {
         repository: repos.update_role_repo.clone(),
+    })
+}
+
+pub fn create_delete_role_service(repos: &Repositories) -> Arc<dyn DeleteRoleService> {
+    Arc::new(DeleteRoleServiceImpl {
+        repository: repos.delete_role_repo.clone(),
     })
 }

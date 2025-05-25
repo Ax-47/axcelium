@@ -17,6 +17,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .app_data(web::Data::from(container.get_roles_by_app_service.clone()))
             .app_data(web::Data::from(container.get_users_by_role_service.clone()))
             .app_data(web::Data::from(container.update_role_service.clone()))
+            .app_data(web::Data::from(container.delete_role_service.clone()))
             .wrap(middleware)
             .route("/", web::post().to(create_role_handler))
             .route("/", web::get().to(get_roles_by_app_handler))
