@@ -26,7 +26,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .route("", web::get().to(get_users_handle))
             .route("/count", web::get().to(get_user_count_handle))
             .route("/{user_id}", web::get().to(get_user_handle))
-            .route("/{user_id}", web::put().to(update_user_handle))
+            .route("/{user_id}", web::patch().to(update_user_handle))
             .route("/{user_id}", web::delete().to(delate_user_handle))
             .route("/{user_id}/ban", web::post().to(ban_user_handle))
             .route("/{user_id}/unban", web::post().to(unban_user_handle))
