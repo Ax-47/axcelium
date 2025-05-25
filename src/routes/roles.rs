@@ -24,6 +24,7 @@ pub fn configure(cfg: &mut ServiceConfig, container: Arc<Container>) {
             .route("/{role_id}", web::get().to(get_role_by_app_handler))
             .route("/{role_id}", web::patch().to(update_role_handler))
             .route("/{role_id}", web::delete().to(delete_role_handler))
+            .route("/{role_id}", web::post().to(delete_role_handler))
             .route("/{role_id}/users", web::get().to(get_users_by_role_handler)),
     );
 }
