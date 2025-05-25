@@ -27,6 +27,13 @@ FROM axcelium.roles_by_app
 WHERE organization_id = ? AND application_id = ? AND role_id = ?;
 "#;
 
+pub const SELECT_ROLES_BY_ID: &str = r#"
+SELECT
+    name, description, permissions,
+    created_at, updated_at
+FROM axcelium.roles_by_app
+WHERE organization_id = ? AND application_id = ? ;
+"#;
 pub const DELETE_ROLE_BY_ID: &str = r#"
 DELETE FROM axcelium.roles_by_app
 WHERE organization_id = ? AND application_id = ? AND role_id = ?;
