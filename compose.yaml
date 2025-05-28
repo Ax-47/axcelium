@@ -27,7 +27,7 @@ services:
     container_name: dragonfly
     ports:
       - 6379:6379
-    command: ["--maxmemory", "3gb"]
+    command: [ "--maxmemory", "3gb" ]
     networks:
       - mynetwork
   es01:
@@ -35,6 +35,7 @@ services:
     container_name: es01
     environment:
       - node.name=es01
+      - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
@@ -59,7 +60,7 @@ services:
       - es01
     networks:
       - esnet
-    
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -81,7 +82,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - mynetwork
@@ -89,6 +92,7 @@ services:
 volumes:
   scylla-data:
   es01-data:
+
 
 networks:
   esnet:
