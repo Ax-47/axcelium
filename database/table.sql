@@ -22,7 +22,7 @@ FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
   AND username IS NOT NULL PRIMARY KEY (
-    (organization_id, application_id),
+    (organization_id, application_id), -- hot partition
     created_at,
     user_id
   ) WITH CLUSTERING
