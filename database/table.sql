@@ -24,8 +24,7 @@ FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
   AND created_at IS NOT NULL
-  AND user_id IS NOT NULL
-  AND username IS NOT NULL PRIMARY KEY (
+  AND user_id IS NOT NULL PRIMARY KEY (
     (organization_id, application_id),
     -- hot partition
     created_at,
@@ -47,7 +46,8 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
-  AND email IS NOT NULL PRIMARY KEY ((organization_id, application_id, email));
+  AND user_id IS NOT NULL
+  AND email IS NOT NULL PRIMARY KEY ((organization_id, application_id, email),user_id);
 CREATE TABLE axcelium.user_count_by_app (
   organization_id UUID,
   application_id UUID,
