@@ -23,7 +23,7 @@ pub const INSERT_USER: &str = r#"
 
 pub const QUERY_FIND_USER_BY_EMAIL: &str = r#"
     SELECT username, user_id, email
-    FROM axcelium.users_by_email
+    FROM axcelium.users_by_email_app_org
     WHERE email = ? AND application_id = ? AND organization_id = ?
 "#;
 

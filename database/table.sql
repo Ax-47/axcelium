@@ -1,3 +1,5 @@
+CREATE KEYSPACE axcelium WITH replication = { 'class': 'SimpleStrategy',
+'replication_factor': 1 };
 CREATE TABLE axcelium.users (
   user_id UUID,
   organization_id UUID,
@@ -21,8 +23,11 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
+  AND created_at IS NOT NULL
+  AND user_id IS NOT NULL
   AND username IS NOT NULL PRIMARY KEY (
-    (organization_id, application_id), -- hot partition
+    (organization_id, application_id),
+    -- hot partition
     created_at,
     user_id
   ) WITH CLUSTERING
@@ -32,6 +37,7 @@ SELECT *
 FROM axcelium.users
 WHERE organization_id IS NOT NULL
   AND application_id IS NOT NULL
+  AND user_id IS NOT NULL
   AND username IS NOT NULL PRIMARY KEY (
     (organization_id, application_id, username),
     user_id
@@ -60,7 +66,7 @@ CREATE TABLE axcelium.applications (
   updated_at TIMESTAMP,
   PRIMARY KEY ((organization_id, application_id))
 );
-CREATE INDEX applications_client_id_sec_ix ON axcelium.users((organization_id, application_id, email));
+CREATE INDEX applications_client_id_sec_ix ON axcelium.applications(client_id);
 CREATE TABLE axcelium.organizations (
   organization_id UUID PRIMARY KEY,
   name TEXT,
