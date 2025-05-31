@@ -1,0 +1,117 @@
+services:
+
+  scylla:
+    image: scylladb/scylla
+    container_name: scylla
+    ports:
+      - 9042:9042
+      - 10000:10000
+    volumes:
+      - scylla-data:/var/lib/scylla
+    networks:
+      - devnet
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: dragonfly
+    ports:
+      - 6379:6379
+    command: [ "--maxmemory", "3gb" ]
+    networks:
+      - devnet
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: es01
+    environment:
+      - node.name=es01
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es01-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - devnet
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es01:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - es01
+    networks:
+      - devnet
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+    networks:
+      - devnet
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - devnet
+
+  server:
+    container_name: axcelium
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: dev
+    ports:
+      - 6969:6969
+    volumes:
+      - ./.env.dev:/app/.env
+      - ./config.yaml:/app/config.yaml
+      - ./src:/app/src
+      - ./Cargo.toml:/app/Cargo.toml
+      - ./Cargo.lock:/app/Cargo.lock
+      - ./target:/app/target
+      # - cargo-git:/usr/local/cargo/git
+      # - cargo-registry:/usr/local/cargo/registry
+    depends_on:
+      - scylla
+      - dragonfly
+      - kafka
+      - es01
+    networks:
+      - devnet
+    command: >
+      sh -c "wait-for-it scylla:9042 -- cargo watch -x run"
+volumes:
+  scylla-data:
+  es01-data:
+  # cargo-git:
+  # cargo-registry:
+
+
+networks:
+  devnet:
+    driver: bridge

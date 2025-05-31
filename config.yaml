@@ -4,12 +4,12 @@ core:
   cache_ttl: 3600
 database:
   urls:
-    - localhost:9042
+    - ${DATABASE_URLS}
   username: ${DATABASE_USERNAME}
   password: ${DATABASE_PASSWORD}
 redis:
   urls:
-    - redis://@localhost:6379
+    - ${REDIS_URLS}
 
 # optional
 organization:

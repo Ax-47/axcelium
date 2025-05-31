@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1.4
+ARG RUST_VERSION=1.87.0
+FROM rust:${RUST_VERSION}-alpine AS dev
+
+RUN apk add --no-cache \
+    bash \
+    git \
+    musl-dev \
+    openssl-dev \
+    pkgconfig \
+    clang \
+    lld \
+    libgcc \
+    libstdc++ \
+ && cargo install cargo-watch \
+ && ln -s /root/.cargo/bin/cargo-watch /usr/local/bin/cargo-watch \
+ && ln -s /usr/local/cargo/bin/cargo /usr/local/bin/cargo
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod +x /usr/local/bin/wait-for-it
+WORKDIR /app
+CMD ["cargo-watch", "-x", "run"]

@@ -2,5 +2,6 @@
 .env
 /scylla/data
 /scylla-data
+/es01-data
 /database/ฟ.dbs
 /database/ฟ.dbs.bak
