@@ -10,7 +10,7 @@ services:
   #     - dragonfly
   #   networks:
   #     - mynetwork
-
+  
   scylla:
     image: scylladb/scylla
     container_name: scylla
@@ -18,7 +18,7 @@ services:
       - 9042:9042
       - 10000:10000
     volumes:
-      - scylla-data:/var/lib/scylla
+      - ./scylla-data:/var/lib/scylla
     networks:
       - mynetwork
 
@@ -43,7 +43,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - es01-data:/usr/share/elasticsearch/data
+      - ./es01-data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
