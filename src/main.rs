@@ -19,7 +19,7 @@ async fn main() -> std::io::Result<()> {
         )
         .await,
     );
-    println!("run server");
+    println!("run server"); // TODO: Seperate to a func
     let server = HttpServer::new(move || routes::create_router(container.clone()))
         .bind(("127.0.0.1", 6969))?;
     server.run().await
