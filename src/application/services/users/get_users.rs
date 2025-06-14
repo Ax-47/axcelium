@@ -46,10 +46,9 @@ impl GetUsersService for GetUsersServiceImpl {
             .repository
             .find_all_users_paginated(organization_id, application_id, page_size, paging_state_u8)
             .await?;
-        let encrypted_paging_state = match users.paging_state {
-            Some(state) => Some(self.repository.bytes_to_base64(state)),
-            None => None,
-        };
+        let encrypted_paging_state = users
+            .paging_state
+            .map(|state| self.repository.bytes_to_base64(state));
         Ok(GetUsersResponse {
             users: users.users,
             paging_state: encrypted_paging_state,
