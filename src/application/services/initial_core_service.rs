@@ -13,11 +13,11 @@ impl InitialCoreServiceImpl {
         Self { repository }
     }
     fn print_info(&self, apporg: AppOrgByClientId, key: String, client_secret: String) {
-        println!("CORE_ORGANIZATION_ID= {}", apporg.organization_id);
-        println!("CORE_APPLICATION_ID= {}", apporg.application_id);
-        println!("CORE_CLIENT_ID= {}", apporg.client_id);
-        println!("CORE_CLIENT_SECRET= {}", client_secret);
-        println!("CORE_CLIENT_KEY= {}", key);
+        println!("CORE_ORGANIZATION_ID={}", apporg.organization_id);
+        println!("CORE_APPLICATION_ID={}", apporg.application_id);
+        println!("CORE_CLIENT_ID={}", apporg.client_id);
+        println!("CORE_CLIENT_SECRET={}", client_secret);
+        println!("CORE_CLIENT_KEY={}", key);
         println!(
             "CORE_CLIENT_TOKEN= axcelium-core: {}",
             self.repository
