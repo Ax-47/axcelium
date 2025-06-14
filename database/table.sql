@@ -1,5 +1,5 @@
 CREATE KEYSPACE axcelium WITH replication = { 'class': 'SimpleStrategy',
-'replication_factor': 1 };
+'replication_factor': 1 } ;
 CREATE TABLE axcelium.users (
   user_id UUID,
   organization_id UUID,
@@ -17,7 +17,8 @@ CREATE TABLE axcelium.users (
   deactivated_at TIMESTAMP,
   locked_at TIMESTAMP,
   PRIMARY KEY ((user_id, organization_id, application_id))
-);
+)
+WITH cdc = {'enabled': 'true'};
 CREATE MATERIALIZED VIEW users_by_app AS
 SELECT *
 FROM axcelium.users
@@ -139,7 +140,7 @@ CREATE TABLE axcelium.roles_by_app (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     PRIMARY KEY ((organization_id, application_id), role_id)
-);
+)WITH cdc = {'enabled': 'true'};
 CREATE TABLE axcelium.user_roles_by_user (
   organization_id UUID,
   application_id UUID,
@@ -150,7 +151,7 @@ CREATE TABLE axcelium.user_roles_by_user (
     (organization_id, application_id, user_id),
     role_id
   )
-);
+)WITH cdc = {'enabled': 'true'};
 CREATE TABLE axcelium.role_users_by_role (
   organization_id UUID,
   application_id UUID,
@@ -161,4 +162,4 @@ CREATE TABLE axcelium.role_users_by_role (
     (organization_id, application_id, role_id),
     user_id
   )
-);
+)WITH cdc = {'enabled': 'true'};
