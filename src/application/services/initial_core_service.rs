@@ -46,7 +46,7 @@ impl InitialCoreService for InitialCoreServiceImpl {
         self.repository.create_org(org.clone()).await;
         let (app, client_key, client_secret) = self
             .repository
-            .new_app(org.organization_id.clone(), cfg.application.clone())
+            .new_app(org.organization_id, cfg.application.clone())
             .await;
         self.repository.create_app(app.clone()).await;
         let apporg = self.repository.new_apporg_by_client_id(app, org);
