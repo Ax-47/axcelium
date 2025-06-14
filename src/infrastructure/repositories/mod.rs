@@ -1,3 +1,4 @@
+pub mod replicator;
 pub mod cache;
 pub mod cache_layer;
 pub mod cipher;
