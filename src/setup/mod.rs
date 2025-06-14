@@ -57,7 +57,7 @@ pub struct Container {
 impl Container {
     pub async fn new(cfg: config::Config, cache: Arc<Client>, database: Arc<Session>) -> Self {
         let secret = cfg.core.secret.clone();
-        let cache_ttl = cfg.core.cache_ttl.clone();
+        let cache_ttl = cfg.core.cache_ttl;
         let (repos, core_service) =
             repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
 
