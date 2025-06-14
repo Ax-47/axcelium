@@ -19,7 +19,7 @@ impl InitialCoreServiceImpl {
         println!("CORE_CLIENT_SECRET={}", client_secret);
         println!("CORE_CLIENT_KEY={}", key);
         println!(
-            "CORE_CLIENT_TOKEN= axcelium-core: {}",
+            "CORE_CLIENT_TOKEN=axcelium-core: {}",
             self.repository
                 .create_client_token(apporg.client_id, key, client_secret)
         );
