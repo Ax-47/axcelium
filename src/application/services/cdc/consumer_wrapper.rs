@@ -5,7 +5,6 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct ArcConsumerWrapper(pub Arc<Mutex<dyn Consumer + Send + Sync>>);
-
 #[async_trait]
 impl Consumer for ArcConsumerWrapper {
     async fn consume_cdc(&mut self, data: CDCRow<'_>) -> anyhow::Result<()> {

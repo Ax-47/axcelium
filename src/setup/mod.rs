@@ -1,8 +1,8 @@
 use crate::{
     application::{
-        controllers::cdc::CDCControllerImpl,
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
+            cdc::printer::PrinterConsumerService,
             hello_service::HelloService,
             refresh_token::{
                 create::CreateRefreshTokenService, get::GetRefreshTokenService,
@@ -27,7 +27,7 @@ use crate::{
 use redis::Client;
 use scylla::client::session::Session;
 use std::sync::Arc;
-use tokio::task;
+use tokio::sync::Mutex;
 mod middlewares;
 mod repositories;
 mod services;
@@ -54,6 +54,7 @@ pub struct Container {
     pub update_role_service: Arc<dyn UpdateRoleService>,
     pub delete_role_service: Arc<dyn DeleteRoleService>,
     pub assign_service: Arc<dyn AssignService>,
+    pub printer_service: Arc<Mutex<dyn PrinterConsumerService>>,
 }
 
 impl Container {
@@ -64,15 +65,6 @@ impl Container {
             repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
 
         core_service.lunch(cfg).await;
-        let mut c = CDCControllerImpl::new(database).await;
-        task::spawn(async move {
-            if let Some(handle) = c.users.1.take() {
-                let _ = handle.await;
-            }
-            if let Some(handle) = c.roles.1.take() {
-                let _ = handle.await;
-            }
-        });
         let hello_service = services::create_hello_service();
         let create_user_service = services::create_create_user_service(&repos);
         let get_users_service = services::create_get_users_service(&repos);
@@ -95,10 +87,12 @@ impl Container {
         let update_role_service = services::create_update_role_service(&repos);
         let delete_role_service = services::create_delete_role_service(&repos);
         let assign_service = services::create_assign_service(&repos);
+
         let validate_bearer_auth_middleware_service = Arc::new(ValidateBearerAuth::new(
             middlewares::create_validate_bearer_auth_service(&repos),
         ));
 
+        let printer_service = services::create_printer_service(&repos);
         Self {
             hello_service,
             create_user_service,
@@ -122,6 +116,7 @@ impl Container {
             update_role_service,
             delete_role_service,
             assign_service,
+            printer_service,
         }
     }
 }

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::application::services::{
+    cdc::printer::{PrinterConsumerService, PrinterConsumerServiceImpl},
     hello_service::{HelloService, HelloServiceImpl},
     refresh_token::{
         create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl},
@@ -9,7 +10,13 @@ use crate::application::services::{
         rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
     },
     roles::{
-        assign::{AssignService, AssignServiceImpl}, create_roles::{CreateRoleService, CreateRoleServiceImpl}, delete_role::{DeleteRoleService, DeleteRoleServiceImpl}, get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl}, get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl}, get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl}, update_role::{UpdateRoleService, UpdateRoleServiceImpl}
+        assign::{AssignService, AssignServiceImpl},
+        create_roles::{CreateRoleService, CreateRoleServiceImpl},
+        delete_role::{DeleteRoleService, DeleteRoleServiceImpl},
+        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl},
+        get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl},
+        get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl},
+        update_role::{UpdateRoleService, UpdateRoleServiceImpl},
     },
     users::{
         ban_user::{BanUserService, BanUserServiceImpl},
@@ -23,6 +30,7 @@ use crate::application::services::{
         update_user::{UpdateUserService, UpdateUserServiceImpl},
     },
 };
+use tokio::sync::Mutex;
 
 use super::repositories::Repositories;
 
@@ -154,4 +162,10 @@ pub fn create_assign_service(repos: &Repositories) -> Arc<dyn AssignService> {
     Arc::new(AssignServiceImpl {
         repository: repos.assign_repo.clone(),
     })
+}
+
+pub fn create_printer_service(repos: &Repositories) -> Arc<Mutex<dyn PrinterConsumerService>> {
+    Arc::new(Mutex::new(PrinterConsumerServiceImpl::new(
+        repos.printer_repo.clone(),
+    )))
 }

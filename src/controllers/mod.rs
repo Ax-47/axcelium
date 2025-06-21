@@ -1,7 +1,8 @@
+pub mod cdc;
 pub mod hello;
-pub mod users;
 pub mod refresh_token;
 pub mod roles;
+pub mod users;
 
 use crate::setup::Container;
 use actix_web::App;
@@ -19,6 +20,20 @@ pub fn configure_routes(cfg: &mut ServiceConfig, container: Arc<Container>) {
 }
 
 pub fn create_router(
+    container: Arc<Container>,
+) -> App<
+    impl ServiceFactory<
+        ServiceRequest,
+        Response = ServiceResponse<impl MessageBody>,
+        Config = (),
+        InitError = (),
+        Error = Error,
+    >,
+> {
+    App::new().configure(|cfg| configure_routes(cfg, container.clone()))
+}
+
+pub fn create_cdc(
     container: Arc<Container>,
 ) -> App<
     impl ServiceFactory<

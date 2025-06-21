@@ -5,13 +5,20 @@ use scylla::client::session::Session;
 
 use crate::{
     application::repositories::{
+        cdc::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
         refresh_tokens::{
             get::{GetRefreshTokenRepository, GetRefreshTokenRepositoryImpl},
             revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
             rotate::{RotateRefreshTokenRepository, RotateRefreshTokenRepositoryImpl},
         },
         roles::{
-            assign::{AssignRepository, AssignRepositoryImpl}, create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl}, delete_role::{DeleteRoleRepository, DeleteRoleRepositoryImpl}, get_role_by_app::{GetRoleByAppRepository, GetRoleByAppRepositoryImpl}, get_roles_by_app::{GetRolesByAppRepository, GetRolesByAppRepositoryImpl}, get_users_by_role::{GetUsersByRoleRepository, GetUsersByRoleRepositoryImpl}, update_role::{UpdateRoleRepository, UpdateRoleRepositoryImpl}
+            assign::{AssignRepository, AssignRepositoryImpl},
+            create_roles::{CreateRoleRepository, CreateRoleRepositoryImpl},
+            delete_role::{DeleteRoleRepository, DeleteRoleRepositoryImpl},
+            get_role_by_app::{GetRoleByAppRepository, GetRoleByAppRepositoryImpl},
+            get_roles_by_app::{GetRolesByAppRepository, GetRolesByAppRepositoryImpl},
+            get_users_by_role::{GetUsersByRoleRepository, GetUsersByRoleRepositoryImpl},
+            update_role::{UpdateRoleRepository, UpdateRoleRepositoryImpl},
         },
     },
     infrastructure::repositories::{
@@ -76,7 +83,8 @@ pub struct Repositories {
     pub get_users_by_role_repo: Arc<dyn GetUsersByRoleRepository>,
     pub update_role_repo: Arc<dyn UpdateRoleRepository>,
     pub delete_role_repo: Arc<dyn DeleteRoleRepository>,
-    pub assign_repo: Arc<dyn AssignRepository>
+    pub assign_repo: Arc<dyn AssignRepository>,
+    pub printer_repo: Arc<dyn PrinterConsumerRepository>,
 }
 
 pub async fn create_all(
@@ -169,7 +177,7 @@ pub async fn create_all(
     let unban_user_repo = Arc::new(UnbanUserRepositoryImpl::new(user_db.clone()));
     let disable_mfa_user_repo = Arc::new(DisableMFAUserRepositoryImpl::new(user_db.clone()));
     let core_service = Arc::new(InitialCoreServiceImpl::new(core_repo));
-
+    let printer_repo = Arc::new(PrinterConsumerRepositoryImpl);
     (
         Repositories {
             create_user_repo,
@@ -192,7 +200,8 @@ pub async fn create_all(
             get_users_by_role_repo,
             update_role_repo,
             delete_role_repo,
-assign_repo,
+            assign_repo,
+            printer_repo,
         },
         core_service,
     )
