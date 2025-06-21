@@ -1,5 +1,6 @@
 use crate::application::repositories::cdc::PrinterConsumerRepositoryImpl;
 use crate::application::services::cdc::PrinterConsumerServiceImpl;
+use crate::application::services::cdc::consumer_wrapper::ArcConsumerWrapper;
 use crate::infrastructure::repositories::cdc::consts::{KEYSPACE, ROLES_BY_APP_TABLE, USERS_TABLE};
 use async_trait::async_trait;
 use futures::future::RemoteHandle;
@@ -7,13 +8,16 @@ use scylla::client::session::Session;
 use scylla_cdc::consumer::{Consumer, ConsumerFactory};
 use scylla_cdc::log_reader::{CDCLogReader, CDCLogReaderBuilder};
 use std::{sync::Arc, time::Duration};
-pub struct CDCImpl {
+use tokio::sync::Mutex;
+pub struct CDCControllerImpl {
     pub users: (CDCLogReader, Option<RemoteHandle<anyhow::Result<()>>>),
     pub roles: (CDCLogReader, Option<RemoteHandle<anyhow::Result<()>>>),
 }
 
-impl CDCImpl {
+impl CDCControllerImpl {
     pub async fn new(session: Arc<Session>) -> Self {
+        let print_repo = Arc::new(PrinterConsumerRepositoryImpl);
+        let print_service = Arc::new(Mutex::new(PrinterConsumerServiceImpl::new(print_repo)));
         let (user_reader, user_handle): (CDCLogReader, RemoteHandle<anyhow::Result<()>>) =
             CDCLogReaderBuilder::new()
                 .session(session.clone())
@@ -22,7 +26,7 @@ impl CDCImpl {
                 .window_size(Duration::from_secs_f64(60.))
                 .safety_interval(Duration::from_secs_f64(30.))
                 .sleep_interval(Duration::from_secs_f64(10.))
-                .consumer_factory(Arc::new(PrinterConsumerFactory))
+                .consumer_factory(Arc::new(PrinterConsumerFactory::new(print_service.clone())))
                 .build()
                 .await
                 .unwrap();
@@ -35,7 +39,7 @@ impl CDCImpl {
                 .window_size(Duration::from_secs_f64(60.))
                 .safety_interval(Duration::from_secs_f64(30.))
                 .sleep_interval(Duration::from_secs_f64(10.))
-                .consumer_factory(Arc::new(PrinterConsumerFactory))
+                .consumer_factory(Arc::new(PrinterConsumerFactory::new(print_service)))
                 .build()
                 .await
                 .unwrap();
@@ -43,34 +47,21 @@ impl CDCImpl {
         Self { users, roles }
     }
 }
-pub struct CDCExternalRepositoryImpl {
-    pub cdc: CDCImpl,
-}
-#[async_trait]
-pub trait CDCExternalRepository: Sync + Send {
-    async fn stop_repo(&mut self);
+
+struct PrinterConsumerFactory {
+    printer_consumer_service: Arc<Mutex<dyn Consumer + Sync>>,
 }
 
-#[async_trait]
-impl CDCExternalRepository for CDCExternalRepositoryImpl {
-    async fn stop_repo(&mut self) {
-        self.cdc.users.0.stop();
-        if let Some(handle) = self.cdc.users.1.take() {
-            let _ = handle.await;
-        }
-        self.cdc.roles.0.stop();
-        if let Some(handle) = self.cdc.roles.1.take() {
-            let _ = handle.await;
+impl PrinterConsumerFactory {
+    fn new(printer_consumer_service: Arc<Mutex<dyn Consumer + Sync>>) -> Self {
+        Self {
+            printer_consumer_service,
         }
     }
 }
-
-pub struct PrinterConsumerFactory;
 #[async_trait]
 impl ConsumerFactory for PrinterConsumerFactory {
     async fn new_consumer(&self) -> Box<dyn Consumer> {
-        Box::new(PrinterConsumerServiceImpl::new(Box::new(
-            PrinterConsumerRepositoryImpl,
-        )))
+        Box::new(ArcConsumerWrapper(self.printer_consumer_service.clone()))
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     application::{
-        controllers::cdc::CDCImpl,
+        controllers::cdc::CDCControllerImpl,
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
             hello_service::HelloService,
@@ -64,7 +64,7 @@ impl Container {
             repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
 
         core_service.lunch(cfg).await;
-        let mut c = CDCImpl::new(database).await;
+        let mut c = CDCControllerImpl::new(database).await;
         task::spawn(async move {
             if let Some(handle) = c.users.1.take() {
                 let _ = handle.await;
