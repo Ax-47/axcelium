@@ -1,10 +1,10 @@
 use actix_web::HttpServer;
 use axcelium::{
-    config,
+    config, controllers,
     infrastructure::repositories::{
         cache::redis::get_redis_client, database::scylladb::get_db_pool,
     },
-    routes, setup,
+    setup,
 };
 use std::sync::Arc;
 #[actix_web::main]
@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()> {
         .await,
     );
     println!("run server"); // TODO: Seperate to a func
-    let server = HttpServer::new(move || routes::create_router(container.clone()))
+    let server = HttpServer::new(move || controllers::create_router(container.clone()))
         .bind(("127.0.0.1", 6969))?;
     server.run().await
 }
