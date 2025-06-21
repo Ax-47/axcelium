@@ -29,11 +29,11 @@ mod tests {
         }
 
         fn to_response(&self) -> CreateUserResponse {
-            return CreateUserResponse {
+            CreateUserResponse {
                 user_id: self.user_id.to_string(),
                 username: self.username.clone(),
                 email: self.email.clone(),
-            };
+            }
         }
     }
     fn build_apporg(can_email_null: bool, must_name_unique: bool) -> CleanAppOrgByClientId {
