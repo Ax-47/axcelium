@@ -22,10 +22,12 @@ use crate::{
         },
     },
     config,
+    infrastructure::repositories::cdc::cdc::CDCImpl,
 };
 use redis::Client;
 use scylla::client::session::Session;
 use std::sync::Arc;
+use tokio::task;
 mod middlewares;
 mod repositories;
 mod services;
@@ -62,7 +64,12 @@ impl Container {
             repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
 
         core_service.lunch(cfg).await;
-
+        let mut c = CDCImpl::new(database).await;
+        task::spawn(async move {
+            if let Some(handle) = c.users.1.take() {
+                let _ = handle.await;
+            }
+        });
         let hello_service = services::create_hello_service();
         let create_user_service = services::create_create_user_service(&repos);
         let get_users_service = services::create_get_users_service(&repos);

@@ -241,22 +241,29 @@
     AND speculative_retry = '99.0PERCENTILE'
     AND tombstone_gc = {'mode': 'timeout', 'propagation_delay_in_seconds': '3600'}]]></options>
 		</table>
+		<table name="users_scylla_cdc_log" >
+			<comment><![CDATA[CDC log for axcelium.users]]></comment>
+		</table>
 	</schema>
 	<layout name="Main Diagram" id="0b99c7fe-24e5-4f60-8c32-605ff00b4d39" show_relation="columns" >
-		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="1380" y="420" />
 		<entity schema="axcelium" name="organizations" color="BED3F4" x="1100" y="540" />
 		<entity schema="axcelium" name="refresh_tokens" color="BED3F4" x="1100" y="900" />
 		<entity schema="axcelium" name="role_users_by_role" color="BED3F4" x="760" y="900" />
 		<entity schema="axcelium" name="user_count_by_app" color="BED3F4" x="480" y="900" />
 		<entity schema="axcelium" name="user_roles_by_user" color="BED3F4" x="780" y="260" />
-		<entity schema="axcelium" name="roles_by_app" color="BED3F4" x="460" y="520" />
 		<entity schema="axcelium" name="users" color="BED3F4" x="460" y="60" />
 		<entity schema="axcelium" name="applications" color="BED3F4" x="760" y="540" />
+		<entity schema="axcelium" name="applications_organization_by_client_id" color="BED3F4" x="1380" y="420" />
+		<entity schema="axcelium" name="roles_by_app" color="BED3F4" x="520" y="520" />
+		<entity schema="axcelium" name="users_scylla_cdc_log" color="3986C1" x="580" y="540" />
 		<callout x="60" y="440" pointer="Round" >
 			<comment><![CDATA[Create new tables by right-clicking the diagram.
 Double-click the table headers, columns, or foreign keys to edit.
 The schema structure will be saved to the design model file.]]></comment>
 		</callout>
+		<script name="SQL_Editor" id="42cc4203-cb38-45e0-947b-f474b0a4064c" language="SQL" >
+			<string><![CDATA[ALTER TABLE axcelium.roles_by_app WITH cdc = {'enabled': 'true'};]]></string>
+		</script>
 		<browser id="4c6e88b7-6c8a-47c2-a090-420a26d05056" name="applications" confirm_updates="y" >
 			<browse_table schema="axcelium" entity="applications" fk_out="n" x="20" y="20" width="322" height="312" />
 		</browser>

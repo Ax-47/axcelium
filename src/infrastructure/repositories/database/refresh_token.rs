@@ -56,7 +56,6 @@ pub trait RefreshTokenDatabaseRepository: Send + Sync {
         org_id: Uuid,
         app_id: Uuid,
         token_id: Uuid,
-
         token_version: &String,
     ) -> RepositoryResult<Option<FoundRefreshTokenModel>>;
 

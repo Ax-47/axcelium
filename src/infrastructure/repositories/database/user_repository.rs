@@ -301,8 +301,8 @@ impl UserDatabaseRepository for UserDatabaseRepositoryImpl {
     ) -> RepositoryResult<()> {
         let mut del_user_bind: HashMap<&str, CqlValue> = HashMap::new();
         del_user_bind.insert("user_id", CqlValue::Uuid(user_id));
-        del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id.clone()));
-        del_user_bind.insert("application_id", CqlValue::Uuid(application_id.clone()));
+        del_user_bind.insert("organization_id", CqlValue::Uuid(organization_id));
+        del_user_bind.insert("application_id", CqlValue::Uuid(application_id));
         self.database
             .execute_unpaged(&self.delete_user, &del_user_bind)
             .await?;

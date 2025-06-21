@@ -7,10 +7,9 @@ pub async fn get_db_pool(cfg: config::DatabaseConfig) -> Session {
     for url in cfg.urls {
         builder = builder.known_node(url);
     }
-    let session = builder
+    builder
         .user(cfg.username, cfg.password)
         .build()
         .await
-        .unwrap();
-    session
+        .unwrap()
 }

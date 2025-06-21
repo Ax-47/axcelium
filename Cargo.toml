@@ -33,6 +33,8 @@ mockall = "0.13.1"
 rusty_paseto = "0.7.2"
 time = "0.3.41"
 kafka = "0.10.0"
+scylla-cdc = { git = "https://github.com/scylladb/scylla-cdc-rust" } 
+anyhow = "1.0.98"
 [dependencies.uuid]
 version = "1.11.0"
 features = [
