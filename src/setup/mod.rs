@@ -1,5 +1,6 @@
 use crate::{
     application::{
+        controllers::cdc::CDCImpl,
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
             hello_service::HelloService,
@@ -22,7 +23,6 @@ use crate::{
         },
     },
     config,
-    infrastructure::repositories::cdc::cdc::CDCImpl,
 };
 use redis::Client;
 use scylla::client::session::Session;
@@ -67,6 +67,9 @@ impl Container {
         let mut c = CDCImpl::new(database).await;
         task::spawn(async move {
             if let Some(handle) = c.users.1.take() {
+                let _ = handle.await;
+            }
+            if let Some(handle) = c.roles.1.take() {
                 let _ = handle.await;
             }
         });

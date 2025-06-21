@@ -14,7 +14,6 @@ use async_trait::async_trait;
 
 impl CDCImpl {
     pub async fn new(session: Arc<Session>) -> Self {
-        println!("test");
         let (user_reader, user_handle): (CDCLogReader, RemoteHandle<anyhow::Result<()>>) =
             CDCLogReaderBuilder::new()
                 .session(session.clone())
