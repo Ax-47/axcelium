@@ -1,4 +1,4 @@
-use crate::application::repositories::cdc::PrinterConsumerRepository;
+use crate::application::repositories::cdc::printer::PrinterConsumerRepository;
 use async_trait::async_trait;
 use scylla_cdc::consumer::{CDCRow, Consumer};
 use std::{fmt::Write, sync::Arc};
