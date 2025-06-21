@@ -5,7 +5,7 @@ use scylla::client::session::Session;
 
 use crate::{
     application::repositories::{
-        cdc::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
+        cdc::printer::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
         refresh_tokens::{
             get::{GetRefreshTokenRepository, GetRefreshTokenRepositoryImpl},
             revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
