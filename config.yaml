@@ -7,6 +7,9 @@ database:
     - ${DATABASE_URLS}
   username: ${DATABASE_USERNAME}
   password: ${DATABASE_PASSWORD}
+queue:
+  urls:
+    - ${QUEUE_URLS}
 redis:
   urls:
     - ${REDIS_URLS}

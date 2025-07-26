@@ -5,6 +5,7 @@ use std::{fs, path::Path};
 pub struct Config {
     pub core: CoreConfig,
     pub database: DatabaseConfig,
+    pub queue: QueueConfig,
     pub redis: RedisConfig,
 
     #[serde(default)]
@@ -28,6 +29,10 @@ pub struct DatabaseConfig {
     pub password: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct QueueConfig {
+    pub urls: Vec<String>,
+}
 #[derive(Debug, Deserialize, Clone)]
 pub struct RedisConfig {
     pub urls: Vec<String>,
@@ -58,6 +63,7 @@ pub struct ApplicationConfig {
     #[serde(default)]
     pub config: AppConfig,
 }
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
