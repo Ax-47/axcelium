@@ -1,12 +1,12 @@
 use chrono::Utc;
-use scylla::value::CqlTimestamp;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub trait UserValidation {
     fn validate_name(&self) -> bool;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub user_id: Uuid,
     pub organization_id: Uuid,
@@ -16,16 +16,16 @@ pub struct User {
     pub email: Option<String>,
     pub hashed_password: String,
 
-    pub created_at: CqlTimestamp,
-    pub updated_at: CqlTimestamp,
+    pub created_at: i64,
+    pub updated_at: i64,
 
     pub is_active: bool,
     pub is_verified: bool,
     pub is_locked: bool,
-    pub last_login: Option<CqlTimestamp>,
+    pub last_login: Option<i64>,
     pub mfa_enabled: bool,
-    pub deactivated_at: Option<CqlTimestamp>,
-    pub locked_at: Option<CqlTimestamp>,
+    pub deactivated_at: Option<i64>,
+    pub locked_at: Option<i64>,
 }
 impl User {
     pub fn new(
@@ -35,7 +35,7 @@ impl User {
         hashed_password: String,
         email: Option<String>,
     ) -> Self {
-        let now = CqlTimestamp(Utc::now().timestamp_millis());
+        let now = Utc::now().timestamp_millis();
         Self {
             user_id: Uuid::new_v4(),
             application_id,
@@ -64,6 +64,6 @@ impl User {
     }
 
     pub fn touch_updated(&mut self) {
-        self.updated_at = CqlTimestamp(Utc::now().timestamp_millis());
+        self.updated_at = Utc::now().timestamp_millis();
     }
 }

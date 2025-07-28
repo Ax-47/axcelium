@@ -3,6 +3,7 @@ pub mod cache_layer;
 pub mod cdc;
 pub mod cipher;
 pub mod database;
+pub mod fulltext_search;
 pub mod paseto;
 pub mod queue;
 pub mod security;

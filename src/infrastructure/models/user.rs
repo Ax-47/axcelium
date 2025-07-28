@@ -59,15 +59,15 @@ impl UserModel {
             username: entity.username,
             email: entity.email,
             hashed_password: entity.hashed_password,
-            created_at: entity.created_at,
-            updated_at: entity.updated_at,
+            created_at: CqlTimestamp(entity.created_at),
+            updated_at: CqlTimestamp(entity.updated_at),
             is_active: entity.is_active,
             is_verified: entity.is_verified,
             is_locked: entity.is_locked,
-            last_login: entity.last_login,
+            last_login: entity.last_login.map(CqlTimestamp),
             mfa_enabled: entity.mfa_enabled,
-            deactivated_at: entity.deactivated_at,
-            locked_at: entity.locked_at,
+            deactivated_at: entity.deactivated_at.map(CqlTimestamp),
+            locked_at: entity.locked_at.map(CqlTimestamp),
         }
     }
     pub fn to_entity(&self) -> User {
@@ -78,15 +78,15 @@ impl UserModel {
             username: self.username.clone(),
             email: self.email.clone(),
             hashed_password: self.hashed_password.clone(),
-            created_at: self.created_at,
-            updated_at: self.updated_at,
+            created_at: self.created_at.0,
+            updated_at: self.updated_at.0,
             is_active: self.is_active,
             is_verified: self.is_verified,
             is_locked: self.is_locked,
-            last_login: self.last_login,
+            last_login: self.last_login.map(|a| a.0),
             mfa_enabled: self.mfa_enabled,
-            deactivated_at: self.deactivated_at,
-            locked_at: self.locked_at,
+            deactivated_at: self.deactivated_at.map(|a| a.0),
+            locked_at: self.locked_at.map(|a| a.0),
         }
     }
     pub fn to_bind_map(&self) -> HashMap<&'static str, CqlValue> {
