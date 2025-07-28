@@ -1,21 +1,47 @@
-use crate::infrastructure::repositories::queue::consumer::ConsumerRepository;
+use std::sync::Arc;
+
+use crate::{
+    domain::entities::user::User,
+    infrastructure::{
+        errors::queue::QueueOperationError,
+        models::queue::users::QueueUser,
+        repositories::{
+            fulltext_search::user_fulltext_search::UserFulltextSearchRepository,
+            queue::consumer::ConsumerRepository,
+        },
+    },
+};
 pub struct UserConsumerRepositoryImpl {
     consumer_repo: Box<dyn ConsumerRepository>,
+    fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
 }
 
 impl UserConsumerRepositoryImpl {
-    pub fn new(consumer_repo: Box<dyn ConsumerRepository>) -> Self {
-        Self { consumer_repo }
+    pub fn new(
+        consumer_repo: Box<dyn ConsumerRepository>,
+        fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
+    ) -> Self {
+        Self {
+            consumer_repo,
+            fulltext_search_repo,
+        }
     }
 
-    pub fn consume_until(&mut self) {
-        while self.consumer_repo.is_running() {
+    pub async fn consume_until(&mut self) {
+        loop {
+            if !self.consumer_repo.is_running() {
+                break;
+            }
             match self.consumer_repo.consume_events() {
                 Ok(messagesets) => {
                     for ms in messagesets.iter() {
                         for m in ms.messages() {
                             match std::str::from_utf8(m.value) {
-                                Ok(v) => println!("{:?}", v),
+                                Ok(v) => {
+                                    if let Err(e) = self.operate(v).await {
+                                        eprintln!("opration error: {:?}", e);
+                                    }
+                                }
                                 Err(e) => eprintln!("UTF-8 error: {:?}", e),
                             }
                         }
@@ -34,7 +60,21 @@ impl UserConsumerRepositoryImpl {
                 }
             }
         }
-
         println!("Kafka consumer stopped~!");
+    }
+    async fn operate(&self, text: &str) -> Result<(), QueueOperationError> {
+        let value = serde_json::from_str::<QueueUser>(text)?;
+        match (value.operation.as_str(), value.user) {
+            ("create", Some(user)) => self.create(user).await?,
+            ("create", None) => return Err(QueueOperationError::MissingUser),
+            ("update", None) => { /* TODO */ }
+            ("delete", None) => { /* TODO */ }
+            (op, _) => eprintln!("Unknown operation: {}", op),
+        }
+        Ok(())
+    }
+    async fn create(&self, user: User) -> Result<(), QueueOperationError> {
+        self.fulltext_search_repo.create(user).await?;
+        Ok(())
     }
 }

@@ -16,16 +16,16 @@ use crate::infrastructure::repositories::{
 use async_trait::async_trait;
 use std::sync::Arc;
 use uuid::Uuid;
-pub struct InitialCoreImpl {
-    aes_repo: Arc<dyn AesGcmCipherRepository>,
-    base64_repo: Arc<dyn Base64Repository>,
-    org_db_repo: Arc<dyn OrganizationDatabaseRepository>,
-    app_db_repo: Arc<dyn ApplicationDatabaseRepository>,
-    apporg_by_client_id_cachelayer_repo:
+pub struct InitialCoreRepositoryImpl {
+    pub aes_repo: Arc<dyn AesGcmCipherRepository>,
+    pub base64_repo: Arc<dyn Base64Repository>,
+    pub org_db_repo: Arc<dyn OrganizationDatabaseRepository>,
+    pub app_db_repo: Arc<dyn ApplicationDatabaseRepository>,
+    pub apporg_by_client_id_cachelayer_repo:
         Arc<dyn ApplicationsOrganizationByClientIdCacheLayerRepository>,
 }
 
-impl InitialCoreImpl {
+impl InitialCoreRepositoryImpl {
     pub fn new(
         aes_repo: Arc<dyn AesGcmCipherRepository>,
         base64_repo: Arc<dyn Base64Repository>,
@@ -67,7 +67,7 @@ pub trait InitialCoreRepository: Send + Sync {
 }
 
 #[async_trait]
-impl InitialCoreRepository for InitialCoreImpl {
+impl InitialCoreRepository for InitialCoreRepositoryImpl {
     fn create_client_token(
         &self,
         client_id: Uuid,

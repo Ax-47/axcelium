@@ -36,6 +36,7 @@ kafka = "0.10.0"
 scylla-cdc = "0.4.0"
 anyhow = "1.0.98"
 elasticsearch = "9.0.0-alpha.1"
+thiserror = "2"
 [dependencies.uuid]
 version = "1.11.0"
 features = [

@@ -13,7 +13,9 @@ queue:
 redis:
   urls:
     - ${REDIS_URLS}
-
+fulltext_search:
+  urls:
+    - ${FULLTEXT_SEARCH_URLS}
 # optional
 organization:
   name: Axcelium

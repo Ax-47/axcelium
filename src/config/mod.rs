@@ -5,6 +5,8 @@ use std::{fs, path::Path};
 pub struct Config {
     pub core: CoreConfig,
     pub database: DatabaseConfig,
+
+    pub fulltext_search: FulltextSearchConfig,
     pub queue: QueueConfig,
     pub redis: RedisConfig,
 
@@ -33,8 +35,14 @@ pub struct DatabaseConfig {
 pub struct QueueConfig {
     pub urls: Vec<String>,
 }
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct FulltextSearchConfig {
+    pub urls: Vec<String>,
+}
 #[derive(Debug, Deserialize, Clone)]
 pub struct RedisConfig {
+    // TODO: rename Redis to Cache
     pub urls: Vec<String>,
 }
 

@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use elasticsearch::Elasticsearch;
 use redis::Client;
 use scylla::client::session::Session;
 
 use crate::{
     application::repositories::{
         cdc::printer::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
+        initial_core::{InitialCoreRepository, InitialCoreRepositoryImpl},
         refresh_tokens::{
             get::{GetRefreshTokenRepository, GetRefreshTokenRepositoryImpl},
             revoke::{RevokeRefreshTokenRepository, RevokeRefreshTokenRepositoryImpl},
@@ -31,34 +33,32 @@ use crate::{
             organization_repository::OrganizationDatabaseRepositoryImpl,
             roles::RoleDatabaseRepositoryImpl, user_repository::UserDatabaseRepositoryImpl,
         },
+        fulltext_search::user_fulltext_search::{
+            UserFulltextSearchRepository, UserFulltextSearchRepositoryImpl,
+        },
         paseto::refresh_token::PasetoRepositoryImpl,
         security::argon2_repository::PasswordHasherImpl,
     },
 };
 use crate::{
-    application::{
-        repositories::{
-            initial_core::InitialCoreImpl,
-            refresh_tokens::create::{
-                CreateRefreshTokenRepository, CreateRefreshTokenRepositoryImpl,
-            },
-            users::{
-                ban_user::{BanUserRepository, BanUserRepositoryImpl},
-                create::{CreateUserRepository, CreateUserRepositoryImpl},
-                delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
-                disable_mfa_user::{DisableMFAUserRepository, DisableMFAUserRepositoryImpl},
-                get_user::{GetUserRepository, GetUserRepositoryImpl},
-                get_user_count::{GetUserCountRepository, GetUserCountRepositoryImpl},
-                get_users::{GetUsersRepository, GetUsersRepositoryImpl},
-                unban_user::{UnbanUserRepository, UnbanUserRepositoryImpl},
-                update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
-            },
-            validate_bearer_auth_repository::{
-                ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
-            },
+    application::repositories::{
+        refresh_tokens::create::{CreateRefreshTokenRepository, CreateRefreshTokenRepositoryImpl},
+        users::{
+            ban_user::{BanUserRepository, BanUserRepositoryImpl},
+            create::{CreateUserRepository, CreateUserRepositoryImpl},
+            delete::{DeleteUserRepository, DeleteUserRepositoryImpl},
+            disable_mfa_user::{DisableMFAUserRepository, DisableMFAUserRepositoryImpl},
+            get_user::{GetUserRepository, GetUserRepositoryImpl},
+            get_user_count::{GetUserCountRepository, GetUserCountRepositoryImpl},
+            get_users::{GetUsersRepository, GetUsersRepositoryImpl},
+            unban_user::{UnbanUserRepository, UnbanUserRepositoryImpl},
+            update_user::{UpdateUserRepository, UpdateUserRepositoryImpl},
         },
-        services::initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
+        validate_bearer_auth_repository::{
+            ValidateBearerAuthMiddlewareRepository, ValidateBearerAuthMiddlewareRepositoryImpl,
+        },
     },
+    config,
     infrastructure::repositories::database::refresh_token::RefreshTokenDatabaseRepositoryImpl,
 };
 
@@ -85,14 +85,18 @@ pub struct Repositories {
     pub delete_role_repo: Arc<dyn DeleteRoleRepository>,
     pub assign_repo: Arc<dyn AssignRepository>,
     pub printer_repo: Arc<dyn PrinterConsumerRepository>,
+    pub user_fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
+    pub core_repo: Arc<dyn InitialCoreRepository>,
 }
 
 pub async fn create_all(
+    cfg: config::Config,
     database: Arc<Session>,
+    fulltext_search: Arc<Elasticsearch>,
     cache: Arc<Client>,
-    secret: &str,
-    cache_ttl: u64,
-) -> (Repositories, Arc<dyn InitialCoreService>) {
+) -> Repositories {
+    let secret = cfg.core.secret.clone();
+    let cache_ttl = cfg.core.cache_ttl;
     let user_db = Arc::new(UserDatabaseRepositoryImpl::new(database.clone()).await);
     let password_hasher = Arc::new(PasswordHasherImpl::new());
     let aes_repo = Arc::new(AesGcmCipherImpl::new(secret.as_bytes()));
@@ -127,6 +131,8 @@ pub async fn create_all(
         user_db.clone(),
         base64_repo.clone(),
     ));
+    let user_fulltext_search_repo =
+        Arc::new(UserFulltextSearchRepositoryImpl::new(fulltext_search)); //repo
 
     let get_user_repo = Arc::new(GetUserRepositoryImpl::new(user_db.clone()));
     let refresh_token_database_repo =
@@ -163,7 +169,7 @@ pub async fn create_all(
         refresh_token_database_repo.clone(),
     ));
 
-    let core_repo = Arc::new(InitialCoreImpl::new(
+    let core_repo = Arc::new(InitialCoreRepositoryImpl::new(
         aes_repo,
         base64_repo,
         org_db_repo,
@@ -176,33 +182,31 @@ pub async fn create_all(
     let ban_user_repo = Arc::new(BanUserRepositoryImpl::new(user_db.clone()));
     let unban_user_repo = Arc::new(UnbanUserRepositoryImpl::new(user_db.clone()));
     let disable_mfa_user_repo = Arc::new(DisableMFAUserRepositoryImpl::new(user_db.clone()));
-    let core_service = Arc::new(InitialCoreServiceImpl::new(core_repo));
     let printer_repo = Arc::new(PrinterConsumerRepositoryImpl);
-    (
-        Repositories {
-            create_user_repo,
-            get_users_repo,
-            auth_repo,
-            get_user_repo,
-            update_user_repo,
-            del_user_repo,
-            get_user_count_repo,
-            ban_user_repo,
-            unban_user_repo,
-            disable_mfa_user_repo,
-            create_refresh_token_repo,
-            rotate_refresh_token_repo,
-            revoke_refresh_token_repo,
-            get_refresh_tokens_by_user,
-            create_role_repo,
-            get_role_by_app_repo,
-            get_roles_by_app_repo,
-            get_users_by_role_repo,
-            update_role_repo,
-            delete_role_repo,
-            assign_repo,
-            printer_repo,
-        },
-        core_service,
-    )
+    Repositories {
+        create_user_repo,
+        get_users_repo,
+        auth_repo,
+        get_user_repo,
+        update_user_repo,
+        del_user_repo,
+        get_user_count_repo,
+        ban_user_repo,
+        unban_user_repo,
+        disable_mfa_user_repo,
+        create_refresh_token_repo,
+        rotate_refresh_token_repo,
+        revoke_refresh_token_repo,
+        get_refresh_tokens_by_user,
+        create_role_repo,
+        get_role_by_app_repo,
+        get_roles_by_app_repo,
+        get_users_by_role_repo,
+        update_role_repo,
+        delete_role_repo,
+        assign_repo,
+        printer_repo,
+        user_fulltext_search_repo,
+        core_repo,
+    }
 }

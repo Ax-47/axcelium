@@ -23,13 +23,15 @@ use crate::{
         },
     },
     config,
+    setup::repositories::Repositories,
 };
+use elasticsearch::Elasticsearch;
 use redis::Client;
 use scylla::client::session::Session;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 mod middlewares;
-mod repositories;
+pub mod repositories;
 mod services;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
@@ -58,13 +60,9 @@ pub struct Container {
 }
 
 impl Container {
-    pub async fn new(cfg: config::Config, cache: Arc<Client>, database: Arc<Session>) -> Self {
-        let secret = cfg.core.secret.clone();
-        let cache_ttl = cfg.core.cache_ttl;
-        let (repos, core_service) =
-            repositories::create_all(database.clone(), cache, &secret, cache_ttl).await;
-
-        core_service.lunch(cfg).await;
+    pub async fn new(cfg: config::Config, repos: Repositories) -> Self {
+        let init_core_service = services::create_init_service(&repos);
+        init_core_service.lunch(cfg).await;
         let hello_service = services::create_hello_service();
         let create_user_service = services::create_create_user_service(&repos);
         let get_users_service = services::create_get_users_service(&repos);

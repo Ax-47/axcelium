@@ -1,12 +1,12 @@
 use crate::config;
 use kafka::producer::{Producer, Record};
 
-pub struct ProducerImpl {
+pub struct ProducerRepositoryImpl {
     producer: Producer,
     topic: String,
 }
 
-impl ProducerImpl {
+impl ProducerRepositoryImpl {
     pub fn new(cfg: config::QueueConfig, topic: &str) -> Self {
         let producer = Producer::from_hosts(cfg.urls).create().unwrap();
         Self {

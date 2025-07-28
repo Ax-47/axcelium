@@ -1,33 +1,37 @@
 use std::sync::Arc;
 
-use crate::application::services::{
-    cdc::printer::{PrinterConsumerService, PrinterConsumerServiceImpl},
-    hello_service::{HelloService, HelloServiceImpl},
-    refresh_token::{
-        create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl},
-        get::{GetRefreshTokenService, GetRefreshTokenServiceImpl},
-        revoke::{RevokeRefreshTokenService, RevokeRefreshTokenServiceImpl},
-        rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
-    },
-    roles::{
-        assign::{AssignService, AssignServiceImpl},
-        create_roles::{CreateRoleService, CreateRoleServiceImpl},
-        delete_role::{DeleteRoleService, DeleteRoleServiceImpl},
-        get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl},
-        get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl},
-        get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl},
-        update_role::{UpdateRoleService, UpdateRoleServiceImpl},
-    },
-    users::{
-        ban_user::{BanUserService, BanUserServiceImpl},
-        create::{CreateUserService, CreateUserServiceImpl},
-        delete::{DeleteUserService, DeleteUserServiceImpl},
-        disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl},
-        get_user::{GetUserService, GetUserServiceImpl},
-        get_user_count::{GetUserCountService, GetUserCountServiceImpl},
-        get_users::{GetUsersService, GetUsersServiceImpl},
-        unban_user::{UnbanUserService, UnbanUserServiceImpl},
-        update_user::{UpdateUserService, UpdateUserServiceImpl},
+use crate::application::{
+    repositories::initial_core::{InitialCoreRepository, InitialCoreRepositoryImpl},
+    services::{
+        cdc::printer::{PrinterConsumerService, PrinterConsumerServiceImpl},
+        hello_service::{HelloService, HelloServiceImpl},
+        initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
+        refresh_token::{
+            create::{CreateRefreshTokenService, CreateRefreshTokenServiceImpl},
+            get::{GetRefreshTokenService, GetRefreshTokenServiceImpl},
+            revoke::{RevokeRefreshTokenService, RevokeRefreshTokenServiceImpl},
+            rotate::{RotateRefreshTokenService, RotateRefreshTokenServiceImpl},
+        },
+        roles::{
+            assign::{AssignService, AssignServiceImpl},
+            create_roles::{CreateRoleService, CreateRoleServiceImpl},
+            delete_role::{DeleteRoleService, DeleteRoleServiceImpl},
+            get_role_by_app::{GetRoleByAppService, GetRoleByAppServiceImpl},
+            get_roles_by_app::{GetRolesByAppService, GetRolesByAppServiceImpl},
+            get_users_by_role::{GetUsersByRoleService, GetUsersByRoleServiceImpl},
+            update_role::{UpdateRoleService, UpdateRoleServiceImpl},
+        },
+        users::{
+            ban_user::{BanUserService, BanUserServiceImpl},
+            create::{CreateUserService, CreateUserServiceImpl},
+            delete::{DeleteUserService, DeleteUserServiceImpl},
+            disable_mfa_user::{DisableMFAUserService, DisableMFAUserServiceImpl},
+            get_user::{GetUserService, GetUserServiceImpl},
+            get_user_count::{GetUserCountService, GetUserCountServiceImpl},
+            get_users::{GetUsersService, GetUsersServiceImpl},
+            unban_user::{UnbanUserService, UnbanUserServiceImpl},
+            update_user::{UpdateUserService, UpdateUserServiceImpl},
+        },
     },
 };
 use tokio::sync::Mutex;
@@ -168,4 +172,10 @@ pub fn create_printer_service(repos: &Repositories) -> Arc<Mutex<dyn PrinterCons
     Arc::new(Mutex::new(PrinterConsumerServiceImpl::new(
         repos.printer_repo.clone(),
     )))
+}
+
+pub fn create_init_service(repos: &Repositories) -> Arc<dyn InitialCoreService> {
+    Arc::new(InitialCoreServiceImpl {
+        repository: repos.core_repo.clone(),
+    })
 }

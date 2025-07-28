@@ -1,4 +1,6 @@
-use crate::domain::entities::user::User;
+use crate::{
+    domain::entities::user::User, infrastructure::errors::fulltext_search::FulltextSearchError,
+};
 use async_trait::async_trait;
 use elasticsearch::Elasticsearch;
 use std::sync::Arc;
@@ -8,7 +10,7 @@ pub struct UserFulltextSearchRepositoryImpl {
     index: String,
 }
 impl UserFulltextSearchRepositoryImpl {
-    pub fn new(&self, fulltext_search_client: Arc<Elasticsearch>) -> Self {
+    pub fn new(fulltext_search_client: Arc<Elasticsearch>) -> Self {
         Self {
             fulltext_search_client,
             index: "users".to_owned(),
@@ -17,13 +19,13 @@ impl UserFulltextSearchRepositoryImpl {
 }
 #[async_trait]
 pub trait UserFulltextSearchRepository: Send + Sync {
-    async fn create(&self, user: User);
+    async fn create(&self, user: User) -> Result<(), FulltextSearchError>;
 }
 
 #[async_trait]
 impl UserFulltextSearchRepository for UserFulltextSearchRepositoryImpl {
-    async fn create(&self, user: User) {
-        let _ = self
+    async fn create(&self, user: User) -> Result<(), FulltextSearchError> {
+        let res = self
             .fulltext_search_client
             .index(elasticsearch::IndexParts::IndexId(
                 self.index.as_str(),
@@ -31,6 +33,12 @@ impl UserFulltextSearchRepository for UserFulltextSearchRepositoryImpl {
             ))
             .body(user)
             .send()
-            .await;
+            .await?;
+        if !res.status_code().is_success() {
+            return Err(FulltextSearchError::IndexingFailed(
+                res.status_code().as_str().to_string(),
+            ));
+        };
+        Ok(())
     }
 }
