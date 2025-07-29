@@ -45,7 +45,6 @@ async fn main() -> std::io::Result<()> {
         repos.user_fulltext_search_repo.clone(),
     ));
     let container = Arc::new(setup::Container::new(cfg.clone(), repos).await);
-    let mut user_producer = ProducerRepositoryImpl::new(cfg.queue, "axcelium-users"); // TODO: Seperate to a func
     println!("run server"); // TODO: Seperate to a func
     let container_for_server = container.clone();
     let srv = HttpServer::new(move || controllers::create_router(container_for_server.clone()));

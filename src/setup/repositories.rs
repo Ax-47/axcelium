@@ -37,6 +37,10 @@ use crate::{
             UserFulltextSearchRepository, UserFulltextSearchRepositoryImpl,
         },
         paseto::refresh_token::PasetoRepositoryImpl,
+        queue::{
+            producer::ProducerRepositoryImpl,
+            producer_users_repository::{UserProducerRepository, UserProducerRepositoryImpl},
+        },
         security::argon2_repository::PasswordHasherImpl,
     },
 };
@@ -87,6 +91,7 @@ pub struct Repositories {
     pub printer_repo: Arc<dyn PrinterConsumerRepository>,
     pub user_fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
     pub core_repo: Arc<dyn InitialCoreRepository>,
+    pub user_producer_repo: Arc<dyn UserProducerRepository>,
 }
 
 pub async fn create_all(
@@ -113,6 +118,10 @@ pub async fn create_all(
         cache.clone(),
         cache_ttl,
     ));
+
+    let producer_repo = Box::new(ProducerRepositoryImpl::new(cfg.queue));
+
+    let user_producer_repo = Arc::new(UserProducerRepositoryImpl::new(producer_repo));
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,
         apporg_db_repo.clone(),
@@ -208,5 +217,6 @@ pub async fn create_all(
         printer_repo,
         user_fulltext_search_repo,
         core_repo,
+        user_producer_repo,
     }
 }
