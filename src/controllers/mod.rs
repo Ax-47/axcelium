@@ -1,9 +1,9 @@
 pub mod cdc;
+pub mod consumers;
 pub mod hello;
 pub mod refresh_token;
 pub mod roles;
 pub mod users;
-
 use crate::setup::Container;
 use actix_web::App;
 use actix_web::Error;

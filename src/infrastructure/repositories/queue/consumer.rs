@@ -26,7 +26,6 @@ pub trait ConsumerRepository: Send + Sync {
     fn consume_messageset(&mut self, ms: MessageSet) -> Result<(), KafkaError>;
     fn commit_consumed(&mut self) -> Result<(), KafkaError>;
 }
-
 impl ConsumerRepositoryImpl {
     pub fn new(
         cfg: config::QueueConfig,
