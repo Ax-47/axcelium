@@ -25,14 +25,14 @@ use crate::{
     config,
     setup::repositories::Repositories,
 };
-use elasticsearch::Elasticsearch;
-use redis::Client;
-use scylla::client::session::Session;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+pub mod init_controllers;
 mod middlewares;
+pub mod print;
 pub mod repositories;
 mod services;
+pub mod shutdown;
 pub struct Container {
     pub hello_service: Arc<dyn HelloService>,
     pub create_user_service: Arc<dyn CreateUserService>,

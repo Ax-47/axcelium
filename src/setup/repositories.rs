@@ -1,9 +1,3 @@
-use std::sync::Arc;
-
-use elasticsearch::Elasticsearch;
-use redis::Client;
-use scylla::client::session::Session;
-
 use crate::{
     application::repositories::{
         cdc::printer::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
@@ -65,6 +59,10 @@ use crate::{
     config,
     infrastructure::repositories::database::refresh_token::RefreshTokenDatabaseRepositoryImpl,
 };
+use elasticsearch::Elasticsearch;
+use redis::Client;
+use scylla::client::session::Session;
+use std::sync::{Arc, atomic::AtomicBool};
 
 pub struct Repositories {
     pub create_user_repo: Arc<dyn CreateUserRepository>,
@@ -98,6 +96,7 @@ pub async fn create_all(
     cfg: config::Config,
     database: Arc<Session>,
     fulltext_search: Arc<Elasticsearch>,
+    shutdown_flag: Arc<AtomicBool>,
     cache: Arc<Client>,
 ) -> Repositories {
     let secret = cfg.core.secret.clone();
@@ -118,10 +117,6 @@ pub async fn create_all(
         cache.clone(),
         cache_ttl,
     ));
-
-    let producer_repo = Box::new(ProducerRepositoryImpl::new(cfg.queue));
-
-    let user_producer_repo = Arc::new(UserProducerRepositoryImpl::new(producer_repo));
     let apporg_cache_layer = Arc::new(ApplicationsOrganizationByClientIdCacheLayerImpl::new(
         apporg_cache_repo,
         apporg_db_repo.clone(),
@@ -142,6 +137,9 @@ pub async fn create_all(
     ));
     let user_fulltext_search_repo =
         Arc::new(UserFulltextSearchRepositoryImpl::new(fulltext_search)); //repo
+
+    let producer_repo = Box::new(ProducerRepositoryImpl::new(cfg.queue.clone()));
+    let user_producer_repo = Arc::new(UserProducerRepositoryImpl::new(producer_repo));
 
     let get_user_repo = Arc::new(GetUserRepositoryImpl::new(user_db.clone()));
     let refresh_token_database_repo =

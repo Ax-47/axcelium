@@ -1,38 +1,30 @@
-use futures::stream::{FusedStream, FuturesUnordered};
 use kafka::consumer::MessageSets;
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{Arc, atomic::AtomicBool},
+    time::Duration,
+};
 use tokio::sync::watch;
 
 use crate::{
-    domain::entities::user::User,
+    config::QueueConfig,
     infrastructure::{
         errors::queue::QueueOperationError,
         models::queue::users::QueueUser,
-        repositories::{
-            fulltext_search::user_fulltext_search::UserFulltextSearchRepository,
-            queue::consumer::ConsumerRepository,
+        repositories::queue::{
+            consumer::{ConsumerRepository, ConsumerRepositoryImpl},
+            topics::USER_TOPIC,
         },
     },
 };
-pub struct UserConsumerRepositoryImpl {
+pub struct UserConsumerController {
     consumer_repo: Box<dyn ConsumerRepository>,
-    fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
 }
-
-impl UserConsumerRepositoryImpl {
-    pub fn new(
-        consumer_repo: Box<dyn ConsumerRepository>,
-        fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
-    ) -> Self {
-        Self {
-            consumer_repo,
-            fulltext_search_repo,
-        }
+impl UserConsumerController {
+    pub fn new(cfg: QueueConfig, running: Arc<AtomicBool>) -> Self {
+        let consumer_repo =
+            Box::new(ConsumerRepositoryImpl::new(cfg, running, USER_TOPIC.to_owned()).unwrap());
+        Self { consumer_repo }
     }
-    // pub async fn consumer_handle(self) {
-    //     let (fut, handle) = async { self.run().await }.remote_handle();
-    //     tokio::task::spawn(fut);
-    // }
     pub async fn run(&mut self, mut shutdown_rx: watch::Receiver<bool>) -> anyhow::Result<()> {
         loop {
             tokio::select! {
@@ -46,7 +38,7 @@ impl UserConsumerRepositoryImpl {
             }
         }
         Ok(())
-    }
+    } // should be controller
     async fn consume(&mut self) {
         println!("consuming...");
         match self.consumer_repo.consume_events() {
@@ -81,16 +73,12 @@ impl UserConsumerRepositoryImpl {
     async fn operate(&self, text: &str) -> Result<(), QueueOperationError> {
         let value = serde_json::from_str::<QueueUser>(text)?;
         match (value.operation.as_str(), value.user) {
-            ("create", Some(user)) => self.create(user).await?,
+            ("create", Some(_user)) => { /* TODO */ }
             ("create", None) => return Err(QueueOperationError::MissingUser),
             ("update", None) => { /* TODO */ }
             ("delete", None) => { /* TODO */ }
             (op, _) => eprintln!("Unknown operation: {}", op),
         }
-        Ok(())
-    }
-    async fn create(&self, user: User) -> Result<(), QueueOperationError> {
-        self.fulltext_search_repo.create(user).await?;
         Ok(())
     }
 }
