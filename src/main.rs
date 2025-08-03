@@ -1,5 +1,4 @@
 use axcelium::{
-    application::controllers::queue::consumer_users::UserConsumerController,
     config,
     controllers::{cdc::CDCControllerImpl, consumers::QueueConsumerImpl},
     infrastructure::repositories::{
@@ -11,7 +10,6 @@ use axcelium::{
         shutdown::spawn_signal_handler,
     },
 };
-use futures::lock::Mutex;
 use std::sync::{Arc, atomic::AtomicBool};
 use tokio::sync::watch;
 #[actix_web::main]
@@ -41,11 +39,7 @@ async fn main() -> std::io::Result<()> {
     let server_future = create_http_server(container_for_server)?;
     let mut c = CDCControllerImpl::new(database, services.clone()).await;
     // FIX: temp
-    let user_consumer_controller = Arc::new(Mutex::new(UserConsumerController::new(
-        cfg.queue.clone(),
-        shutdown_flag,
-    )));
-    let consumer_controller = QueueConsumerImpl::new(user_consumer_controller, shutdown_rx);
+    let consumer_controller = QueueConsumerImpl::new(cfg.queue, shutdown_rx).unwrap();
     // Wait for consumer to end
     tokio::spawn(async move { c.handle().await });
     tokio::spawn(async move {

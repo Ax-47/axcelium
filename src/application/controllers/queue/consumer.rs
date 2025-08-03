@@ -1,30 +1,32 @@
-use serde::de::Error;
-use std::{collections::HashMap, future::Future, pin::Pin, str, sync::Arc, time::Duration}; // ← ใส่อันนี้เข้าไปด้านบนก่อนเลย!
+use std::{collections::HashMap, future::Future, pin::Pin, str, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use kafka::{
     Error as KafkaError,
     client::GroupOffsetStorage,
-    consumer::{Consumer, FetchOffset, Message, MessageSet, MessageSets},
+    consumer::{Consumer, FetchOffset, MessageSet, MessageSets},
 };
-use serde_json::Value;
 use tokio::sync::watch;
 
 use crate::{config, infrastructure::models::queue::queue_payload::QueueOperation};
 
 /// Type alias for a boxed async operation handler
-///  
 pub type OperationFn<T, E> =
     dyn Fn(&T) -> Pin<Box<dyn Future<Output = Result<(), E>> + Send>> + Send + Sync;
 
 /// Consumer interface
 #[async_trait]
-pub trait ConsumerRepository: Send + Sync {
-    async fn run(&mut self, shutdown_rx: watch::Receiver<bool>) -> anyhow::Result<()>;
+pub trait ConsumerCotroller<T, E>: Send + Sync
+where
+    T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
+    E: std::error::Error + Send + Sync + std::convert::From<serde_json::Error> + 'static,
+{
+    fn add_operation(&mut self, op_type: &'static str, op: Arc<OperationFn<T, E>>);
+    async fn run(&mut self) -> anyhow::Result<()>;
 }
 
 /// Kafka consumer implementation
-pub struct ConsumerRepositoryImpl<T, E>
+pub struct ConsumerCotrollerImpl<T, E>
 where
     T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
     E: std::error::Error + Send + Sync + 'static,
@@ -35,7 +37,7 @@ where
     operation_map: HashMap<&'static str, Arc<OperationFn<T, E>>>,
 }
 
-impl<T, E> ConsumerRepositoryImpl<T, E>
+impl<T, E> ConsumerCotrollerImpl<T, E>
 where
     T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
     E: std::error::Error + Send + Sync + std::convert::From<serde_json::Error> + 'static,
@@ -58,12 +60,6 @@ where
             shutdown_rx,
             operation_map: HashMap::new(),
         })
-    }
-
-    fn get_event_data(&self, m: &Message) -> Result<Value, serde_json::Error> {
-        let event =
-            str::from_utf8(m.value).map_err(|e| serde_json::Error::custom(e.to_string()))?;
-        serde_json::from_str(event)
     }
 
     fn consume_events(&mut self) -> Result<MessageSets, KafkaError> {
@@ -125,15 +121,18 @@ where
 }
 
 #[async_trait]
-impl<T, E> ConsumerRepository for ConsumerRepositoryImpl<T, E>
+impl<T, E> ConsumerCotroller<T, E> for ConsumerCotrollerImpl<T, E>
 where
     T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
     E: std::error::Error + Send + Sync + std::convert::From<serde_json::Error> + 'static,
 {
-    async fn run(&mut self, mut shutdown_rx: watch::Receiver<bool>) -> anyhow::Result<()> {
+    fn add_operation(&mut self, op_type: &'static str, op: Arc<OperationFn<T, E>>) {
+        self.operation_map.insert(op_type, op);
+    }
+    async fn run(&mut self) -> anyhow::Result<()> {
         loop {
             tokio::select! {
-                _ = shutdown_rx.changed() => {
+                _ = self.shutdown_rx.changed() => {
                     println!("🔴 Shutdown signal received in {}'s run()",self.topic);
                     break;
                 }

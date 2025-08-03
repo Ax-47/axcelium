@@ -1,1 +1,2 @@
-pub mod consumer_users;
+pub mod consumer;
+

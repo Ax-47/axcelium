@@ -2,6 +2,7 @@ use crate::infrastructure::errors::fulltext_search::FulltextSearchError;
 use kafka::error::Error as KafkaError;
 use thiserror::Error;
 
+pub type DynResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 #[derive(Debug, Error)]
 pub enum QueueOperationError {
     #[error("Failed to parse JSON: {0}")]
