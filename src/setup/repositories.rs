@@ -1,6 +1,9 @@
 use crate::{
     application::repositories::{
-        cdc::printer::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
+        cdc::{
+            printer::{PrinterConsumerRepository, PrinterConsumerRepositoryImpl},
+            replicator::{ReplicatorRepository, ReplicatorRepositoryImpl},
+        },
         initial_core::{InitialCoreRepository, InitialCoreRepositoryImpl},
         refresh_tokens::{
             get::{GetRefreshTokenRepository, GetRefreshTokenRepositoryImpl},
@@ -34,6 +37,7 @@ use crate::{
         queue::{
             producer::ProducerRepositoryImpl,
             producer_users_repository::{UserProducerRepository, UserProducerRepositoryImpl},
+            topics::USER_TOPIC,
         },
         security::argon2_repository::PasswordHasherImpl,
     },
@@ -62,7 +66,7 @@ use crate::{
 use elasticsearch::Elasticsearch;
 use redis::Client;
 use scylla::client::session::Session;
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::{Arc, Mutex};
 
 pub struct Repositories {
     pub create_user_repo: Arc<dyn CreateUserRepository>,
@@ -90,13 +94,13 @@ pub struct Repositories {
     pub user_fulltext_search_repo: Arc<dyn UserFulltextSearchRepository>,
     pub core_repo: Arc<dyn InitialCoreRepository>,
     pub user_producer_repo: Arc<dyn UserProducerRepository>,
+    pub replicator_repo: Arc<dyn ReplicatorRepository>,
 }
 
 pub async fn create_all(
     cfg: config::Config,
     database: Arc<Session>,
     fulltext_search: Arc<Elasticsearch>,
-    shutdown_flag: Arc<AtomicBool>,
     cache: Arc<Client>,
 ) -> Repositories {
     let secret = cfg.core.secret.clone();
@@ -190,6 +194,11 @@ pub async fn create_all(
     let unban_user_repo = Arc::new(UnbanUserRepositoryImpl::new(user_db.clone()));
     let disable_mfa_user_repo = Arc::new(DisableMFAUserRepositoryImpl::new(user_db.clone()));
     let printer_repo = Arc::new(PrinterConsumerRepositoryImpl);
+
+    let replicator_repo = Arc::new(ReplicatorRepositoryImpl::new(
+        Arc::new(Mutex::new(ProducerRepositoryImpl::new(cfg.queue.clone()))),
+        USER_TOPIC.to_string(),
+    ));
     Repositories {
         create_user_repo,
         get_users_repo,
@@ -216,5 +225,6 @@ pub async fn create_all(
         user_fulltext_search_repo,
         core_repo,
         user_producer_repo,
+        replicator_repo,
     }
 }

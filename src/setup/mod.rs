@@ -2,7 +2,7 @@ use crate::{
     application::{
         middlewares::bearer_auth::ValidateBearerAuth,
         services::{
-            cdc::printer::PrinterConsumerService,
+            cdc::{printer::PrinterConsumerService, replicator::ReplicatorConsumerService},
             hello_service::HelloService,
             refresh_token::{
                 create::CreateRefreshTokenService, get::GetRefreshTokenService,
@@ -57,6 +57,7 @@ pub struct Container {
     pub delete_role_service: Arc<dyn DeleteRoleService>,
     pub assign_service: Arc<dyn AssignService>,
     pub printer_service: Arc<Mutex<dyn PrinterConsumerService>>,
+    pub replicator_service: Arc<Mutex<dyn ReplicatorConsumerService>>,
 }
 
 impl Container {
@@ -91,6 +92,8 @@ impl Container {
         ));
 
         let printer_service = services::create_printer_service(&repos);
+
+        let replicator_service = services::create_replicator_service(&repos);
         Self {
             hello_service,
             create_user_service,
@@ -115,6 +118,7 @@ impl Container {
             delete_role_service,
             assign_service,
             printer_service,
+            replicator_service,
         }
     }
 }

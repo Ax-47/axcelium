@@ -1,13 +1,11 @@
-use serde::de::Error;
 use std::{collections::HashMap, future::Future, pin::Pin, str, sync::Arc, time::Duration}; // ← ใส่อันนี้เข้าไปด้านบนก่อนเลย!
 
 use async_trait::async_trait;
 use kafka::{
     Error as KafkaError,
     client::GroupOffsetStorage,
-    consumer::{Consumer, FetchOffset, Message, MessageSet, MessageSets},
+    consumer::{Consumer, FetchOffset, MessageSet, MessageSets},
 };
-use serde_json::Value;
 use tokio::sync::watch;
 
 use crate::{config, infrastructure::models::queue::queue_payload::QueueOperation};
@@ -20,14 +18,14 @@ pub type OperationFn<T, E> =
 /// Consumer interface
 #[async_trait]
 pub trait ConsumerRepository: Send + Sync {
-    async fn run(&mut self, shutdown_rx: watch::Receiver<bool>) -> anyhow::Result<()>;
+    async fn run(&mut self) -> anyhow::Result<()>;
 }
 
 /// Kafka consumer implementation
 pub struct ConsumerRepositoryImpl<T, E>
 where
     T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
-    E: std::error::Error + Send + Sync + 'static,
+    E: std::error::Error + Send + Sync + std::convert::From<serde_json::Error> + 'static,
 {
     topic: String,
     consumer: Consumer,
@@ -58,12 +56,6 @@ where
             shutdown_rx,
             operation_map: HashMap::new(),
         })
-    }
-
-    fn get_event_data(&self, m: &Message) -> Result<Value, serde_json::Error> {
-        let event =
-            str::from_utf8(m.value).map_err(|e| serde_json::Error::custom(e.to_string()))?;
-        serde_json::from_str(event)
     }
 
     fn consume_events(&mut self) -> Result<MessageSets, KafkaError> {
@@ -114,7 +106,6 @@ where
     }
 
     async fn consume(&mut self) {
-        println!("consuming...");
         match self.consume_events() {
             Ok(messagesets) => self.handle_messages(messagesets).await,
             Err(e) => {
@@ -130,10 +121,10 @@ where
     T: serde::de::DeserializeOwned + QueueOperation + Send + Sync + 'static,
     E: std::error::Error + Send + Sync + std::convert::From<serde_json::Error> + 'static,
 {
-    async fn run(&mut self, mut shutdown_rx: watch::Receiver<bool>) -> anyhow::Result<()> {
+    async fn run(&mut self) -> anyhow::Result<()> {
         loop {
             tokio::select! {
-                _ = shutdown_rx.changed() => {
+                _ = self.shutdown_rx.changed() => {
                     println!("🔴 Shutdown signal received in {}'s run()",self.topic);
                     break;
                 }

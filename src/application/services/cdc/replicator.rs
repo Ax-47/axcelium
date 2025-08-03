@@ -1,17 +1,15 @@
-use crate::application::repositories::cdc::printer::PrinterConsumerRepository;
+use crate::application::repositories::cdc::replicator::ReplicatorRepository;
 use async_trait::async_trait;
 use scylla_cdc::consumer::{CDCRow, Consumer};
-use std::{fmt::Write, sync::Arc};
+use std::sync::Arc;
 pub struct ReplicatorConsumerServiceImpl {
-    repo: Arc<dyn PrinterConsumerRepository>,
+    repo: Arc<dyn ReplicatorRepository>,
 }
-
 impl ReplicatorConsumerServiceImpl {
-    pub fn new(repo: Arc<dyn PrinterConsumerRepository>) -> Self {
+    pub fn new(repo: Arc<dyn ReplicatorRepository>) -> Self {
         Self { repo }
     }
 }
-
 #[async_trait]
 pub trait ReplicatorConsumerService: Consumer + Send + Sync {}
 impl ReplicatorConsumerService for ReplicatorConsumerServiceImpl {}
@@ -19,64 +17,26 @@ impl ReplicatorConsumerService for ReplicatorConsumerServiceImpl {}
 trait Replicator: Send + Sync {
     async fn execute(&mut self, data: CDCRow<'_>) -> anyhow::Result<()>;
 }
-
 #[async_trait]
 impl Replicator for ReplicatorConsumerServiceImpl {
     async fn execute(&mut self, data: CDCRow<'_>) -> anyhow::Result<()> {
-        let mut row_to_print = String::new();
-        write!(
-            &mut row_to_print,
-            "{}",
-            self.repo.print_row_change_header(&data)
-        )?;
-
-        let column_names = data.get_non_cdc_column_names();
-        for column in column_names {
-            if data.column_exists(column) {
-                match data.get_value(column) {
-                    Some(value) => write!(
-                        &mut row_to_print,
-                        "{}",
-                        self.repo
-                            .print_field(column, format!("{:?}", value).as_str())
-                    )?,
-                    None => write!(
-                        &mut row_to_print,
-                        "{}",
-                        self.repo.print_field(column, "null")
-                    )?,
-                };
+        println!("replicate: {}", data.operation.to_string().as_str());
+        match data.operation.to_string().as_str() {
+            "RowInsert" => {
+                let user = self.repo.parse_user_from_cdcrow(&data)?;
+                self.repo.create(user)?;
             }
-
-            if data.collection_exists(column) {
-                write!(
-                    &mut row_to_print,
-                    "{}",
-                    self.repo.print_field(
-                        &format!("{}_deleted_elements", column),
-                        format!("{:?}", data.get_deleted_elements(column)).as_str()
-                    )
-                )?;
+            "RowUpdate" => {
+                let user = self.repo.parse_user_from_cdcrow(&data)?;
+                self.repo.update(user)?;
             }
-
-            if data.column_deletable(column) {
-                write!(
-                    &mut row_to_print,
-                    "{}",
-                    self.repo.print_field(
-                        &format!("{}_deleted", column),
-                        format!("{:?}", data.is_value_deleted(column)).as_str()
-                    )
-                )?;
+            "RowDelete" => {
+                self.repo.delete()?;
+            }
+            _ => {
+                // ignore others or log
             }
         }
-        writeln!(
-            &mut row_to_print,
-            "└────────────────────────────────────────────────────────────────────────────┘"
-        )?;
-
-        println!("{}", row_to_print);
-
         Ok(())
     }
 }
@@ -84,6 +44,17 @@ impl Replicator for ReplicatorConsumerServiceImpl {
 #[async_trait]
 impl Consumer for ReplicatorConsumerServiceImpl {
     async fn consume_cdc(&mut self, data: CDCRow<'_>) -> anyhow::Result<()> {
-        self.execute(data).await
+        match self.execute(data).await {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                if e.to_string().contains("some specific error") {
+                    tracing::warn!("Handled known issue: {}", e);
+                    Ok(()) // หรือจะ return Err ก็ได้
+                } else {
+                    tracing::error!("Unknown error: {:?}", e);
+                    Err(e)
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use crate::application::services::{
-    cdc::printer::{PrinterConsumerService, PrinterConsumerServiceImpl},
+    cdc::{
+        printer::{PrinterConsumerService, PrinterConsumerServiceImpl},
+        replicator::{ReplicatorConsumerService, ReplicatorConsumerServiceImpl},
+    },
     hello_service::{HelloService, HelloServiceImpl},
     initial_core_service::{InitialCoreService, InitialCoreServiceImpl},
     refresh_token::{
@@ -171,6 +174,13 @@ pub fn create_printer_service(repos: &Repositories) -> Arc<Mutex<dyn PrinterCons
     )))
 }
 
+pub fn create_replicator_service(
+    repos: &Repositories,
+) -> Arc<Mutex<dyn ReplicatorConsumerService>> {
+    Arc::new(Mutex::new(ReplicatorConsumerServiceImpl::new(
+        repos.replicator_repo.clone(),
+    )))
+}
 pub fn create_init_service(repos: &Repositories) -> Arc<dyn InitialCoreService> {
     Arc::new(InitialCoreServiceImpl {
         repository: repos.core_repo.clone(),

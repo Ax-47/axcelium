@@ -79,6 +79,7 @@ where
             for m in ms.messages() {
                 match str::from_utf8(m.value) {
                     Ok(v) => {
+                        println!("{v}");
                         if let Err(e) = self.operate(v).await {
                             eprintln!("operation error: {:?}", e);
                         }
@@ -110,7 +111,6 @@ where
     }
 
     async fn consume(&mut self) {
-        println!("consuming...");
         match self.consume_events() {
             Ok(messagesets) => self.handle_messages(messagesets).await,
             Err(e) => {

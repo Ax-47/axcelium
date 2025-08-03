@@ -4,23 +4,23 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::application::services::cdc::{
-    consumer_wrapper::ArcConsumerWrapper, printer::PrinterConsumerService,
+    consumer_wrapper::ArcConsumerWrapper, replicator::ReplicatorConsumerService,
 };
 
-pub struct PrinterConsumerFactory {
-    printer_consumer_service: Arc<Mutex<dyn PrinterConsumerService>>,
+pub struct ReplicatorConsumerFactory {
+    replicator_consumer_service: Arc<Mutex<dyn ReplicatorConsumerService>>,
 }
 
-impl PrinterConsumerFactory {
-    pub fn new(printer_consumer_service: Arc<Mutex<dyn PrinterConsumerService>>) -> Self {
+impl ReplicatorConsumerFactory {
+    pub fn new(replicator_consumer_service: Arc<Mutex<dyn ReplicatorConsumerService>>) -> Self {
         Self {
-            printer_consumer_service,
+            replicator_consumer_service,
         }
     }
 }
 #[async_trait]
-impl ConsumerFactory for PrinterConsumerFactory {
+impl ConsumerFactory for ReplicatorConsumerFactory {
     async fn new_consumer(&self) -> Box<dyn Consumer> {
-        Box::new(ArcConsumerWrapper(self.printer_consumer_service.clone()))
+        Box::new(ArcConsumerWrapper(self.replicator_consumer_service.clone()))
     }
 }

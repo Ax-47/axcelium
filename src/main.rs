@@ -10,14 +10,13 @@ use axcelium::{
         shutdown::spawn_signal_handler,
     },
 };
-use std::sync::{Arc, atomic::AtomicBool};
+use std::sync::Arc;
 use tokio::sync::watch;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let cfg = config::Config::from_file("./config.yaml").unwrap();
     // core setup
     cfg.validate().unwrap();
-    let shutdown_flag = Arc::new(AtomicBool::new(false));
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let shutdown_tx_clone = shutdown_tx.clone();
     spawn_signal_handler(shutdown_tx_clone);
@@ -29,7 +28,6 @@ async fn main() -> std::io::Result<()> {
         cfg.clone(),
         database.clone(),
         fulltext_search,
-        Arc::clone(&shutdown_flag),
         Arc::new(get_redis_client(cfg.redis.clone())),
     )
     .await;

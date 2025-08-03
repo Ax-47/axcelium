@@ -27,3 +27,15 @@ pub enum ProducerError {
     #[error("Kafka topic is not set")]
     MissingTopic,
 }
+
+#[derive(Debug, Error)]
+pub enum ReplicatorError {
+    #[error("Failed to serialize user operation to JSON")]
+    SerializationError(#[from] serde_json::Error),
+
+    #[error("Failed to lock the Kafka producer")]
+    LockError,
+
+    #[error("Failed to send message to Kafka")]
+    KafkaSendError,
+}
